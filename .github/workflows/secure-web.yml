@@ -28,6 +28,9 @@ jobs:
       - name: Start API for web interaction checks
         run: pnpm --filter @yapesa/api start > "$RUNNER_TEMP/yapesa-api.log" 2>&1 &
       - run: pnpm test:live
+      - name: Local Auth diagnostics on failure
+        if: failure()
+        run: docker logs --tail 100 supabase_auth_yapesa 2>&1 | tail -100
       - uses: actions/upload-artifact@v4
         if: always()
         with:
