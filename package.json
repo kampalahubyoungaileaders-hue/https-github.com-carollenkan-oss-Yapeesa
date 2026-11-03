@@ -20,7 +20,11 @@
     "build": "turbo run build",
     "mobile:export": "pnpm --filter @yapesa/mobile export:android",
     "smoke:stack": "node scripts/smoke-stack.mjs",
-    "test:web": "playwright test"
+    "test:web": "playwright test",
+    "api:generate": "node --import tsx scripts/generate-api.ts",
+    "local:provision": "node --import tsx scripts/provision-local.ts",
+    "test:integration": "node --env-file=.env --import tsx --test integration/secure-shares.test.ts",
+    "test:live": "node --env-file=.env node_modules/@playwright/test/cli.js test apps/web/browser/secure.spec.ts"
   },
   "devDependencies": {
     "typescript": "5.9.3",
@@ -32,6 +36,12 @@
     "prettier": "3.9.10",
     "tsx": "4.23.15",
     "@types/node": "24.0.0",
-    "@playwright/test": "1.64.1"
-  }
+    "@playwright/test": "1.64.1",
+    "pg": "8.23.1",
+    "@types/pg": "8.15.5",
+    "openapi-typescript": "7.13.0",
+    "uuid": "14.0.3",
+    "fast-check": "4.10.2"
+  },
+  "type": "module"
 }

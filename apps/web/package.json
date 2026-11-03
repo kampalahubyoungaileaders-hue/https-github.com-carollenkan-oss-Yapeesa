@@ -14,7 +14,8 @@
     "@yapesa/ui-tokens": "workspace:*",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "@yapesa/domain": "workspace:*"
+    "@yapesa/domain": "workspace:*",
+    "@yapesa/api-client": "workspace:*"
   },
   "devDependencies": {
     "vite": "8.3.5",

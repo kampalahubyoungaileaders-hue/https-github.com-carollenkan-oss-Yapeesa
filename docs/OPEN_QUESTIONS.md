@@ -6,9 +6,9 @@ These do not block Phase 0 code scaffolding.
    Validate Expo SDK 58 on it before accepting device and performance targets.
 2. Provide a group cycle, a SACCO month, and a worked dividend example before
    their relevant phases. No financial rule is inferred from missing records.
-3. During Phase 1, define how a calculation mismatch is accepted and flagged
-   while preserving balanced ledger postings: which amount is the posted amount,
-   what is held for review, and who may resolve it?
+3. The online workflow posts the server-calculated amount and preserves submitted
+   inputs with a review flag. Define the later Fencher review/resolution authority
+   and user-facing process before implementing that review interface.
 4. Before offline approver PINs are implemented, define their enrolment, hashed
    local verification, lockout/recovery, revocation and second-factor interaction.
 5. Phase 0 acceptance needs the Docker CI run plus a native development build on
@@ -18,3 +18,7 @@ These do not block Phase 0 code scaffolding.
    branch protection/rulesets. CI configuration alone does not prevent bypasses.
 
 No payment features, new accounting rules, or production hosting are in scope.
+
+7. Provision the first real administrator with a verified phone and controlled PIN
+   handover; configure SMS recovery before customer use. The hosted database has
+   no synthetic customer accounts. Public hosting is not yet configured.

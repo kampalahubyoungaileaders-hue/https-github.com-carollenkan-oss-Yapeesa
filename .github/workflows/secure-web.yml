@@ -1,0 +1,40 @@
+name: Secure web workflow
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: secure-web-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  secure-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start disposable Supabase and apply migrations
+        run: pnpm exec supabase start
+      - run: pnpm local:provision
+      - run: pnpm test:integration
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Start API for web interaction checks
+        run: pnpm --filter @yapesa/api start > "$RUNNER_TEMP/yapesa-api.log" 2>&1 &
+      - run: pnpm test:live
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: secure-web-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Stop the disposable stack
+        if: always()
+        run: pnpm exec supabase stop

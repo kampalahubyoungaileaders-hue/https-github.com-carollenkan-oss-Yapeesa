@@ -6,6 +6,12 @@ preview**. The web preview uses labelled sample records saved in this browser;
 secure live financial operations and authentication are not connected yet. The agreed scope
 and later phases are in [the build brief](docs/BUILD_BRIEF.md).
 
+## Saved organisation records
+
+The secure online share-purchase workflow is available at `/#live` when the API
+and accounts are configured. See [setup, controls and verification](docs/SECURE_WEB.md).
+The sample workspace remains separate and needs no credentials.
+
 ## Open the web workspace
 
 After `pnpm install --frozen-lockfile`, run `pnpm --filter @yapesa/web dev` and open

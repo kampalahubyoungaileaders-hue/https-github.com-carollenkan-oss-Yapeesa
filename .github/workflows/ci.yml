@@ -19,6 +19,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      - run: pnpm api:generate && git diff --exit-code -- packages/api-client/openapi.json packages/api-client/src/schema.ts
       - run: pnpm mobile:export
         env:
           CI: '1'

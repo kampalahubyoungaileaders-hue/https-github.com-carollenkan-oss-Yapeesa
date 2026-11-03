@@ -432,6 +432,9 @@ export default function App() {
             <Icon name="reset" size={16} />
             {t('resetDemo')}
           </button>
+          <a className="button open-saved" href="#live">
+            {t('openSaved')}
+          </a>
           <p className="powered">{t('poweredBy')}</p>
         </div>
       </aside>

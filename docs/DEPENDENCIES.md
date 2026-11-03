@@ -46,3 +46,19 @@ Fineract remains unmodified. Mifos applications are not vendored or started in P
 | `@playwright/test` | 1.64.1  | Exercise the web workspace in desktop and phone-width Chromium viewports and capture screenshots. | Apache-2.0 |
 
 The generated Android source uses `expo-template-bare-minimum@58.0.31` (0BSD); signing keys are excluded, and the Android Gradle plugin generates a debug key locally. Web typography uses DM Sans and Manrope (SIL Open Font Licence 1.1), with local system fallbacks.
+
+## Secure web additions
+
+| Package               | Pinned version | Purpose                                              | Licence |
+| --------------------- | -------------- | ---------------------------------------------------- | ------- |
+| `@fastify/cookie`     | 11.1.5         | Read/write HttpOnly session cookies.                 | MIT     |
+| `@fastify/rate-limit` | 10.3.0         | Throttle login/MFA requests.                         | MIT     |
+| `@fastify/swagger`    | 9.9.3          | Publish the API OpenAPI contract.                    | MIT     |
+| `openapi-typescript`  | 7.13.0         | Generate the client types from that contract.        | MIT     |
+| `uuid`                | 14.0.3         | Generate UUID v7 transaction/device references.      | MIT     |
+| `pg`                  | 8.23.1         | Disposable local test/provisioning connections only. | MIT     |
+| `@types/pg`           | 8.15.5         | Type the provisioning and database tests.            | MIT     |
+
+Runtime Auth/Data API requests use native fetch. HMAC and authenticated cookie
+encryption use Node's built-in cryptography. No application dependency adds a
+second ledger or authentication provider.

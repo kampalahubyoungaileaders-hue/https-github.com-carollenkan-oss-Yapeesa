@@ -41,3 +41,12 @@ access explicitly as appropriate and enable/test RLS; no user tables exist yet.
 ## Web-first follow-up
 
 At the founder’s direction, Android source is prepared for a later local build and further development focuses on web. The new Groups workspace is an explicitly labelled browser demo, not a completed Phase 1 implementation. Shared integer-only share-purchase/reversal calculations have property tests; secure API/database posting and isolation controls remain mandatory before live records. No native APK build is scheduled.
+
+## Secure online shares
+
+- The Yapesa hosted Supabase project is `acqefirtqmfxttgrjoxu` in Frankfurt. It was created at the quoted USD 0/month after the founder confirmed the organisation and freed the second free-project slot.
+- Supabase password-attempt hooks require Teams/Enterprise. To keep the agreed six-digit PIN and five-attempt lockout on the free setup, the API derives an opaque provider credential using a server pepper and verifies the PIN through Supabase Auth. A separately credentialed private gateway persists attempt counts. This does not use or expose the service key in financial requests.
+- Staff use app-authenticator TOTP; paid Phone MFA is not introduced. Database access requires the current session and verified factor as well as the signed `aal` claim.
+- A calculation mismatch posts the server-calculated value while preserving the original submitted amount/version and marking the transaction for review. No historical input is overwritten.
+- Initial device designation is claimed atomically by the first accepted purchase. A different device is denied until an explicit transfer workflow is implemented.
+- These changes implement the online web path. Native Android compilation, SMS recovery and other phase acceptance requirements are still separately tracked.
