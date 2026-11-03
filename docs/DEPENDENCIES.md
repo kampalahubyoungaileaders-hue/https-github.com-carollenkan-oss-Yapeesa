@@ -37,3 +37,12 @@ monitoring, payment, database-client or financial-calculation library is added y
 Tooling/runtime: pnpm and Node.js are MIT; Docker Engine and Compose are Apache-2.0 (Docker Desktop has separate subscription terms); Apache Fineract is Apache-2.0; PostgreSQL uses the PostgreSQL Licence.
 
 Fineract remains unmodified. Mifos applications are not vendored or started in Phase 0. No licence is assigned to Fencher’s own source by this register.
+
+## Web workspace additions
+
+| Package            | Version | Purpose                                                                                           | Licence    |
+| ------------------ | ------- | ------------------------------------------------------------------------------------------------- | ---------- |
+| `fast-check`       | 4.10.2  | Generate integer share-purchase cases to test balancing and exact reversals.                      | MIT        |
+| `@playwright/test` | 1.64.1  | Exercise the web workspace in desktop and phone-width Chromium viewports and capture screenshots. | Apache-2.0 |
+
+The generated Android source uses `expo-template-bare-minimum@58.0.31` (0BSD); signing keys are excluded, and the Android Gradle plugin generates a debug key locally. Web typography uses DM Sans and Manrope (SIL Open Font Licence 1.1), with local system fallbacks.

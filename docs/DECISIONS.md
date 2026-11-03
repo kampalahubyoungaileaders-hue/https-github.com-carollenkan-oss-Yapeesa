@@ -37,3 +37,7 @@ The build brief is the source of truth. Phase 0 does not reopen its architecture
 
 Supabase's current changelog was reviewed. Future schema work must grant Data API
 access explicitly as appropriate and enable/test RLS; no user tables exist yet.
+
+## Web-first follow-up
+
+At the founder’s direction, Android source is prepared for a later local build and further development focuses on web. The new Groups workspace is an explicitly labelled browser demo, not a completed Phase 1 implementation. Shared integer-only share-purchase/reversal calculations have property tests; secure API/database posting and isolation controls remain mandatory before live records. No native APK build is scheduled.

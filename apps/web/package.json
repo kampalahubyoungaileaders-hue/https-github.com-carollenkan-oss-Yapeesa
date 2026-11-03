@@ -6,13 +6,15 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "node --import tsx --test test/workspace.test.ts"
   },
   "dependencies": {
     "@yapesa/i18n": "workspace:*",
     "@yapesa/ui-tokens": "workspace:*",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "@yapesa/domain": "workspace:*"
   },
   "devDependencies": {
     "vite": "8.3.5",

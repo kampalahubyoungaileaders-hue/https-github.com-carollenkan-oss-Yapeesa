@@ -25,3 +25,7 @@ accepting Phase 0. No financial operations or user data are implemented.
 2. Fresh clone on a Docker-capable machine starts via `pnpm dev`.
 3. Install the development build on the chosen reference phone and open the shell.
 4. Require both CI jobs in branch protection before merging.
+
+## Web workspace follow-up
+
+`pnpm check` passes with the share-purchase property tests and web record-validation tests. Android native source generation completed successfully; a native build was deliberately deferred. The `Web browser checks` workflow performs desktop and 360 px interaction tests and captures screenshots; its GitHub run is the source for browser verification results. See `WEB_WORKSPACE.md` for the explicit demo/live-data boundary.

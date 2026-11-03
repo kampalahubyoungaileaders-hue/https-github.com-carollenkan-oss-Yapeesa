@@ -1,9 +1,17 @@
 # Yapesa
 
 Digital records for savings groups, lenders and SACCOs, from Fencher Technologies.
-This repository implements **Phase 0: repository and local environment**. It has
-application shells, not financial operations or authentication. The agreed scope
+This repository includes the **Phase 0 foundation** and a **web Groups workspace
+preview**. The web preview uses labelled sample records saved in this browser;
+secure live financial operations and authentication are not connected yet. The agreed scope
 and later phases are in [the build brief](docs/BUILD_BRIEF.md).
+
+## Open the web workspace
+
+After `pnpm install --frozen-lockfile`, run `pnpm --filter @yapesa/web dev` and open
+http://127.0.0.1:5173. See [web workspace features and data boundaries](docs/WEB_WORKSPACE.md).
+The sample workspace works without Docker. For the complete infrastructure stack,
+use the fresh-clone instructions below.
 
 ## Start a fresh clone
 
@@ -41,6 +49,10 @@ Local demo credentials are not production credentials.
 
 ## Run on a phone
 
+Android native source is checked in under `apps/mobile/android` for a later local
+build. See [Android source instructions](docs/ANDROID_SOURCE.md). No native Android
+build is scheduled in CI.
+
 Use a **development build**, not Expo Go. With an Android emulator or USB-connected
 device and Android SDK configured, run:
 
@@ -77,7 +89,7 @@ Branch protection must require both CI jobs before merging.
 - `apps/mobile`: Expo Router development-build shell.
 - `apps/web`: React/Vite responsive web shell.
 - `apps/api`: Fastify API with `/health` and a test.
-- `packages/domain`: reserved for integer-only money logic and its tests in Phase 1.
+- `packages/domain`: tested integer share-purchase and reversal calculations for the web demo; authoritative posting remains Phase 1 work.
 - `packages/api-client`: reserved for OpenAPI-generated types/client in Phase 1.
 - `packages/ui-tokens`, `i18n`, `country-packs`: shared foundations.
 - `supabase`: CLI-generated local configuration, migrations and tests.

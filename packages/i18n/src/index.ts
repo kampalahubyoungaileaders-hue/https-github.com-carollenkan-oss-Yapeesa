@@ -1,4 +1,6 @@
+import { web } from './web.js';
 const en = {
+  ...web,
   appName: 'Yapesa',
   tagline: 'Digital records for groups, lenders and SACCOs.',
   phase: 'Foundation · Phase 0',
