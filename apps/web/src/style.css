@@ -1,0 +1,38 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f6f8fb;
+  font-family: system-ui, sans-serif;
+}
+main {
+  max-width: 850px;
+  margin: 10vh auto;
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+h1 {
+  font-size: clamp(3rem, 12vw, 5rem);
+  margin: 12px 0;
+  letter-spacing: -0.05em;
+}
+.eyebrow {
+  color: #176c58;
+  font-weight: 700;
+}
+.tagline {
+  font-size: 1.3rem;
+  color: #536674;
+}
+section {
+  margin-top: 40px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #dce5ec;
+  border-radius: 16px;
+}
+h2 {
+  font-size: 1.1rem;
+  line-height: 1.5;
+}

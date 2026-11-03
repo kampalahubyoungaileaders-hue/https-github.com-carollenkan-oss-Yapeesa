@@ -1,0 +1,22 @@
+{
+  "name": "@yapesa/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@yapesa/i18n": "workspace:*",
+    "@yapesa/ui-tokens": "workspace:*",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "vite": "8.3.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}

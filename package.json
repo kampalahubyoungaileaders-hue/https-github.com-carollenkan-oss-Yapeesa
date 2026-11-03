@@ -1,0 +1,35 @@
+{
+  "name": "yapesa",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:apps": "turbo run dev",
+    "infra:up": "node scripts/infra.mjs up",
+    "infra:down": "node scripts/infra.mjs down",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "turbo run typecheck",
+    "test": "node --test tooling/*.test.mjs && turbo run test",
+    "build": "turbo run build",
+    "mobile:export": "pnpm --filter @yapesa/mobile export:android",
+    "smoke:stack": "node scripts/smoke-stack.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "turbo": "2.11.10",
+    "supabase": "2.120.0",
+    "eslint": "10.14.0",
+    "@eslint/js": "10.0.1",
+    "typescript-eslint": "8.72.1",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "@types/node": "24.0.0"
+  }
+}

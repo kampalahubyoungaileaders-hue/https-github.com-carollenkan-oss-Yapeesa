@@ -1,0 +1,16 @@
+{
+  "name": "@yapesa/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --import tsx src/server.ts",
+    "start": "node --import tsx src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test src/app.test.ts"
+  },
+  "dependencies": {
+    "fastify": "5.12.6"
+  }
+}

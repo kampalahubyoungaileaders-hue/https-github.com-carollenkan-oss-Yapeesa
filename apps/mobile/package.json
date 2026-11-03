@@ -1,0 +1,34 @@
+{
+  "name": "@yapesa/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start --dev-client --port 8081",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
+    "export:android": "expo export --platform android --output-dir dist"
+  },
+  "dependencies": {
+    "@yapesa/i18n": "workspace:*",
+    "@yapesa/ui-tokens": "workspace:*",
+    "expo": "58.0.22",
+    "expo-router": "58.0.29",
+    "expo-dev-client": "58.0.18",
+    "expo-constants": "58.0.14",
+    "expo-linking": "58.0.15",
+    "expo-status-bar": "58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "5.10.1",
+    "react-native-screens": "4.30.1",
+    "@expo/metro-runtime": "58.0.16",
+    "@expo/ui": "58.0.26",
+    "expo-symbols": "58.0.4"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0"
+  }
+}

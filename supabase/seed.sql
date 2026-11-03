@@ -1,0 +1,1 @@
+-- No customer data or financial tables in Phase 0.
