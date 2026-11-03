@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+node_modules
+dist
+.expo
+.turbo
+supabase/.temp
+supabase/.branches
+test-results
+playwright-report
+apps/mobile/android

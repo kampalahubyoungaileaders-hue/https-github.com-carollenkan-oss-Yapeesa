@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Yapesa",
+    "slug": "yapesa",
+    "scheme": "yapesa",
+    "version": "0.0.1",
+    "plugins": ["expo-router"],
+    "android": {
+      "package": "com.fencher.yapesa"
+    },
+    "ios": {
+      "bundleIdentifier": "com.fencher.yapesa"
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
