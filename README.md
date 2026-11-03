@@ -3,7 +3,8 @@
 Digital records for savings groups, lenders and SACCOs, from Fencher Technologies.
 This repository includes the **Phase 0 foundation** and a **web Groups workspace
 preview**. The web preview uses labelled sample records saved in this browser;
-secure live financial operations and authentication are not connected yet. The agreed scope
+The authenticated online share-purchase path is implemented separately and requires
+server/account configuration. The agreed scope
 and later phases are in [the build brief](docs/BUILD_BRIEF.md).
 
 ## Saved organisation records
@@ -94,9 +95,9 @@ Branch protection must require both CI jobs before merging.
 
 - `apps/mobile`: Expo Router development-build shell.
 - `apps/web`: React/Vite responsive web shell.
-- `apps/api`: Fastify API with `/health` and a test.
-- `packages/domain`: tested integer share-purchase and reversal calculations for the web demo; authoritative posting remains Phase 1 work.
-- `packages/api-client`: reserved for OpenAPI-generated types/client in Phase 1.
+- `apps/api`: Fastify authentication gateway and protected share-purchase API.
+- `packages/domain`: tested integer share-purchase and reversal calculations; online shares are recalculated and posted in Postgres.
+- `packages/api-client`: generated OpenAPI types and typed API client.
 - `packages/ui-tokens`, `i18n`, `country-packs`: shared foundations.
 - `supabase`: CLI-generated local configuration, migrations and tests.
 - `infra/fineract`: unmodified official Fineract **1.12.0**, Java 21,

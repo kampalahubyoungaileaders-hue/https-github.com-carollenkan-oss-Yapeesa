@@ -80,6 +80,11 @@ async function user(label: string, phone: string, secretary: boolean) {
     phone,
     password,
     phone_confirm: true,
+    // Disposable staff fixtures have non-deliverable email labels because the
+    // pinned Auth release cannot enrol TOTP for a phone-only account (#2872).
+    ...(secretary
+      ? { email: `local-${label.toLowerCase()}@example.invalid` }
+      : {}),
   });
   const id = String(created['id']);
   const person = await db.query<{ id: string }>(
