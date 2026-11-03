@@ -490,8 +490,12 @@ export default function SecureApp() {
           .toLowerCase()
           .includes(search.toLowerCase()),
     ) ?? [];
-  const total = rows.reduce((sum, row) => sum + BigInt(row.amount), 0n);
-  const netShares = rows.reduce((sum, row) => sum + BigInt(row.shares), 0n);
+  const savedRows = workspace?.transactions ?? [];
+  const total = savedRows.reduce((sum, row) => sum + BigInt(row.amount), 0n);
+  const netShares = savedRows.reduce(
+    (sum, row) => sum + BigInt(row.shares),
+    0n,
+  );
   const journalLines =
     workspace?.journal_lines.filter((line) => line.journal_id === journal) ??
     [];
@@ -650,7 +654,7 @@ export default function SecureApp() {
                   <strong className="stat-value">
                     {amount(total, workspace)}
                   </strong>
-                  <small>{t('activeCycle')}</small>
+                  <small>{t('allSavedRecords')}</small>
                 </section>
                 <section className="stat-card">
                   <span className="stat-top">{t('netShares')}</span>
@@ -660,7 +664,7 @@ export default function SecureApp() {
                 <section className="stat-card">
                   <span className="stat-top">{t('meetingsRecorded')}</span>
                   <strong className="stat-value">
-                    {new Set(rows.map((row) => row.meeting_date)).size}
+                    {new Set(savedRows.map((row) => row.meeting_date)).size}
                   </strong>
                   <small>{workspace.group.currency}</small>
                 </section>

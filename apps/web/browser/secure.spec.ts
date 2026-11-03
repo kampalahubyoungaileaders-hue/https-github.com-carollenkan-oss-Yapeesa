@@ -72,8 +72,12 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
       .getByRole('button', { name: 'Open navigation', exact: true })
       .click();
   await page.getByRole('button', { name: 'Ledger', exact: true }).click();
+  const totals = await page
+    .locator('.live-stats .stat-value')
+    .allTextContents();
   await page.getByRole('searchbox').fill(`Saved from ${info.project.name}`);
   await expect(page.locator('.record-row')).toHaveCount(1);
+  await expect(page.locator('.live-stats .stat-value')).toHaveText(totals);
   await page.locator('.record-row').click();
   await expect(page.getByText('Balanced', { exact: true })).toBeVisible();
   expect(

@@ -1,4 +1,5 @@
 export const secure = {
+  allSavedRecords: 'All saved records',
   savedWorkspace: 'Saved workspace',
   openSaved: 'Open saved records',
   sampleWorkspace: 'Explore sample workspace',
