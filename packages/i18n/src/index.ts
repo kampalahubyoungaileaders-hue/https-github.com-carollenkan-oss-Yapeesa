@@ -1,4 +1,4 @@
-import { web } from './web.js';
+import { web } from './web';
 const en = {
   ...web,
   appName: 'Yapesa',
