@@ -63,7 +63,10 @@ pnpm --filter @yapesa/api start
 ```
 
 In another terminal run the web dev server, or run `pnpm test:live` after installing
-Chromium with `pnpm exec playwright install chromium`. Local provisioning refuses
+Chromium with `pnpm exec playwright install chromium`. Start the disposable test
+stack using `pnpm local:test-stack`; it temporarily enables a placeholder SMS
+provider locally so phone/password login is available, then restores the config.
+It never sends SMS or modifies the hosted project's Auth settings. Local provisioning refuses
 non-loopback URLs. It generates test credentials, seeds two organisations and
 writes the ignored `.env`. Do not run the fixture job against hosted data.
 

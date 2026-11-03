@@ -21,7 +21,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Start disposable Supabase and apply migrations
-        run: pnpm exec supabase start
+        run: pnpm local:test-stack
       - run: pnpm local:provision
       - run: pnpm test:integration
       - run: pnpm exec playwright install --with-deps chromium

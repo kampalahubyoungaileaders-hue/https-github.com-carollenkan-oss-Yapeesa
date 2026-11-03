@@ -66,8 +66,12 @@ async function auth(
     },
     body: JSON.stringify(body),
   });
-  if (!res.ok)
-    throw new Error(`Local Auth provisioning failed (${res.status})`);
+  if (!res.ok) {
+    const failure = (await res.json()) as { error_code?: string };
+    throw new Error(
+      `Local Auth provisioning failed at ${path.split('?')[0]} (${res.status}, ${failure.error_code ?? 'unknown'})`,
+    );
+  }
   return (await res.json()) as Record<string, unknown>;
 }
 async function user(label: string, phone: string, secretary: boolean) {
