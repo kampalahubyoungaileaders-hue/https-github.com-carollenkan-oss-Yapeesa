@@ -25,7 +25,7 @@
     "local:provision": "node --import tsx scripts/provision-local.ts",
     "local:test-stack": "node scripts/start-test-stack.mjs",
     "test:integration": "node --env-file=.env --import tsx --test integration/secure-shares.test.ts",
-    "test:live": "node --env-file=.env node_modules/@playwright/test/cli.js test apps/web/browser/secure.spec.ts"
+    "test:live": "node --env-file=.env node_modules/@playwright/test/cli.js test apps/web/browser/secure.spec.ts --workers=1"
   },
   "devDependencies": {
     "typescript": "5.9.3",

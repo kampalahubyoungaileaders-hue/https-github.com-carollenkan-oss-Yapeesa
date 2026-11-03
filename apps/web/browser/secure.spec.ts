@@ -33,7 +33,7 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
     .fill(totp(env['TEST_A_TOTP']!));
   await page.getByRole('button', { name: 'Verify code', exact: true }).click();
   await expect(
-    page.getByRole('heading', { name: 'Local group A', exact: true }),
+    page.getByRole('heading', { name: 'Local group A', level: 1, exact: true }),
   ).toBeVisible();
   await page
     .getByLabel('Member', { exact: true })
@@ -65,7 +65,7 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
   await expect(page.getByRole('status')).toContainText('Share purchase saved.');
   await page.reload();
   await expect(
-    page.getByRole('heading', { name: 'Local group A', exact: true }),
+    page.getByRole('heading', { name: 'Local group A', level: 1, exact: true }),
   ).toBeVisible();
   if ((page.viewportSize()?.width ?? 1440) < 760)
     await page
