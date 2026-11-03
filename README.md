@@ -2,7 +2,7 @@
 
 Digital records for savings groups, lenders and SACCOs, from Fencher Technologies.
 This repository includes the **Phase 0 foundation** and a **web Groups workspace
-preview**. The web preview uses labelled sample records saved in this browser;
+preview**. The web preview uses labelled sample records saved in this browser.
 The authenticated online share-purchase path is implemented separately and requires
 server/account configuration. The agreed scope
 and later phases are in [the build brief](docs/BUILD_BRIEF.md).

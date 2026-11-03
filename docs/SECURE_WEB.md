@@ -56,7 +56,7 @@ For a disposable real-Auth/database test environment, Docker must be running:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm exec supabase start
+pnpm local:test-stack
 pnpm local:provision
 pnpm test:integration
 pnpm --filter @yapesa/api start

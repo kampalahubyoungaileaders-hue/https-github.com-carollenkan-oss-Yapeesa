@@ -105,6 +105,37 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   };
   const url = `/api/groups/${env['TEST_ORG_A']}/shares`;
   const saved = await call('A', 'POST', url, input);
+  if (saved.statusCode !== 200) {
+    // Local-only diagnostics expose the SQL error, never a credential, when the
+    // API's intentionally generic error response cannot identify a migration bug.
+    const access = openTokens(
+      cookies.get('A')!.slice('yapesa_session='.length),
+      config!.cookieKey,
+    ).access_token;
+    const detail = await fetch(
+      `${config!.supabaseUrl}/rest/v1/rpc/post_share_purchase`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: config!.publishableKey,
+          Authorization: `Bearer ${access}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          p_org: env['TEST_ORG_A'],
+          p_member: input.member_id,
+          p_date: input.meeting_date,
+          p_shares: input.shares,
+          p_client: input.client_id,
+          p_device: input.device_id,
+          p_client_amount: input.client_amount,
+          p_client_version: input.client_calc_version,
+          p_note: input.note,
+        }),
+      },
+    );
+    assert.equal(detail.status, 200, await detail.text());
+  }
   assert.equal(saved.statusCode, 200, saved.body);
   assert.equal(saved.json().amount, '10000');
   assert.equal(saved.json().calculation_mismatch, true);

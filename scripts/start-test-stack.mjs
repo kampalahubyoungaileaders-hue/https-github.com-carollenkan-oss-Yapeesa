@@ -17,7 +17,14 @@ try {
   const code = await new Promise((resolve, reject) => {
     const child = spawn(
       process.execPath,
-      [process.env.npm_execpath, 'exec', 'supabase', 'start'],
+      [
+        process.env.npm_execpath,
+        'exec',
+        'supabase',
+        'start',
+        '--exclude',
+        'realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor',
+      ],
       { stdio: 'inherit' },
     );
     child.on('error', reject);
