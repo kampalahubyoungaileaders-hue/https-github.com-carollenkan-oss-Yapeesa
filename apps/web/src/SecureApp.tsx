@@ -580,7 +580,13 @@ export default function SecureApp() {
             </button>
           ))}
           {session.user.can_administer && (
-            <button className="live-nav" onClick={() => setAdminOpen(true)}>
+            <button
+              className="live-nav"
+              onClick={() => {
+                setMenu(false);
+                setAdminOpen(true);
+              }}
+            >
               <Icon name="shield" />
               {t('administration')}
             </button>
@@ -686,7 +692,10 @@ export default function SecureApp() {
               {session.user.can_administer && (
                 <button
                   className="button primary"
-                  onClick={() => setAdminOpen(true)}
+                  onClick={() => {
+                    setMenu(false);
+                    setAdminOpen(true);
+                  }}
                 >
                   {t('administration')}
                 </button>

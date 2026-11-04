@@ -6,7 +6,7 @@ settings, not a Blueprint.
 
 - Runtime: Node 24.22.1, pnpm 11.25.0.
 - Build: `bash scripts/build-hosted.sh`.
-- Start: `pnpm --filter @yapesa/api start`.
+- Hosted start: `node --import tsx apps/api/src/server.ts` (avoids package-manager startup overhead).
 - Plan: Free, Frankfurt, one instance, no attached disk or new database.
 - Release source: `main`; use the review branch only before its release merge.
 - Health: `/health`; use `/api/session` to check authentication configuration.

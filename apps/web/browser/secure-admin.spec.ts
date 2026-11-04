@@ -28,6 +28,10 @@ test('administrator creates a group once, adds a member, assigns a secretary and
     .getByLabel('Authenticator code', { exact: true })
     .fill(totp(env['TEST_ADMIN_TOTP']!));
   await page.getByRole('button', { name: 'Verify code', exact: true }).click();
+  if ((page.viewportSize()?.width ?? 1440) < 760)
+    await page
+      .getByRole('button', { name: 'Open navigation', exact: true })
+      .click();
   await page
     .getByRole('button', { name: 'Administration', exact: true })
     .click();
@@ -140,7 +144,7 @@ test('administrator creates a group once, adds a member, assigns a secretary and
     .getByLabel('Choose a savings group', { exact: true })
     .selectOption({ label: name });
   await expect(
-    page.getByRole('cell', { name: memberName, exact: true }),
-  ).toBeVisible();
+    page.locator('.record-row').filter({ hasText: memberName }),
+  ).toHaveCount(1);
   expect(errors).toEqual([]);
 });
