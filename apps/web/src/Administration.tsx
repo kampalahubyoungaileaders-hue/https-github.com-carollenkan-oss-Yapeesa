@@ -68,7 +68,12 @@ function ConfigurationForm({
   function field(
     key: keyof typeof value,
     label: string,
-    props: { type?: string; pattern?: string; maxLength?: number } = {},
+    props: {
+      type?: string;
+      pattern?: string;
+      maxLength?: number;
+      readOnly?: boolean;
+    } = {},
   ) {
     return (
       <div className="form-group">
@@ -127,6 +132,7 @@ function ConfigurationForm({
             </select>
           </div>
           {field('time_zone', t('adminTimeZone'), { maxLength: 100 })}
+          <p className="dialog-description">{t('adminZoneHelp')}</p>
         </>
       )}
       {field('max_shares', t('adminMaxShares'), {
@@ -137,9 +143,10 @@ function ConfigurationForm({
       {field(
         'share_price',
         `${t('adminSharePrice')}${value.currency ? ` (${value.currency})` : ''}`,
-        { pattern: '[1-9][0-9]{0,18}' },
+        { pattern: '[1-9][0-9]{0,18}', readOnly: !!initial },
       )}
       <p className="dialog-description">{t('adminPriceHelp')}</p>
+      {initial && <p className="dialog-description">{t('adminFixedPrice')}</p>}
       <button
         className="button primary"
         type="submit"

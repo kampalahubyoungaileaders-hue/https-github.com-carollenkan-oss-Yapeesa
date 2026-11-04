@@ -265,14 +265,40 @@ test('real verified administration creates a usable group and rejects elevation,
     max_shares: '6',
     starts_on: input.starts_on,
     ends_on: input.ends_on,
-    share_price: '2000',
+    share_price: '1000',
   };
+  assert.equal(
+    (
+      await call('ADMIN', 'POST', `/api/admin/groups/${group}/settings`, {
+        ...settings,
+        request_id: v7(),
+        share_price: '2000',
+      })
+    ).statusCode,
+    422,
+    'Cycle price stays fixed even before posting',
+  );
   const updated = await call(
     'ADMIN',
     'POST',
     `/api/admin/groups/${group}/settings`,
     settings,
   );
+  if (updated.statusCode !== 200) {
+    // Local-only diagnostics reveal the database failure behind the API's safe
+    // generic error. No Auth headers, tokens or credentials are printed.
+    const detail = await direct('ADMIN', '/rest/v1/rpc/admin_configure_group', {
+      p_request: settings.request_id,
+      p_device: settings.device_id,
+      p_org: group,
+      p_name: settings.name,
+      p_max: settings.max_shares,
+      p_starts: settings.starts_on,
+      p_ends: settings.ends_on,
+      p_price: settings.share_price,
+    });
+    assert.equal(detail.status, 200, await detail.text());
+  }
   assert.equal(updated.statusCode, 200, updated.body);
   const purchase = await call('ADMIN', 'POST', `/api/groups/${group}/shares`, {
     member_id: person,
@@ -280,12 +306,12 @@ test('real verified administration creates a usable group and rejects elevation,
     shares: '1',
     client_id: v7(),
     device_id,
-    client_amount: '2000',
+    client_amount: '1000',
     client_calc_version: 'groups-shares-v1',
     note: 'Administration integration',
   });
   assert.equal(purchase.statusCode, 200, purchase.body);
-  assert.equal(purchase.json().amount, '2000');
+  assert.equal(purchase.json().amount, '1000');
   assert.equal(
     (
       await call('ADMIN', 'POST', `/api/admin/groups/${group}/settings`, {
@@ -303,7 +329,37 @@ test('real verified administration creates a usable group and rejects elevation,
     .json()
     .groups.find((item: { id: string }) => item.id === group);
   assert.equal(savedGroup.configuration_locked, true);
-  assert.equal(savedGroup.cycle.share_price, '2000');
+  assert.equal(savedGroup.cycle.share_price, '1000');
+  const removedMember = await call(
+    'ADMIN',
+    'POST',
+    `/api/admin/groups/${group}/roles`,
+    {
+      request_id: v7(),
+      device_id,
+      person_id: person,
+      role: 'member',
+      enabled: false,
+    },
+  );
+  assert.equal(removedMember.statusCode, 200, removedMember.body);
+  const history = await call('ADMIN', 'GET', `/api/groups/${group}`);
+  assert.equal(history.statusCode, 200, history.body);
+  assert.equal(
+    history.json().members.find((item: { id: string }) => item.id === person)
+      .name,
+    newMember.name,
+  );
+  assert.equal(
+    history.json().members.find((item: { id: string }) => item.id === person)
+      .active,
+    false,
+  );
+  assert.equal(
+    history.json().transactions.length,
+    1,
+    'Role removal preserves financial history',
+  );
   const revoked = await call(
     'ADMIN',
     'POST',

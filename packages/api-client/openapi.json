@@ -1602,9 +1602,12 @@
                           },
                           "name": {
                             "type": "string"
+                          },
+                          "active": {
+                            "type": "boolean"
                           }
                         },
-                        "required": ["id", "name"]
+                        "required": ["id", "name", "active"]
                       }
                     },
                     "transactions": {

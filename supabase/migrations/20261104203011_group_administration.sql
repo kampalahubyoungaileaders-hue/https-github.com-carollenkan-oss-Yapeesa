@@ -42,7 +42,7 @@ grant insert(display_name,phone,country_code) on public.person to yapesa_adminis
 grant update(name) on public.organisation to yapesa_administrator;
 grant update(starts_at,ends_at) on public.membership to yapesa_administrator;
 grant update(max_shares_per_meeting) on public.group_settings to yapesa_administrator;
-grant update(starts_on,ends_on,share_price) on public.cycle to yapesa_administrator;
+grant update(starts_on,ends_on) on public.cycle to yapesa_administrator;
 create policy admin_currency_read on public.currency_reference for select to yapesa_administrator using(private.is_platform_admin());
 create policy admin_txn_read on public.group_txn for select to yapesa_administrator using(private.is_platform_admin());
 do $$ declare tbl text; begin
@@ -152,7 +152,8 @@ declare payload jsonb; prior jsonb; begin
  if exists(select 1 from public.group_txn where organisation_id=p_org) then raise exception 'Posted configuration is locked' using errcode='22023'; end if;
  update public.organisation set name=btrim(p_name) where id=p_org;
  update public.group_settings set max_shares_per_meeting=p_max::bigint where organisation_id=p_org;
- update public.cycle set starts_on=p_starts,ends_on=p_ends,share_price=p_price::bigint where organisation_id=p_org and status='active';
+ if exists(select 1 from public.cycle where organisation_id=p_org and status='active' and share_price<>p_price::bigint) then raise exception 'Cycle share price is fixed' using errcode='22023'; end if;
+ update public.cycle set starts_on=p_starts,ends_on=p_ends where organisation_id=p_org and status='active';
  if not found then insert into public.cycle(organisation_id,starts_on,ends_on,share_price) values(p_org,p_starts,p_ends,p_price::bigint); end if;
  return private.admin_finish(p_request,'configure_group',payload,jsonb_build_object('id',p_org),p_org,p_device,p_org);
 end $$;
@@ -175,3 +176,25 @@ create function public.admin_set_role(p_request uuid,p_device uuid,p_org uuid,p_
 create function public.admin_configure_group(p_request uuid,p_device uuid,p_org uuid,p_name text,p_max text,p_starts date,p_ends date,p_price text) returns jsonb language sql security invoker set search_path='' as $$ select private.admin_configure_group(p_request,p_device,p_org,p_name,p_max,p_starts,p_ends,p_price); $$;
 revoke all on function public.admin_workspace(),public.admin_create_group(uuid,uuid,text,text,text,text,text,date,date,text),public.admin_add_member(uuid,uuid,uuid,uuid,text,text),public.admin_set_role(uuid,uuid,uuid,uuid,text,boolean),public.admin_configure_group(uuid,uuid,uuid,text,text,date,date,text) from public,anon;
 grant execute on function public.admin_workspace(),public.admin_create_group(uuid,uuid,text,text,text,text,text,date,date,text),public.admin_add_member(uuid,uuid,uuid,uuid,text,text),public.admin_set_role(uuid,uuid,uuid,uuid,text,boolean),public.admin_configure_group(uuid,uuid,uuid,text,text,date,date,text) to authenticated;
+
+-- Revoking membership removes access and purchasing eligibility, while preserving
+-- names required to read historical financial records.
+create index group_txn_member_history on public.group_txn(member_id,organisation_id);
+create or replace function private.person_visible(p_person uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select auth.uid() is not null and private.session_active(private.requires_mfa()) and
+ (p_person=private.current_person()
+ or exists(select 1 from public.membership m where m.person_id=p_person and private.is_officer(m.organisation_id) and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now()))
+ or exists(select 1 from public.group_txn t where t.member_id=p_person and private.is_officer(t.organisation_id)));
+$$;
+create or replace function public.group_workspace(p_org uuid) returns jsonb language plpgsql stable security invoker set search_path='' as $$
+declare data jsonb; begin
+ if not private.can_read_org(p_org) then raise exception 'Not permitted' using errcode='42501'; end if;
+ select jsonb_build_object(
+ 'group',jsonb_build_object('id',o.id,'name',o.name,'currency',o.currency,'time_zone',o.time_zone,'country_code',o.country_code,'minor_digits',cr.minor_digits,'max_shares',gs.max_shares_per_meeting::text,'can_record',private.can_record(o.id)),
+ 'cycle',(select jsonb_build_object('id',c.id,'starts_on',c.starts_on,'ends_on',c.ends_on,'share_price',c.share_price::text) from public.cycle c where c.organisation_id=o.id and c.status='active'),
+ 'members',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'name',p.display_name,'active',exists(select 1 from public.membership m where m.person_id=p.id and m.organisation_id=o.id and m.role='member' and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now()))) order by p.display_name) from public.person p where exists(select 1 from public.membership m where m.person_id=p.id and m.organisation_id=o.id and m.role='member' and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now())) or exists(select 1 from public.group_txn t where t.member_id=p.id and t.organisation_id=o.id)),'[]'::jsonb),
+ 'transactions',coalesce((select jsonb_agg(jsonb_build_object('id',t.id,'member_id',t.member_id,'meeting_date',m.meeting_date,'recorded_at',t.recorded_at,'shares',t.shares::text,'amount',t.amount::text,'currency',t.currency,'journal_id',t.journal_id,'calculation_mismatch',t.calculation_mismatch,'note',t.note) order by t.recorded_at desc) from public.group_txn t join public.meeting m on m.id=t.meeting_id where t.organisation_id=o.id),'[]'::jsonb),
+ 'journal_lines',coalesce((select jsonb_agg(jsonb_build_object('journal_id',l.journal_id,'account',a.code,'side',l.side,'amount',l.amount::text)) from public.journal_line l join public.ledger_account a on a.id=l.account_id where l.organisation_id=o.id),'[]'::jsonb)) into data
+ from public.organisation o join public.currency_reference cr on cr.code=o.currency join public.group_settings gs on gs.organisation_id=o.id where o.id=p_org and o.type='group' and o.status='active';
+ return data;
+end $$;

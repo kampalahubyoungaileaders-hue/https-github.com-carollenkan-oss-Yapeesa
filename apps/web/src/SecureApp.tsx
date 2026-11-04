@@ -740,11 +740,13 @@ export default function SecureApp() {
                             }}
                           >
                             <option value="">{t('chooseMember')}</option>
-                            {workspace.members.map((row) => (
-                              <option value={row.id} key={row.id}>
-                                {row.name}
-                              </option>
-                            ))}
+                            {workspace.members
+                              .filter((row) => row.active !== false)
+                              .map((row) => (
+                                <option value={row.id} key={row.id}>
+                                  {row.name}
+                                </option>
+                              ))}
                           </select>
                         </div>
                         <div className="form-grid">
@@ -899,7 +901,11 @@ export default function SecureApp() {
                       <span className="avatar">{row.name.charAt(0)}</span>
                       <span className="record-person">
                         <strong>{row.name}</strong>
-                        <small>{t('viewPassbook')}</small>
+                        <small>
+                          {row.active === false
+                            ? t('formerMember')
+                            : t('viewPassbook')}
+                        </small>
                       </span>
                       <Icon name="chevron" size={16} />
                     </button>

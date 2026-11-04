@@ -1,5 +1,6 @@
 export const secure = {
   administration: 'Administration',
+  formerMember: 'Former member · view records',
   adminDescription:
     'Create a group, add its members and assign verified staff before recording shares.',
   adminBack: 'Back to saved records',
@@ -17,6 +18,9 @@ export const secure = {
   adminSharePrice: 'Price per share',
   adminPriceHelp:
     'Enter whole smallest currency units. For UGX, enter whole shillings.',
+  adminFixedPrice: 'The price per share is fixed for this cycle.',
+  adminZoneHelp:
+    'Use a two-letter country code such as UG and a time zone such as Africa/Kampala.',
   adminSaveSettings: 'Save group settings',
   adminSettings: 'Group and cycle settings',
   adminSettingsLocked:

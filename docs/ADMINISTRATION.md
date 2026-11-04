@@ -24,8 +24,9 @@ Currency references currently contain UGX. An IANA example is `Africa/Kampala`.
 UGX has no fractional minor units, so a price of `5000` means UGX 5,000. Dates and
 limits must come from the actual group agreement.
 
-Financial configuration can be corrected before the first posted transaction.
-After posting, the existing cycle/settings are locked to preserve recorded rules.
+The share price is fixed for the cycle from creation. Other cycle dates/limits
+can be corrected before the first posted transaction. After posting, the existing
+cycle/settings are locked to preserve recorded rules.
 The configuration operation uses the same organisation lock as share posting, so
 an edit cannot race the first transaction. Closing/replacing a posted cycle is a
 separate workflow, not an undocumented reset of history.

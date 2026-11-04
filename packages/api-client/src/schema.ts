@@ -1098,6 +1098,7 @@ export interface paths {
                 /** Format: uuid */
                 id: string;
                 name: string;
+                active: boolean;
               }[];
               transactions: {
                 /** Format: uuid */

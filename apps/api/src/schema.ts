@@ -44,7 +44,10 @@ export const workspaceSchema = object({
       }),
     ],
   },
-  members: { type: 'array', items: object({ id: uuid, name: string }) },
+  members: {
+    type: 'array',
+    items: object({ id: uuid, name: string, active: boolean }),
+  },
   transactions: {
     type: 'array',
     items: object({
