@@ -90,6 +90,13 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
       Object.keys(localStorage).some((key) => /token|pin|session/i.test(key)),
     ),
   ).toBe(false);
+  const downloadPromise = page.waitForEvent('download');
+  await page
+    .getByRole('button', { name: 'Download PDF statement', exact: true })
+    .click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe(`yapesa-${org}.pdf`);
+  await download.saveAs(info.outputPath('statement.pdf'));
   await page.screenshot({
     path: info.outputPath('saved-workspace.png'),
     fullPage: true,

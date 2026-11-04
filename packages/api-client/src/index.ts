@@ -65,6 +65,37 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   return value as T;
 }
 export const api = {
+  statement: async (id: string, memberId?: string): Promise<Blob> => {
+    let response: Response;
+    try {
+      response = await fetch(
+        `/api/groups/${encodeURIComponent(id)}/statement.pdf${memberId ? `?member_id=${encodeURIComponent(memberId)}` : ''}`,
+        { credentials: 'same-origin', signal: AbortSignal.timeout(90000) },
+      );
+    } catch {
+      throw new ClientError(0, 'NETWORK_ERROR');
+    }
+    if (!response.ok) {
+      let value: unknown;
+      try {
+        value = await response.json();
+      } catch {
+        throw new ClientError(503, 'BACKEND_UNAVAILABLE');
+      }
+      throw new ClientError(
+        response.status,
+        value &&
+          typeof value === 'object' &&
+          'error' in value &&
+          typeof value.error === 'string'
+          ? value.error
+          : 'REQUEST_FAILED',
+      );
+    }
+    if (!response.headers.get('Content-Type')?.startsWith('application/pdf'))
+      throw new ClientError(503, 'BACKEND_UNAVAILABLE');
+    return response.blob();
+  },
   adminWorkspace: () => request<AdminWorkspace>('/api/admin/workspace'),
   adminCreateGroup: (input: AdminGroupInput) =>
     request<{ id: string }>('/api/admin/groups', input),

@@ -1,4 +1,19 @@
 export const secure = {
+  exportPdf: 'Download PDF statement',
+  pdfStatement: 'Share purchase statement',
+  pdfAmount: 'Amount',
+  pdfGenerated: 'Generated (UTC)',
+  pdfRecords: 'Records',
+  pdfShareValue: 'Recorded share value',
+  pdfScope:
+    'Includes all share purchases visible to your account in the selected group or member filter. This is a record of shares, not a cash balance or payment receipt.',
+  pdfEmpty: 'No share purchases are visible for this selection.',
+  pdfRecorded: 'Recorded (UTC)',
+  pdfNote: 'Note',
+  pdfReview: 'Calculation difference flagged for review.',
+  pdfPage: 'Page',
+  pdfTooLarge:
+    'This statement exceeds 5,000 records. Select a member to make a smaller statement.',
   administration: 'Administration',
   formerMember: 'Former member · view records',
   adminDescription:

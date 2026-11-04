@@ -52,8 +52,12 @@ existing verified staff roles, retry receipts and audited changes. Disposable re
 integration tests pass for these controls and for preserved historical member names.
 The administration PR records the latest complete browser/CI results.
 
+Server-side PDF share statements are implemented with member filtering, exact
+integer totals, journal references and embedded fonts. The statement PR records
+its current CI and browser download results; sample rendering is checked with Poppler.
+
 Additional Auth-account invitations, customer-supplied group data, SMS recovery,
-PDF statements, full meeting/loan/share-out engines, offline mobile sync and writer
+full meeting/loan/share-out engines, offline mobile sync and writer
 transfer, live reversal endpoints, programme views and Fineract staff/tenant flows
 remain later phases. Production backup/restore drills and monitoring are not yet
 accepted. See `OPEN_QUESTIONS.md` and the phase acceptance checks in `BUILD_BRIEF.md`.

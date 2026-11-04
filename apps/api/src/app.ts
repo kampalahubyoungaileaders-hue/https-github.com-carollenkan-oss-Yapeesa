@@ -7,6 +7,7 @@ import { calcVersion, money, shareJournal } from '@yapesa/domain';
 import type { ApiConfig } from './config.js';
 import { Backend, ApiError, object, textField, tokensFrom } from './backend.js';
 import { acceptInvitation, pendingInvitation } from './invitation.js';
+import { renderStatement, statementData } from './statement.js';
 import {
   deriveAuthPassword,
   openTokens,
@@ -463,6 +464,50 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
         );
         if (!result) throw new ApiError(404, 'GROUP_NOT_FOUND');
         return result;
+      },
+    );
+    app.get<{ Params: { id: string }; Querystring: { member_id?: string } }>(
+      '/api/groups/:id/statement.pdf',
+      {
+        config: { rateLimit: { max: 6, timeWindow: '1 minute' } },
+        schema: {
+          params: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          querystring: {
+            type: 'object',
+            additionalProperties: false,
+            properties: { member_id: { type: 'string', format: 'uuid' } },
+          },
+          produces: ['application/pdf'],
+          response: {
+            200: { type: 'string', format: 'binary' },
+            ...errors,
+            404: errorSchema,
+          },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        const workspace = await configured().backend.rpc(
+          'group_workspace',
+          { p_org: request.params.id },
+          user.tokens.access_token,
+        );
+        if (!workspace) throw new ApiError(404, 'GROUP_NOT_FOUND');
+        const statement = statementData(workspace, request.query.member_id);
+        const pdf = await renderStatement(statement);
+        return reply
+          .type('application/pdf')
+          .header(
+            'Content-Disposition',
+            `attachment; filename="yapesa-${request.params.id}.pdf"`,
+          )
+          .header('Cross-Origin-Resource-Policy', 'same-origin')
+          .send(pdf);
       },
     );
     interface Purchase {

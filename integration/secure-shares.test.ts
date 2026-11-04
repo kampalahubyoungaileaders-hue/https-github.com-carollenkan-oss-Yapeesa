@@ -42,7 +42,11 @@ async function call(
     ...(payload === undefined
       ? {}
       : { payload: payload as Record<string, unknown> }),
-    remoteAddress: label === 'LOCK' ? '127.0.0.8' : '127.0.0.7',
+    remoteAddress: url.includes('/statement.pdf')
+      ? `127.0.0.${({ A: 31, B: 32, MEMBER: 33, NONE: 34 } as Record<string, number>)[label] ?? 35}`
+      : label === 'LOCK'
+        ? '127.0.0.8'
+        : '127.0.0.7',
   });
   for (const item of response.cookies)
     if (item.name === 'yapesa_session')
@@ -66,6 +70,16 @@ async function verify(label: string) {
 }
 test('real Auth, SQL isolation, balanced posting, replay and session revocation', async () => {
   assert.equal((await call('NONE', 'GET', '/api/groups')).statusCode, 401);
+  assert.equal(
+    (
+      await call(
+        'NONE',
+        'GET',
+        `/api/groups/${env['TEST_ORG_A']}/statement.pdf`,
+      )
+    ).statusCode,
+    401,
+  );
   const csrf = await app.inject({
     method: 'POST',
     url: '/api/auth/login',
@@ -74,6 +88,11 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   });
   assert.equal(csrf.statusCode, 403);
   await login('A');
+  assert.equal(
+    (await call('A', 'GET', `/api/groups/${env['TEST_ORG_A']}/statement.pdf`))
+      .statusCode,
+    403,
+  );
   assert.equal(
     (await call('A', 'GET', '/api/groups')).statusCode,
     403,
@@ -161,6 +180,24 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   assert.equal(snapshot.statusCode, 200, snapshot.body);
   assert.equal(snapshot.json().transactions.length, 1);
   assert.equal(snapshot.json().journal_lines.length, 2);
+  const pdf = await call(
+    'A',
+    'GET',
+    `/api/groups/${env['TEST_ORG_A']}/statement.pdf`,
+  );
+  assert.equal(pdf.statusCode, 200, pdf.body);
+  assert.equal(pdf.headers['content-type'], 'application/pdf');
+  assert.equal(pdf.headers['cache-control'], 'no-store');
+  assert.match(
+    String(pdf.headers['content-disposition']),
+    /^attachment; filename="yapesa-[a-f0-9-]+\.pdf"$/,
+  );
+  assert.equal(pdf.rawPayload.subarray(0, 5).toString(), '%PDF-');
+  assert.equal(
+    (await call('B', 'GET', `/api/groups/${env['TEST_ORG_A']}/statement.pdf`))
+      .statusCode,
+    403,
+  );
   const member = await login('MEMBER');
   assert.equal(member.json().user.requires_mfa, false);
   const restricted = await call(
@@ -170,6 +207,32 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   );
   assert.equal(restricted.statusCode, 200);
   assert.equal(restricted.json().transactions.length, 0);
+  const ownPdf = await call(
+    'MEMBER',
+    'GET',
+    `/api/groups/${env['TEST_ORG_A']}/statement.pdf`,
+  );
+  assert.equal(ownPdf.statusCode, 200, ownPdf.body);
+  assert.equal(
+    (
+      await call(
+        'MEMBER',
+        'GET',
+        `/api/groups/${env['TEST_ORG_A']}/statement.pdf?member_id=${env['TEST_A_PERSON']}`,
+      )
+    ).statusCode,
+    404,
+  );
+  assert.equal(
+    (
+      await call(
+        'A',
+        'GET',
+        `/api/groups/${env['TEST_ORG_A']}/statement.pdf?member_id=invalid`,
+      )
+    ).statusCode,
+    400,
+  );
   assert.equal(
     (
       await call('MEMBER', 'POST', url, {
