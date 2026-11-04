@@ -1599,6 +1599,7 @@ dialog::backdrop {
   }
   .heading-actions {
     width: 100%;
+    flex-wrap: wrap;
   }
   .heading-actions .button {
     flex: 1;

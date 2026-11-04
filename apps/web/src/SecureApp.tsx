@@ -677,7 +677,7 @@ export default function SecureApp() {
                 <Icon name="people" size={17} />
                 <select
                   value={selected}
-                  disabled={busy || Boolean(pending.current)}
+                  disabled={busy || loading || Boolean(pending.current)}
                   aria-label={t('groupSelector')}
                   onChange={(e) => void chooseGroup(e.target.value)}
                 >
