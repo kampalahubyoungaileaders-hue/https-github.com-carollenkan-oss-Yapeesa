@@ -14,6 +14,7 @@ import { calcVersion } from '@yapesa/domain';
 import { t } from '@yapesa/i18n';
 import { Icon } from './icons';
 import { exportRows } from './workspace';
+import InvitationForm from './InvitationForm';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -54,6 +55,7 @@ function day(value: string, zone: string) {
 }
 export default function SecureApp() {
   const [session, setSession] = useState<Session | null>(null);
+  const [invitation, setInvitation] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -342,6 +344,11 @@ export default function SecureApp() {
           <p>{t('loginDescription')}</p>
           {loading ? (
             <p role="status">{t('loadingRecords')}</p>
+          ) : invitation ? (
+            <InvitationForm
+              onComplete={setSession}
+              onCancel={() => setInvitation(false)}
+            />
           ) : (
             <form onSubmit={signIn}>
               <div className="form-group">
@@ -389,6 +396,17 @@ export default function SecureApp() {
                 <Icon name="arrow" size={17} />
               </button>
             </form>
+          )}
+          {!loading && !invitation && session?.configured && (
+            <button
+              className="text-button signout-link"
+              onClick={() => {
+                setError('');
+                setInvitation(true);
+              }}
+            >
+              {t('firstTimeSetup')}
+            </button>
           )}
           <a className="back-link sample-link" href="#overview">
             {t('sampleWorkspace')}

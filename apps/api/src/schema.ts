@@ -102,3 +102,10 @@ export const mfaBody = object({
   factor_id: uuid,
   code: { type: 'string', pattern: '^[0-9]{6}$' },
 });
+export const invitationPhoneBody = object({
+  phone: phonePinBody.properties.phone,
+});
+export const invitationBody = object({
+  ...phonePinBody.properties,
+  code: { type: 'string', pattern: '^[0-9]{6}$' },
+});

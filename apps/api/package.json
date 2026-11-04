@@ -11,11 +11,11 @@
     "test": "node --import tsx --test src/*.test.ts"
   },
   "dependencies": {
-    "fastify": "5.12.6",
     "@fastify/cookie": "11.1.5",
     "@fastify/rate-limit": "10.3.0",
+    "@fastify/static": "10.1.8",
     "@fastify/swagger": "9.9.3",
-    "@yapesa/domain": "workspace:*"
-  },
-  "devDependencies": {}
+    "@yapesa/domain": "workspace:*",
+    "fastify": "5.12.6"
+  }
 }

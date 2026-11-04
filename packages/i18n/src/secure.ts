@@ -1,4 +1,18 @@
 export const secure = {
+  firstTimeSetup: 'First-time account setup',
+  invitationDescription:
+    'Use your invited phone number and SMS code, then choose a private PIN. You will set up an authenticator next.',
+  requestSms: 'Request an SMS code',
+  smsRequested:
+    'If a pending invitation exists, a code has been requested. Check your phone and use the latest code.',
+  smsCode: 'SMS verification code',
+  choosePin: 'Choose a 6-digit PIN',
+  confirmPin: 'Confirm your PIN',
+  pinMismatch: 'The PINs do not match.',
+  invitationError:
+    'Setup could not be completed. Check your invitation and code. If your phone was already verified, try signing in with your chosen PIN or contact your administrator.',
+  activateInvitation: 'Verify phone and save PIN',
+  backToSignIn: 'Back to sign in',
   allSavedRecords: 'All saved records',
   savedWorkspace: 'Saved workspace',
   openSaved: 'Open saved records',

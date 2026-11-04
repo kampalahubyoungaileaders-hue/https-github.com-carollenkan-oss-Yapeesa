@@ -50,6 +50,10 @@ export const api = {
   session: () => request<Session>('/api/session'),
   login: (phone: string, pin: string) =>
     request<Session>('/api/auth/login', { phone, pin }),
+  requestInvitationCode: (phone: string) =>
+    request<{ ok: boolean }>('/api/auth/invitation/code', { phone }),
+  acceptInvitation: (phone: string, code: string, pin: string) =>
+    request<Session>('/api/auth/invitation/accept', { phone, code, pin }),
   logout: () => request<{ ok: boolean }>('/api/auth/logout', {}),
   enroll: () => request<Factor>('/api/auth/mfa/enroll', {}),
   verify: (factor_id: string, code: string) =>

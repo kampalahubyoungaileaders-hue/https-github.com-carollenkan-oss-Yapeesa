@@ -62,8 +62,13 @@ responses, transport failure, no automatic retry and secret-free errors.
 `pnpm check` includes these tests and strict function TypeScript checking.
 
 The deployed GET endpoint returned 405 and unsigned POST returned 401. These are
-negative security checks, not evidence of real SMS delivery. The Auth hook and
-its signing secret still need to be connected before a delivery test.
+negative security checks, not evidence of real SMS delivery. The Auth hook is now
+enabled, all four secret names are present, and phone confirmation is enabled with
+public signup disabled. One approved recipient's confirmation request was accepted
+by Auth and recorded in `confirmation_sent_at`. Handset receipt and successful OTP
+verification remain pending. Do not treat an accepted request as proof of delivery
+or repeat it automatically. Enter codes only in the web application's first-time
+setup screen, never in chat.
 
 References:
 

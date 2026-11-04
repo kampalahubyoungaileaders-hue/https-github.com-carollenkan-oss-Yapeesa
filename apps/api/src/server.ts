@@ -1,6 +1,13 @@
 import { buildApp } from './app.js';
 import { readConfig } from './config.js';
-const app = buildApp(readConfig());
+import { resolve } from 'node:path';
+import { stat } from 'node:fs/promises';
+const webRoot =
+  process.env['SERVE_WEB'] === 'true'
+    ? resolve(import.meta.dirname, '../../web/dist')
+    : undefined;
+if (webRoot) await stat(resolve(webRoot, 'index.html'));
+const app = buildApp(readConfig(), webRoot);
 const port = Number(process.env['PORT'] ?? '3000');
 if (!Number.isInteger(port) || port < 1 || port > 65535)
   throw new Error('Invalid PORT');

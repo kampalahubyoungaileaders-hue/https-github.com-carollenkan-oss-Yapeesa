@@ -6,6 +6,7 @@ export interface ApiConfig {
   cookieKey: Buffer;
   webOrigin: string;
   secureCookies: boolean;
+  trustedProxyHops?: number;
 }
 export function readConfig(): ApiConfig | undefined {
   const env = process.env;
@@ -34,7 +35,16 @@ export function readConfig(): ApiConfig | undefined {
     throw new Error(
       'Authentication secrets must contain at least 32 characters',
     );
-  const origin = new URL(env['WEB_ORIGIN'] ?? 'http://127.0.0.1:5173').origin;
+  const origin = new URL(
+    env['WEB_ORIGIN'] ?? env['RENDER_EXTERNAL_URL'] ?? 'http://127.0.0.1:5173',
+  ).origin;
+  const trustedProxyHops = Number(env['TRUSTED_PROXY_HOPS'] ?? '0');
+  if (
+    !Number.isInteger(trustedProxyHops) ||
+    trustedProxyHops < 0 ||
+    trustedProxyHops > 3
+  )
+    throw new Error('Invalid TRUSTED_PROXY_HOPS');
   if (env['NODE_ENV'] === 'production' && !origin.startsWith('https://'))
     throw new Error('Production WEB_ORIGIN requires HTTPS');
   return {
@@ -45,5 +55,6 @@ export function readConfig(): ApiConfig | undefined {
     cookieKey: Buffer.from(env['SESSION_COOKIE_KEY']!, 'hex'),
     webOrigin: origin,
     secureCookies: env['NODE_ENV'] === 'production',
+    trustedProxyHops,
   };
 }

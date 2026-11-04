@@ -2,9 +2,11 @@ import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
+import staticFiles from '@fastify/static';
 import { calcVersion, money, shareJournal } from '@yapesa/domain';
 import type { ApiConfig } from './config.js';
 import { Backend, ApiError, object, textField, tokensFrom } from './backend.js';
+import { acceptInvitation, pendingInvitation } from './invitation.js';
 import {
   deriveAuthPassword,
   openTokens,
@@ -21,6 +23,8 @@ import {
   errorSchema,
   phonePinBody,
   mfaBody,
+  invitationPhoneBody,
+  invitationBody,
 } from './schema.js';
 interface Context {
   person_id: string;
@@ -34,9 +38,12 @@ interface Identity {
   factors: { id: string; name: string }[];
 }
 const COOKIE = 'yapesa_session';
-export function buildApp(config?: ApiConfig) {
+export function buildApp(config?: ApiConfig, webRoot?: string) {
   const app = Fastify({
     logger: false,
+    trustProxy: config?.trustedProxyHops
+      ? (_address: string, hop: number) => hop < config.trustedProxyHops!
+      : false,
     bodyLimit: 8192,
     ajv: { customOptions: { coerceTypes: false, removeAdditional: false } },
   });
@@ -46,6 +53,23 @@ export function buildApp(config?: ApiConfig) {
   app.register(swagger, {
     openapi: { info: { title: 'Yapesa API', version: '0.1.0' } },
   });
+  if (webRoot) {
+    app.addHook('onRequest', async (_request, reply) => {
+      reply
+        .header('X-Content-Type-Options', 'nosniff')
+        .header('Referrer-Policy', 'no-referrer')
+        .header(
+          'Content-Security-Policy',
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+        );
+    });
+    app.register(staticFiles, {
+      root: webRoot,
+      index: ['index.html'],
+      dotfiles: 'deny',
+      maxAge: 0,
+    });
+  }
   app.setErrorHandler((error, _request, reply) => {
     const err = error as Error & { validation?: unknown; statusCode?: number };
     if (error instanceof ApiError)
@@ -132,7 +156,7 @@ export function buildApp(config?: ApiConfig) {
     const context: Context = {
       person_id: textField(data, 'person_id'),
       display_name: textField(data, 'display_name'),
-      requires_mfa: data['requires_mfa'],
+      requires_mfa: data['requires_mfa'] || pendingInvitation(user),
       mfa_verified: data['mfa_verified'],
     };
     const factors = Array.isArray(user['factors'])
@@ -204,6 +228,48 @@ export function buildApp(config?: ApiConfig) {
           }
           throw error;
         }
+      },
+    );
+    app.post<{ Body: { phone: string } }>(
+      '/api/auth/invitation/code',
+      {
+        config: { rateLimit: { max: 3, timeWindow: '1 hour' } },
+        schema: {
+          body: invitationPhoneBody,
+          response: {
+            200: {
+              type: 'object',
+              properties: { ok: { type: 'boolean' } },
+              required: ['ok'],
+            },
+            ...errors,
+          },
+        },
+      },
+      async (request) => {
+        await configured().backend.auth('resend', {
+          phone: request.body.phone,
+          type: 'sms',
+        });
+        return { ok: true };
+      },
+    );
+    app.post<{ Body: { phone: string; code: string; pin: string } }>(
+      '/api/auth/invitation/accept',
+      {
+        config: { rateLimit: { max: 5, timeWindow: '15 minutes' } },
+        schema: {
+          body: invitationBody,
+          response: { 200: sessionSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const { backend, config } = configured();
+        const tokens = await acceptInvitation(backend, request.body);
+        request.cookies[COOKIE] = sealTokens(tokens, config.cookieKey);
+        const result = session(await identity(request, reply));
+        setTokens(reply, tokens);
+        return result;
       },
     );
     app.post<{ Body: { phone: string; pin: string } }>(
