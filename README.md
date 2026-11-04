@@ -15,6 +15,11 @@ The secure online share-purchase workflow is available at `/#live` when the API
 and accounts are configured. See [setup, controls and verification](docs/SECURE_WEB.md).
 The sample workspace remains separate and needs no credentials.
 
+Verified Fencher administrators can use **Administration** to create Groups,
+register members and assign existing verified staff. See
+[group setup and controls](docs/ADMINISTRATION.md). Deployment never seeds real
+groups, people or financial entries.
+
 ## Open the web workspace
 
 After `pnpm install --frozen-lockfile`, run `pnpm --filter @yapesa/web dev` and open

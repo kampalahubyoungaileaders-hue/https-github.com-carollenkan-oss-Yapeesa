@@ -22,6 +22,7 @@ No payment features or new accounting rules are introduced by the current web
 release. Free development hosting is configured; production readiness is separate.
 
 7. The first administrator is verified and active, and public development hosting
-   is configured. SMS recovery, organisation/group administration screens and
-   production backup/restore verification remain before customer onboarding.
+   is configured. Group administration, ledger-member registration and existing verified staff
+   assignments are implemented. Additional Auth-account invitations, SMS recovery
+   and production backup/restore verification remain before customer onboarding.
    No live savings groups or financial records have been invented.

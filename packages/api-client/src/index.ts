@@ -12,6 +12,16 @@ export type Receipt =
   paths['/api/groups/{id}/shares']['post']['responses'][200]['content']['application/json'];
 export type Factor =
   paths['/api/auth/mfa/enroll']['post']['responses'][200]['content']['application/json'];
+export type AdminWorkspace =
+  paths['/api/admin/workspace']['get']['responses'][200]['content']['application/json'];
+export type AdminGroupInput =
+  paths['/api/admin/groups']['post']['requestBody']['content']['application/json'];
+export type AdminSettingsInput =
+  paths['/api/admin/groups/{id}/settings']['post']['requestBody']['content']['application/json'];
+export type AdminMemberInput =
+  paths['/api/admin/groups/{id}/members']['post']['requestBody']['content']['application/json'];
+export type AdminRoleInput =
+  paths['/api/admin/groups/{id}/roles']['post']['requestBody']['content']['application/json'];
 export class ClientError extends Error {
   constructor(
     public status: number,
@@ -55,6 +65,24 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   return value as T;
 }
 export const api = {
+  adminWorkspace: () => request<AdminWorkspace>('/api/admin/workspace'),
+  adminCreateGroup: (input: AdminGroupInput) =>
+    request<{ id: string }>('/api/admin/groups', input),
+  adminSettings: (id: string, input: AdminSettingsInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/settings`,
+      input,
+    ),
+  adminAddMember: (id: string, input: AdminMemberInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/members`,
+      input,
+    ),
+  adminRole: (id: string, input: AdminRoleInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/roles`,
+      input,
+    ),
   session: () => request<Session>('/api/session'),
   login: (phone: string, pin: string) =>
     request<Session>('/api/auth/login', { phone, pin }),

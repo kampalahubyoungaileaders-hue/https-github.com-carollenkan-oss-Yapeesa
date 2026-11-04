@@ -1,4 +1,68 @@
 export const secure = {
+  administration: 'Administration',
+  formerMember: 'Former member · view records',
+  adminDescription:
+    'Create a group, add its members and assign verified staff before recording shares.',
+  adminBack: 'Back to saved records',
+  adminCreateGroup: 'Create a savings group',
+  adminManageGroup: 'Manage a group',
+  adminChooseGroup: 'Choose a group',
+  adminGroupName: 'Group name',
+  adminCountry: 'Country code',
+  adminCurrency: 'Currency',
+  adminChooseCurrency: 'Choose a currency',
+  adminTimeZone: 'Time zone',
+  adminMaxShares: 'Maximum shares per member per meeting',
+  adminCycleStart: 'Cycle starts',
+  adminCycleEnd: 'Cycle ends',
+  adminSharePrice: 'Price per share',
+  adminPriceHelp:
+    'Enter whole smallest currency units. For UGX, enter whole shillings.',
+  adminFixedPrice: 'The price per share is fixed for this cycle.',
+  adminZoneHelp:
+    'Use a two-letter country code such as UG and a time zone such as Africa/Kampala.',
+  adminSaveSettings: 'Save group settings',
+  adminSettings: 'Group and cycle settings',
+  adminSettingsLocked:
+    'This group has posted transactions. Its financial settings are locked to preserve the recorded cycle.',
+  adminNoGroups: 'Create your first group to begin.',
+  adminAddMember: 'Add a member',
+  adminMemberKind: 'Member source',
+  adminNewPerson: 'New person',
+  adminExistingPerson: 'Existing person',
+  adminChoosePerson: 'Choose a person',
+  adminPersonName: 'Full name',
+  adminOptionalPhone: 'Phone number (optional)',
+  adminMemberHelp:
+    'Registering a member creates a ledger identity. It does not create a sign-in account or send an SMS.',
+  adminRoles: 'Group roles',
+  adminRolePerson: 'Person to update',
+  adminRole: 'Role',
+  adminRoleMember: 'Member',
+  adminRoleSecretary: 'Secretary',
+  adminRoleTreasurer: 'Treasurer',
+  adminRoleChair: 'Chair',
+  adminRoleAction: 'Action',
+  adminGrant: 'Assign role',
+  adminRevoke: 'Remove role',
+  adminSaveRole: 'Save role assignment',
+  adminStaffHelp:
+    'Staff roles require an existing sign-in account with a verified phone and authenticator. Only the secretary role can record share purchases.',
+  adminStaffReady: 'Phone and authenticator verified',
+  adminMemberOnly: 'Member registration only',
+  adminCurrentRoles: 'Current group memberships',
+  adminNoMembers: 'No members have been added to this group yet.',
+  adminSaved: 'Administration change saved and audited.',
+  adminInvalid:
+    'Check the settings. Staff need a verified phone and authenticator; posted financial settings cannot be changed.',
+  adminDuplicate:
+    'This phone, membership or request reference already exists. Select the existing person or refresh the records.',
+  adminPending:
+    'This change is not confirmed. Retry the same form without changing its values; its original request reference will be reused.',
+  adminRetry: 'Retry this change',
+  adminRefresh: 'Refresh administration',
+  adminSavedRefresh:
+    'The change was saved, but the list could not refresh. Use Refresh administration.',
   firstTimeSetup: 'First-time account setup',
   connectingSecurely: 'Connecting securely… Please keep this page open.',
   invitationDescription:

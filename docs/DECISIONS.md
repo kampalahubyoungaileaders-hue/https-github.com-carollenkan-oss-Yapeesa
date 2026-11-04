@@ -65,3 +65,17 @@ The free service can sleep after inactivity. Client requests allow up to 90 seco
 for startup, show a waiting status during authentication, and never automatically
 retry mutations. HTML host loading/error responses become a safe connection error.
 This does not change any financial calculation or authentication requirement.
+
+## Verified group administration
+
+Platform administration is an active Fencher-organisation membership plus a real
+verified phone/TOTP session. Groups, explicit cycle settings, ledger members and
+existing verified staff assignments use audited, deduplicated commands under a
+private NOLOGIN/NOBYPASSRLS role. That role cannot write Auth accounts or journals.
+Only an explicitly assigned secretary can post shares; being a platform admin
+does not automatically make a person the secretary.
+
+The existing fixed cycle share-price rule is retained from creation. Other initial
+settings can be corrected before posting; all configuration locks afterward under
+the same organisation lock as posting. Revoking membership excludes a person from
+new purchases while retaining names needed to read historical transactions.

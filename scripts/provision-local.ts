@@ -128,6 +128,15 @@ try {
   const b = await user('B', '+256700000012', true);
   const m = await user('MEMBER', '+256700000013', false);
   await user('LOCK', '+256700000014', false);
+  const admin = await user('ADMIN', '+256700000015', true);
+  const platform = await db.query<{ id: string }>(
+    "insert into public.organisation(name,type,country_code,currency,time_zone) values('Local platform','fencher','UG','UGX','Africa/Kampala') returning id",
+  );
+  fixtures['TEST_PLATFORM_ORG'] = platform.rows[0]!.id;
+  await db.query(
+    "insert into public.membership(person_id,organisation_id,role) values($1,$2,'fencher_admin')",
+    [admin, fixtures['TEST_PLATFORM_ORG']],
+  );
   for (const [label, person, price] of [
     ['A', a, '5000'],
     ['B', b, '10000'],

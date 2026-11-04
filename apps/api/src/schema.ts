@@ -16,6 +16,7 @@ export const sessionSchema = object({
         display_name: string,
         requires_mfa: boolean,
         mfa_verified: boolean,
+        can_administer: boolean,
         factors: { type: 'array', items: object({ id: uuid, name: string }) },
       }),
     ],
@@ -43,7 +44,10 @@ export const workspaceSchema = object({
       }),
     ],
   },
-  members: { type: 'array', items: object({ id: uuid, name: string }) },
+  members: {
+    type: 'array',
+    items: object({ id: uuid, name: string, active: boolean }),
+  },
   transactions: {
     type: 'array',
     items: object({
@@ -108,4 +112,75 @@ export const invitationPhoneBody = object({
 export const invitationBody = object({
   ...phonePinBody.properties,
   code: { type: 'string', pattern: '^[0-9]{6}$' },
+});
+const nullableUuid = { anyOf: [uuid, { type: 'null' }] };
+const adminCycle = object({
+  starts_on: { type: 'string', format: 'date' },
+  ends_on: { type: 'string', format: 'date' },
+  share_price: integerString,
+});
+export const adminWorkspaceSchema = object({
+  currencies: {
+    type: 'array',
+    items: object({
+      code: string,
+      minor_digits: { type: 'integer', minimum: 0, maximum: 4 },
+    }),
+  },
+  people: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      name: string,
+      phone: { anyOf: [string, { type: 'null' }] },
+      has_login: boolean,
+      staff_ready: boolean,
+    }),
+  },
+  groups: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      name: string,
+      country_code: string,
+      currency: string,
+      time_zone: string,
+      max_shares: integerString,
+      configuration_locked: boolean,
+      cycle: { anyOf: [adminCycle, { type: 'null' }] },
+      memberships: {
+        type: 'array',
+        items: object({ person_id: uuid, role: string }),
+      },
+    }),
+  },
+});
+export const adminResultSchema = object({ id: uuid });
+const command = { request_id: uuid, device_id: uuid };
+const configuration = {
+  name: { type: 'string', minLength: 1, maxLength: 200 },
+  max_shares: { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+  starts_on: { type: 'string', format: 'date' },
+  ends_on: { type: 'string', format: 'date' },
+  share_price: { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+};
+export const adminGroupBody = object({
+  ...command,
+  ...configuration,
+  country_code: { type: 'string', pattern: '^[A-Z]{2}$' },
+  currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+  time_zone: { type: 'string', minLength: 1, maxLength: 100 },
+});
+export const adminConfigurationBody = object({ ...command, ...configuration });
+export const adminMemberBody = object({
+  ...command,
+  existing_person: nullableUuid,
+  name: { type: 'string', maxLength: 150 },
+  phone: { anyOf: [phonePinBody.properties.phone, { type: 'null' }] },
+});
+export const adminRoleBody = object({
+  ...command,
+  person_id: uuid,
+  role: { type: 'string', enum: ['member', 'secretary', 'treasurer', 'chair'] },
+  enabled: boolean,
 });

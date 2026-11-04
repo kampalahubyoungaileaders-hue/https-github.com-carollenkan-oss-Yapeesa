@@ -21,7 +21,7 @@ Updated 4 November 2026. Current results and deployment details are recorded in
 
 ## Hosted deployment and account
 
-The dedicated Yapesa Supabase project has three migrations and RLS enabled.
+The dedicated Yapesa Supabase project has four migrations and RLS enabled.
 The signed EgoSMS hook and phone confirmations are enabled; public signup is off.
 Handset SMS delivery and real phone verification succeeded. The first
 administrator chose its PIN privately and verified a TOTP factor. An actual AAL2
@@ -47,7 +47,12 @@ GitHub main-branch protection is configured: pull requests and passing `checks`,
 up to date, and administrator bypass is disabled. Force pushes and deletions stay
 disallowed. The check jobs passed at `8b5da29`; the final PR records later runs.
 
-Organisation/group administration screens, customer data/cycle setup, SMS recovery,
+Groups administration now covers explicit cycle setup, ledger-member registration,
+existing verified staff roles, retry receipts and audited changes. Disposable real-Auth
+integration tests pass for these controls and for preserved historical member names.
+The administration PR records the latest complete browser/CI results.
+
+Additional Auth-account invitations, customer-supplied group data, SMS recovery,
 PDF statements, full meeting/loan/share-out engines, offline mobile sync and writer
 transfer, live reversal endpoints, programme views and Fineract staff/tenant flows
 remain later phases. Production backup/restore drills and monitoring are not yet

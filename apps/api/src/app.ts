@@ -25,12 +25,19 @@ import {
   mfaBody,
   invitationPhoneBody,
   invitationBody,
+  adminWorkspaceSchema,
+  adminResultSchema,
+  adminGroupBody,
+  adminConfigurationBody,
+  adminMemberBody,
+  adminRoleBody,
 } from './schema.js';
 interface Context {
   person_id: string;
   display_name: string;
   requires_mfa: boolean;
   mfa_verified: boolean;
+  can_administer: boolean;
 }
 interface Identity {
   tokens: Tokens;
@@ -158,6 +165,7 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
       display_name: textField(data, 'display_name'),
       requires_mfa: data['requires_mfa'] || pendingInvitation(user),
       mfa_verified: data['mfa_verified'],
+      can_administer: data['can_administer'] === true,
     };
     const factors = Array.isArray(user['factors'])
       ? user['factors'].flatMap((item: unknown) => {
@@ -188,6 +196,12 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
     configured: true,
     user: { ...user.context, factors: user.factors },
   });
+  async function administrator(request: FastifyRequest, reply: FastifyReply) {
+    const user = await authorised(request, reply);
+    if (!user.context.can_administer)
+      throw new ApiError(403, 'PERMISSION_DENIED');
+    return user;
+  }
   app.after(() => {
     const errors = {
       400: errorSchema,
@@ -531,6 +545,158 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
         },
       },
       async () => ({ calc_version: calcVersion }),
+    );
+    app.get(
+      '/api/admin/workspace',
+      { schema: { response: { 200: adminWorkspaceSchema, ...errors } } },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        return configured().backend.rpc(
+          'admin_workspace',
+          {},
+          user.tokens.access_token,
+        );
+      },
+    );
+    interface Command {
+      request_id: string;
+      device_id: string;
+    }
+    interface GroupConfiguration {
+      name: string;
+      max_shares: string;
+      starts_on: string;
+      ends_on: string;
+      share_price: string;
+    }
+    const groupParams = {
+      type: 'object',
+      additionalProperties: false,
+      required: ['id'],
+      properties: { id: { type: 'string', format: 'uuid' } },
+    };
+    const adminResponses = { 200: adminResultSchema, ...errors };
+    const commandArgs = (body: Command) => ({
+      p_request: body.request_id,
+      p_device: body.device_id,
+    });
+    const configurationArgs = (body: GroupConfiguration) => ({
+      p_name: body.name,
+      p_max: body.max_shares,
+      p_starts: body.starts_on,
+      p_ends: body.ends_on,
+      p_price: body.share_price,
+    });
+    app.post<{
+      Body: Command &
+        GroupConfiguration & {
+          country_code: string;
+          currency: string;
+          time_zone: string;
+        };
+    }>(
+      '/api/admin/groups',
+      {
+        config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+        schema: { body: adminGroupBody, response: adminResponses },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        const body = request.body;
+        return configured().backend.rpc(
+          'admin_create_group',
+          {
+            ...commandArgs(body),
+            ...configurationArgs(body),
+            p_country: body.country_code,
+            p_currency: body.currency,
+            p_zone: body.time_zone,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{ Params: { id: string }; Body: Command & GroupConfiguration }>(
+      '/api/admin/groups/:id/settings',
+      {
+        schema: {
+          params: groupParams,
+          body: adminConfigurationBody,
+          response: adminResponses,
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        return configured().backend.rpc(
+          'admin_configure_group',
+          {
+            ...commandArgs(request.body),
+            ...configurationArgs(request.body),
+            p_org: request.params.id,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: Command & {
+        existing_person: string | null;
+        name: string;
+        phone: string | null;
+      };
+    }>(
+      '/api/admin/groups/:id/members',
+      {
+        schema: {
+          params: groupParams,
+          body: adminMemberBody,
+          response: adminResponses,
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        const body = request.body;
+        return configured().backend.rpc(
+          'admin_add_member',
+          {
+            ...commandArgs(body),
+            p_org: request.params.id,
+            p_existing: body.existing_person,
+            p_name: body.name,
+            p_phone: body.phone,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: Command & { person_id: string; role: string; enabled: boolean };
+    }>(
+      '/api/admin/groups/:id/roles',
+      {
+        schema: {
+          params: groupParams,
+          body: adminRoleBody,
+          response: adminResponses,
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        const body = request.body;
+        return configured().backend.rpc(
+          'admin_set_role',
+          {
+            ...commandArgs(body),
+            p_org: request.params.id,
+            p_person: body.person_id,
+            p_role: body.role,
+            p_enabled: body.enabled,
+          },
+          user.tokens.access_token,
+        );
+      },
     );
   });
   return app;
