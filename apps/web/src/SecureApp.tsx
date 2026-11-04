@@ -29,6 +29,7 @@ function errorMessage(error: unknown): string {
     AUTH_REQUIRED: 'sessionExpired',
     AUTH_NOT_CONFIGURED: 'authPreparing',
     NETWORK_ERROR: 'connectionError',
+    STATEMENT_TOO_LARGE: 'pdfTooLarge',
     BACKEND_UNAVAILABLE: 'connectionError',
   };
   return t(messages[code] ?? 'requestError');
@@ -293,6 +294,17 @@ export default function SecureApp() {
       setGroups([]);
       setFactor(null);
       setReceipt(null);
+    });
+  }
+  async function exportPdf() {
+    await handle(async () => {
+      const blob = await api.statement(selected, memberFilter || undefined);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `yapesa-${selected}.pdf`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
   }
   function exportCsv() {
@@ -636,6 +648,14 @@ export default function SecureApp() {
               <button
                 className="button"
                 disabled={busy || !workspace}
+                onClick={() => void exportPdf()}
+              >
+                <Icon name="download" size={17} />
+                {t('exportPdf')}
+              </button>
+              <button
+                className="button"
+                disabled={busy || !workspace}
                 onClick={exportCsv}
               >
                 <Icon name="download" size={17} />
@@ -657,7 +677,7 @@ export default function SecureApp() {
                 <Icon name="people" size={17} />
                 <select
                   value={selected}
-                  disabled={busy || Boolean(pending.current)}
+                  disabled={busy || loading || Boolean(pending.current)}
                   aria-label={t('groupSelector')}
                   onChange={(e) => void chooseGroup(e.target.value)}
                 >

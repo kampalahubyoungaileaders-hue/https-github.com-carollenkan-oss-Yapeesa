@@ -16,6 +16,11 @@
     "@fastify/static": "10.1.8",
     "@fastify/swagger": "9.9.3",
     "@yapesa/domain": "workspace:*",
-    "fastify": "5.12.6"
+    "@yapesa/i18n": "workspace:*",
+    "fastify": "5.12.6",
+    "pdfkit": "0.20.2"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "0.17.7"
   }
 }
