@@ -1,6 +1,6 @@
 // Pure calculations for the explicitly labelled web demo. Database posting,
 // authorisation and authoritative server recalculation remain Phase 1 work.
-export const calcVersion = 'web-demo-shares-v1';
+export const calcVersion = 'groups-shares-v1';
 declare const minorUnitBrand: unique symbol;
 export type MinorUnits = bigint & { readonly [minorUnitBrand]: true };
 export type Money = Readonly<{ minor: MinorUnits; currency: string }>;

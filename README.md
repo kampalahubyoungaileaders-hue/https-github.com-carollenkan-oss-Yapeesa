@@ -2,9 +2,18 @@
 
 Digital records for savings groups, lenders and SACCOs, from Fencher Technologies.
 This repository includes the **Phase 0 foundation** and a **web Groups workspace
-preview**. The web preview uses labelled sample records saved in this browser;
-secure live financial operations and authentication are not connected yet. The agreed scope
+preview**. The web preview uses labelled sample records saved in this browser.
+The authenticated online share-purchase path is implemented separately and requires
+server/account configuration. A development deployment is available at
+https://yapesa-web.onrender.com/#live with the first administrator activated.
+See [hosting and onboarding](docs/HOSTING.md). The agreed scope
 and later phases are in [the build brief](docs/BUILD_BRIEF.md).
+
+## Saved organisation records
+
+The secure online share-purchase workflow is available at `/#live` when the API
+and accounts are configured. See [setup, controls and verification](docs/SECURE_WEB.md).
+The sample workspace remains separate and needs no credentials.
 
 ## Open the web workspace
 
@@ -82,15 +91,16 @@ Ctrl+C stops the app processes; infrastructure stays running until
 CI runs code checks, an Android bundle export, and a Docker-backed stack smoke
 check. A device install and real 2 GB Android measurements remain separate manual
 checks. See [verification status](docs/VERIFICATION.md) for what has actually run.
-Branch protection must require both CI jobs before merging.
+Branch protection must require `checks`, `local-stack`, `secure-web` and
+`web-browser` before merging.
 
 ## Structure
 
 - `apps/mobile`: Expo Router development-build shell.
 - `apps/web`: React/Vite responsive web shell.
-- `apps/api`: Fastify API with `/health` and a test.
-- `packages/domain`: tested integer share-purchase and reversal calculations for the web demo; authoritative posting remains Phase 1 work.
-- `packages/api-client`: reserved for OpenAPI-generated types/client in Phase 1.
+- `apps/api`: Fastify authentication gateway and protected share-purchase API.
+- `packages/domain`: tested integer share-purchase and reversal calculations; online shares are recalculated and posted in Postgres.
+- `packages/api-client`: generated OpenAPI types and typed API client.
 - `packages/ui-tokens`, `i18n`, `country-packs`: shared foundations.
 - `supabase`: CLI-generated local configuration, migrations and tests.
 - `infra/fineract`: unmodified official Fineract **1.12.0**, Java 21,

@@ -1,31 +1,54 @@
-# Phase 0 verification
+# Verification status
 
-Checks run successfully in the editing environment on 2026-11-03:
+Updated 4 November 2026. Current results and deployment details are recorded in
+[the secure web pull request](https://github.com/kampalahubyoungaileaders-hue/https-github.com-carollenkan-oss-Yapeesa/pull/2).
 
-- `pnpm check`: ESLint, Prettier, strict TypeScript across all eight workspaces,
-  money-rule test suite, API request-injection test, and workspace builds.
-- The money-rule suite checks bigint code is accepted and rejects numeric
-  literals, number types, Number/parseFloat/Math use and unary numeric coercion.
-- `CI=1 EXPO_NO_TELEMETRY=1 pnpm mobile:export`: Android Hermes bundle exported
-  successfully. This compiles the mobile shell and its Router dependencies;
-  it does not prove a native install or a download-size target.
-- Started the API, web development server and Expo Metro; their HTTP readiness
-  endpoints returned 200 and the API/Metro response bodies matched expectations.
-- `git diff --check`: no whitespace errors.
+## Verified release functionality
 
-The editing environment has **no Docker runtime or Android/iOS build environment**.
-Container startup, Fineract migrations, PostgreSQL 17 compatibility, native
-installation and physical device behaviour have not been certified here.
-GitHub CI contains a Docker-backed stack check; its result must be reviewed before
-accepting Phase 0. No financial operations or user data are implemented.
+- Local `pnpm check`: lint, formatting, strict TypeScript, unit/property/security
+  tests and builds. Generated OpenAPI/client files reproduce without a diff.
+- All three GitHub workflows passed at `c972532`: CI `41778977533`, secure web
+  `41778977562`, browser checks `41778977531`. New changes must pass again.
+- Disposable actual Supabase Auth/Postgres tests cover phone/PIN, staff TOTP,
+  organisation isolation, denied direct writes, role/factor/session revocation,
+  balanced immutable journals, integer parity, lockout and repeated transactions.
+- Desktop/360px browser checks cover saved purchases, interrupted-response retry,
+  persistence/reload, journal inspection, invitation setup, PIN confirmation,
+  explicit-only SMS requests, required MFA and browser storage boundaries.
+- Docker CI verified pinned Fineract, Java 21 and PostgreSQL 17 service readiness.
+- Android source is checked in and JavaScript/Hermes export passes. Native APK
+  compilation and reference-device measurements remain deferred by the founder.
 
-## Remaining acceptance checks
+## Hosted deployment and account
 
-1. Both GitHub CI jobs pass, including the pinned Java 21 runtime and full stack.
-2. Fresh clone on a Docker-capable machine starts via `pnpm dev`.
-3. Install the development build on the chosen reference phone and open the shell.
-4. Require both CI jobs in branch protection before merging.
+The dedicated Yapesa Supabase project has three migrations and RLS enabled.
+The signed EgoSMS hook and phone confirmations are enabled; public signup is off.
+Handset SMS delivery and real phone verification succeeded. The first
+administrator chose its PIN privately and verified a TOTP factor. An actual AAL2
+session was checked before activating its membership in an audited transaction.
+No live savings groups or financial records have been invented.
 
-## Web workspace follow-up
+The free Frankfurt Render service hosts web and API on one origin at
+https://yapesa-web.onrender.com/#live . Server configuration was explicitly
+approved by the founder. Verified health 200, session `configured:true`,
+cross-origin invitation rejection 403 and no server secrets in browser assets.
+The service can sleep; a cold-start delay was observed. Browser requests now
+allow 90 seconds and do not automatically retry uncertain mutations.
 
-`pnpm check` passes with the share-purchase property tests and web record-validation tests. Android native source generation completed successfully; a native build was deliberately deferred. The `Web browser checks` workflow performs desktop and 360 px interaction tests and captures screenshots; its GitHub run is the source for browser verification results. See `WEB_WORKSPACE.md` for the explicit demo/live-data boundary.
+The latest security advisor returned no database RLS notices, and one Auth warning:
+[leaked-password protection is disabled](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+Provider passwords are server-derived opaque credentials, rather than raw PINs.
+This is not a claim of independent security certification or production readiness.
+
+## Separate remaining work
+
+GitHub main-branch protection is configured: pull requests and passing `checks`,
+`local-stack`, `secure-web` and `web-browser` jobs are required, branches must be
+up to date, and administrator bypass is disabled. Force pushes and deletions stay
+disallowed. The check jobs passed at `8b5da29`; the final PR records later runs.
+
+Organisation/group administration screens, customer data/cycle setup, SMS recovery,
+PDF statements, full meeting/loan/share-out engines, offline mobile sync and writer
+transfer, live reversal endpoints, programme views and Fineract staff/tenant flows
+remain later phases. Production backup/restore drills and monitoring are not yet
+accepted. See `OPEN_QUESTIONS.md` and the phase acceptance checks in `BUILD_BRIEF.md`.

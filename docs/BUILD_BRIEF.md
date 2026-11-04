@@ -440,7 +440,7 @@ Hosting costs nothing until real records arrive. These figures are estimates for
 
 | Stage                          | What runs where                                                                                                                                                       | Monthly cost               |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| Building and demos             | Everything in Docker locally; a demo copy on Oracle Cloud's Always Free server; Supabase free tier; GitHub, Expo EAS and Sentry free tiers                            | USD 0                      |
+| Building and demos             | Everything in Docker locally; current web/API development deployment on Render Free (founder-approved); Supabase free tier; GitHub, Expo EAS and Sentry free tiers    | USD 0                      |
 | Groups pilot with real records | Supabase Pro (automatic backups)                                                                                                                                      | About USD 25               |
 | First lender or SACCO live     | Add AWS: managed PostgreSQL for Fineract plus one server for Fineract and the API. Region: Cape Town or Frankfurt, whichever is faster from Kampala in a one-day test | About USD 115–150 in total |
 

@@ -1,6 +1,8 @@
+import { secure } from './secure';
 import { web } from './web';
 const en = {
   ...web,
+  ...secure,
   appName: 'Yapesa',
   tagline: 'Digital records for groups, lenders and SACCOs.',
   phase: 'Foundation · Phase 0',
