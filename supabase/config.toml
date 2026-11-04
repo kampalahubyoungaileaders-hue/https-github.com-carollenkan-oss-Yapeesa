@@ -4,6 +4,10 @@
 # working directory name when running `supabase init`.
 project_id = "yapesa"
 
+# Supabase Auth HTTP hooks use Standard Webhooks signatures instead of user JWTs.
+[functions.egosms-auth]
+verify_jwt = false
+
 [api]
 enabled = true
 # Port to use for the API URL.

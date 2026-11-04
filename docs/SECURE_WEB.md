@@ -106,6 +106,10 @@ be configured. Secrets are never committed to GitHub or put in Vite variables.
 
 ## Explicit remaining scope
 
+The EgoSMS Auth delivery function and its mocked security tests are described in
+[EgoSMS setup](EGOSMS.md). Its deployment alone does not enable phone login: the
+shared hook signing secret and Auth configuration must also be completed.
+
 This is the first secure online share-purchase path, not the entire platform.
 Offline mobile storage/sync, writer-device transfer, live reversal endpoints,
 attendance, loans, social fund, meeting approvals/close, share-out, PDF export,
