@@ -1245,7 +1245,7 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Default Response */
+        /** @description Share purchase statement */
         200: {
           headers: {
             [name: string]: unknown;
@@ -1260,7 +1260,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };
@@ -1271,7 +1271,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };
@@ -1282,7 +1282,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };
@@ -1293,7 +1293,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };
@@ -1304,7 +1304,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };
@@ -1315,7 +1315,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };
@@ -1326,7 +1326,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };
@@ -1337,7 +1337,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/pdf': {
+            'application/json': {
               error: string;
             };
           };

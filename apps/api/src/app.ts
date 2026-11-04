@@ -482,9 +482,15 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             additionalProperties: false,
             properties: { member_id: { type: 'string', format: 'uuid' } },
           },
-          produces: ['application/pdf'],
           response: {
-            200: { type: 'string', format: 'binary' },
+            200: {
+              description: 'Share purchase statement',
+              content: {
+                'application/pdf': {
+                  schema: { type: 'string', format: 'binary' },
+                },
+              },
+            },
             ...errors,
             404: errorSchema,
           },

@@ -1867,7 +1867,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Share purchase statement",
             "content": {
               "application/pdf": {
                 "schema": {
@@ -1880,7 +1880,7 @@
           "400": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
@@ -1897,7 +1897,7 @@
           "401": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
@@ -1914,7 +1914,7 @@
           "403": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
@@ -1931,7 +1931,7 @@
           "404": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
@@ -1948,7 +1948,7 @@
           "409": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
@@ -1965,7 +1965,7 @@
           "422": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
@@ -1982,7 +1982,7 @@
           "429": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
@@ -1999,7 +1999,7 @@
           "503": {
             "description": "Default Response",
             "content": {
-              "application/pdf": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,

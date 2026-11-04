@@ -350,6 +350,11 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   );
   await call('A', 'POST', '/api/auth/logout', {});
   assert.equal((await call('A', 'GET', '/api/groups')).statusCode, 401);
+  assert.equal(
+    (await call('A', 'GET', `/api/groups/${env['TEST_ORG_A']}/statement.pdf`))
+      .statusCode,
+    401,
+  );
 });
 test.after(async () => {
   await app.close();
