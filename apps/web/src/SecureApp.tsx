@@ -15,6 +15,7 @@ import { t } from '@yapesa/i18n';
 import { Icon } from './icons';
 import { exportRows } from './workspace';
 import InvitationForm from './InvitationForm';
+import Administration from './Administration';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -56,6 +57,7 @@ function day(value: string, zone: string) {
 export default function SecureApp() {
   const [session, setSession] = useState<Session | null>(null);
   const [invitation, setInvitation] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -502,6 +504,17 @@ export default function SecureApp() {
         </div>
       </div>
     );
+  if (adminOpen && session.user.can_administer)
+    return (
+      <Administration
+        onBack={() => {
+          setAdminOpen(false);
+          void handle(async () => {
+            setSession(await api.session());
+          });
+        }}
+      />
+    );
   const rows =
     workspace?.transactions.filter(
       (row) =>
@@ -566,6 +579,12 @@ export default function SecureApp() {
               {t(titleKeys[key])}
             </button>
           ))}
+          {session.user.can_administer && (
+            <button className="live-nav" onClick={() => setAdminOpen(true)}>
+              <Icon name="shield" />
+              {t('administration')}
+            </button>
+          )}
         </nav>
         <div className="sidebar-bottom">
           <button
@@ -664,6 +683,14 @@ export default function SecureApp() {
               <Icon name="people" size={30} />
               <h2>{t('noGroups')}</h2>
               <p>{t('noGroupsHelp')}</p>
+              {session.user.can_administer && (
+                <button
+                  className="button primary"
+                  onClick={() => setAdminOpen(true)}
+                >
+                  {t('administration')}
+                </button>
+              )}
             </section>
           )}
           {workspace && (

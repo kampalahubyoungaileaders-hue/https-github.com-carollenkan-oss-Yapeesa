@@ -78,6 +78,19 @@ export class Backend {
         );
       if (code === '23505') throw new ApiError(409, 'DUPLICATE_REFERENCE');
       if (code === '42501') throw new ApiError(403, 'PERMISSION_DENIED');
+      if (
+        path.startsWith('/rest/v1/rpc/admin_') &&
+        [
+          '22023',
+          '23514',
+          'P0001',
+          'P0002',
+          '22003',
+          '22007',
+          '22008',
+        ].includes(code)
+      )
+        throw new ApiError(422, 'INVALID_ADMIN_REQUEST');
       if (['22023', '23514', 'P0001', 'P0002', '22003'].includes(code))
         throw new ApiError(422, 'INVALID_SHARE_PURCHASE');
       throw new ApiError(
