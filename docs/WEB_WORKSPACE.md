@@ -20,6 +20,18 @@ Implemented:
 
 ## Scope and data boundary
 
+The fixed sample snapshot covers twelve weekly meetings from 15 August to
+31 October 2026: 57 fictional people, 58 group memberships and 644 ledger
+records. Umoja has 25 members (731 net shares, UGX 3,655,000), Nakawa has 18
+(530 net shares, UGX 1,060,000), and Kasubi has 15 (440 net shares,
+UGX 4,400,000). Each group includes a linked reversal and corrected purchase.
+Some meetings have no purchase for particular members; this does not assert
+anything about attendance. Names and figures are synthetic.
+
+The snapshot is deterministic. **Reload fixed sample data** restores its original
+figures after browser edits. This version uses `yapesa-web-demo-v2`, leaving any
+older v1 browser demo copy untouched. It never seeds the hosted database.
+
 This is an explicitly labelled browser demo. It is not the authoritative Groups
 engine. Records stay in this browser; there is no login, server sync, PostgreSQL
 posting, RLS, encrypted local storage or multi-user access control. No customer data
@@ -27,10 +39,9 @@ should be entered. The financial calculations demonstrated are share purchases
 and exact reversals only. Loans, interest, social fund, attendance, approvals and
 meeting close are not presented as implemented.
 
-The API currently exposes its existing health endpoint. Connecting live records
-requires the Phase 1 identity model, user-token API, database ledger constraints,
-RLS isolation tests, idempotent sync and server recalculation. The browser demo is
-not a substitute for those controls or for the complete Phase 1 acceptance check.
+The separate authenticated workspace at `/#live` connects to the user-token API,
+RLS-protected share ledger, administration and PDF statements. This demo does not
+use those accounts or post sample transactions to them. See `SECURE_WEB.md`.
 
 ## Verification
 

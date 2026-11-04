@@ -83,16 +83,74 @@ export const groups: readonly Group[] = [
     color: 'orange',
   },
 ];
+// Fictional, fixed identities. No names, contacts or financial records are
+// copied from the signed-in account or the hosted database.
 export const members: readonly Member[] = [
-  { id: 'amina', name: 'Amina N.', joined: '2026-01-10' },
-  { id: 'joseph', name: 'Joseph K.', joined: '2026-01-10' },
-  { id: 'grace', name: 'Grace N.', joined: '2026-01-10' },
-  { id: 'peter', name: 'Peter O.', joined: '2026-01-10' },
-  { id: 'sarah', name: 'Sarah A.', joined: '2026-01-10' },
-  { id: 'david', name: 'David M.', joined: '2026-01-10' },
-  { id: 'esther', name: 'Esther W.', joined: '2026-01-10' },
-  { id: 'brian', name: 'Brian S.', joined: '2026-01-10' },
+  { id: 'amina', name: 'Amina Nansubuga', joined: '2026-01-10' },
+  { id: 'joseph', name: 'Joseph Kato', joined: '2026-01-10' },
+  { id: 'grace', name: 'Grace Namusoke', joined: '2026-01-10' },
+  { id: 'peter', name: 'Peter Okello', joined: '2026-01-10' },
+  { id: 'sarah', name: 'Sarah Akello', joined: '2026-01-10' },
+  { id: 'david', name: 'David Mugisha', joined: '2026-01-10' },
+  { id: 'esther', name: 'Esther Wanyama', joined: '2026-01-10' },
+  { id: 'brian', name: 'Brian Ssemakula', joined: '2026-01-10' },
+  { id: 'fatuma', name: 'Fatuma Nakato', joined: '2026-01-10' },
+  { id: 'robert', name: 'Robert Ouma', joined: '2026-01-10' },
+  { id: 'agnes', name: 'Agnes Nabirye', joined: '2026-01-10' },
+  { id: 'moses', name: 'Moses Sserwanga', joined: '2026-01-10' },
+  { id: 'ruth', name: 'Ruth Atim', joined: '2026-01-10' },
+  { id: 'isaac', name: 'Isaac Tumusiime', joined: '2026-01-10' },
+  { id: 'mariam', name: 'Mariam Namutebi', joined: '2026-01-10' },
+  { id: 'paul', name: 'Paul Lwanga', joined: '2026-01-10' },
+  { id: 'florence', name: 'Florence Achieng', joined: '2026-01-10' },
+  { id: 'daniel', name: 'Daniel Kyambadde', joined: '2026-01-10' },
+  { id: 'rose', name: 'Rose Nakiwala', joined: '2026-01-10' },
+  { id: 'samuel', name: 'Samuel Waiswa', joined: '2026-01-10' },
+  { id: 'janet', name: 'Janet Nambi', joined: '2026-01-10' },
+  { id: 'henry', name: 'Henry Byaruhanga', joined: '2026-01-10' },
+  { id: 'olive', name: 'Olive Nakanwagi', joined: '2026-01-10' },
+  { id: 'john', name: 'John Ssemanda', joined: '2026-01-10' },
+  { id: 'beatrice', name: 'Beatrice Apio', joined: '2026-01-10' },
+  { id: 'nakawa-1', name: 'Harriet Nalubega', joined: '2026-02-14' },
+  { id: 'nakawa-2', name: 'James Musoke', joined: '2026-02-14' },
+  { id: 'nakawa-3', name: 'Christine Adong', joined: '2026-02-14' },
+  { id: 'nakawa-4', name: 'Patrick Ssebunya', joined: '2026-02-14' },
+  { id: 'nakawa-5', name: 'Sylvia Nakaweesi', joined: '2026-02-14' },
+  { id: 'nakawa-6', name: 'Francis Opio', joined: '2026-02-14' },
+  { id: 'nakawa-7', name: 'Lydia Nakitende', joined: '2026-02-14' },
+  { id: 'nakawa-8', name: 'Emmanuel Ssekitoleko', joined: '2026-02-14' },
+  { id: 'nakawa-9', name: 'Susan Alupo', joined: '2026-02-14' },
+  { id: 'nakawa-10', name: 'Charles Muwanga', joined: '2026-02-14' },
+  { id: 'nakawa-11', name: 'Helen Namatovu', joined: '2026-02-14' },
+  { id: 'nakawa-12', name: 'Stephen Odong', joined: '2026-02-14' },
+  { id: 'nakawa-13', name: 'Alice Nanyonga', joined: '2026-02-14' },
+  { id: 'nakawa-14', name: 'Andrew Kintu', joined: '2026-02-14' },
+  { id: 'nakawa-15', name: 'Victoria Amoding', joined: '2026-02-14' },
+  { id: 'nakawa-16', name: 'George Nsubuga', joined: '2026-02-14' },
+  { id: 'nakawa-17', name: 'Rebecca Nyakato', joined: '2026-02-14' },
+  { id: 'kasubi-1', name: 'Peace Nankya', joined: '2026-03-07' },
+  { id: 'kasubi-2', name: 'Edward Ssenyonjo', joined: '2026-03-07' },
+  { id: 'kasubi-3', name: 'Dorothy Auma', joined: '2026-03-07' },
+  { id: 'kasubi-4', name: 'Richard Lubega', joined: '2026-03-07' },
+  { id: 'kasubi-5', name: 'Joyce Nabukenya', joined: '2026-03-07' },
+  { id: 'kasubi-6', name: 'Simon Ocen', joined: '2026-03-07' },
+  { id: 'kasubi-7', name: 'Annet Kansiime', joined: '2026-03-07' },
+  { id: 'kasubi-8', name: 'Michael Ssewankambo', joined: '2026-03-07' },
+  { id: 'kasubi-9', name: 'Mercy Nambasa', joined: '2026-03-07' },
+  { id: 'kasubi-10', name: 'William Okot', joined: '2026-03-07' },
+  { id: 'kasubi-11', name: 'Sharon Nabulime', joined: '2026-03-07' },
+  { id: 'kasubi-12', name: 'Timothy Asiimwe', joined: '2026-03-07' },
+  { id: 'kasubi-13', name: 'Prossy Nandutu', joined: '2026-03-07' },
+  { id: 'kasubi-14', name: 'Vincent Kibirige', joined: '2026-03-07' },
+  { id: 'kasubi-15', name: 'Doreen Akech', joined: '2026-03-07' },
 ];
+export function membersForGroup(groupId: string): readonly Member[] {
+  if (groupId === 'umoja') return members.slice(0, 25);
+  // One shared identity demonstrates membership in more than one group.
+  if (groupId === 'nakawa') return [members[0]!, ...members.slice(25, 42)];
+  if (groupId === 'kasubi') return members.slice(42);
+  throw new Error('Unknown group');
+}
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 function validDate(value: string): boolean {
   if (!datePattern.test(value)) return false;
@@ -103,6 +161,12 @@ function validDate(value: string): boolean {
 }
 export function initialWorkspace(): Workspace {
   const dates = [
+    '2026-08-15',
+    '2026-08-22',
+    '2026-08-29',
+    '2026-09-05',
+    '2026-09-12',
+    '2026-09-19',
     '2026-09-26',
     '2026-10-03',
     '2026-10-10',
@@ -110,24 +174,55 @@ export function initialWorkspace(): Workspace {
     '2026-10-24',
     '2026-10-31',
   ];
-  return {
+  const counts = [2, 3, 2, 1, 4, 3, 2, 5, 1, 2, 3, 4];
+  let state: Workspace = {
     version: 1,
     entries: groups.flatMap((group, gi) =>
       dates.flatMap((date, di) =>
-        members.map((member, mi) => ({
-          id: `sample-${group.id}-${di}-${member.id}`,
-          groupId: group.id,
-          memberId: member.id,
-          meetingDate: date,
-          recordedAt: `${date}T11:${String(mi).padStart(2, '0')}:00Z`,
-          shares: String(1 + ((di + mi + gi) % 5)),
-          kind: 'share_purchase' as const,
-          reverses: null,
-          note: '',
-        })),
+        membersForGroup(group.id).flatMap((member, mi) => {
+          // A missing purchase is not inferred to be an attendance record.
+          if ((mi + di * 3 + gi) % 11 === 0 && di > 0) return [];
+          return [
+            {
+              id: `sample-${group.id}-${di}-${member.id}`,
+              groupId: group.id,
+              memberId: member.id,
+              meetingDate: date,
+              recordedAt: `${date}T11:${String(mi).padStart(2, '0')}:00Z`,
+              shares: String(counts[(mi * 3 + di + gi) % counts.length]!),
+              kind: 'share_purchase' as const,
+              reverses: null,
+              note: `Weekly savings - meeting ${String(di + 1).padStart(2, '0')}`,
+            },
+          ];
+        }),
       ),
     ),
   };
+  for (const group of groups) {
+    const original = state.entries.find(
+      (entry) =>
+        entry.groupId === group.id && entry.meetingDate === '2026-10-24',
+    )!;
+    state = appendReversal(
+      state,
+      original.id,
+      `sample-correction-${group.id}`,
+      'Share count corrected after checking the meeting sheet.',
+      '2026-10-24T12:00:00Z',
+    );
+    state = appendPurchase(state, {
+      id: `sample-replacement-${group.id}`,
+      groupId: group.id,
+      memberId: original.memberId,
+      meetingDate: original.meetingDate,
+      shares:
+        original.shares === '5' ? '4' : String(BigInt(original.shares) + 1n),
+      note: 'Corrected share count; original and reversal retained.',
+      recordedAt: '2026-10-24T12:01:00Z',
+    });
+  }
+  return state;
 }
 export function groupById(id: string): Group {
   const group = groups.find((item) => item.id === id);
@@ -197,7 +292,7 @@ export function appendPurchase(
 ): Workspace {
   const group = groupById(input.groupId);
   if (
-    !members.some((member) => member.id === input.memberId) ||
+    !membersForGroup(group.id).some((member) => member.id === input.memberId) ||
     !validDate(input.meetingDate)
   )
     throw new Error('Invalid member or date');

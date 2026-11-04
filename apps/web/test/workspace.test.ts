@@ -9,6 +9,9 @@ import {
   formatAmount,
   groupById,
   csvCell,
+  membersForGroup,
+  entriesFor,
+  totalShares,
 } from '../src/workspace.ts';
 const input = {
   id: 'new',
@@ -19,6 +22,27 @@ const input = {
   note: '',
   recordedAt: '2026-11-03T10:00:00Z',
 };
+test('fixed sample snapshot reconciles all group totals and linked corrections', () => {
+  const state = initialWorkspace();
+  assert.deepEqual(initialWorkspace(), state);
+  for (const [id, roster, shares, cash] of [
+    ['umoja', 25, 731n, 3655000n],
+    ['nakawa', 18, 530n, 1060000n],
+    ['kasubi', 15, 440n, 4400000n],
+  ] as const) {
+    const rows = entriesFor(state, id);
+    assert.equal(membersForGroup(id).length, roster);
+    assert.equal(new Set(rows.map((row) => row.meetingDate)).size, 12);
+    assert.equal(totalShares(rows), shares);
+    assert.equal(cashBalance(state, id), cash);
+    assert.equal(rows.filter((row) => row.kind === 'reversal').length, 1);
+    for (const row of rows)
+      assert(membersForGroup(id).some((person) => person.id === row.memberId));
+  }
+  assert.throws(() =>
+    appendPurchase(state, { ...input, memberId: 'kasubi-1' }),
+  );
+});
 test('demo records survive persistence and a purchase/reversal restores the original cash', () => {
   const original = initialWorkspace();
   assert.deepEqual(parseWorkspace(JSON.stringify(original)), original);

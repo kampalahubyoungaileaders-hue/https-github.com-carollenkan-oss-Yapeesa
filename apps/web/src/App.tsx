@@ -5,6 +5,7 @@ import { Icon, type IconName } from './icons';
 import {
   groups,
   members,
+  membersForGroup,
   initialWorkspace,
   parseWorkspace,
   entriesFor,
@@ -27,7 +28,7 @@ type Modal =
   | { type: 'reverse'; entry: Entry }
   | { type: 'reset' }
   | null;
-const STORAGE_KEY = 'yapesa-web-demo-v1';
+const STORAGE_KEY = 'yapesa-web-demo-v2';
 const navigation: { page: Page; icon: IconName }[] = [
   { page: 'overview', icon: 'grid' },
   { page: 'meetings', icon: 'calendar' },
@@ -153,6 +154,7 @@ export default function App() {
   const [meetingDate, setMeetingDate] = useState('2026-11-03');
   const [note, setNote] = useState('');
   const group = groups.find((item) => item.id === groupId) ?? groups[0]!;
+  const groupMembers = membersForGroup(group.id);
   const state = session.state;
   const entries = useMemo(() => entriesFor(state, group.id), [state, group]);
   const sorted = useMemo(
@@ -512,6 +514,7 @@ export default function App() {
             <Icon name="shield" size={17} />
             <span>{t('demoNotice')}</span>
           </div>
+          <p className="demo-dataset-note">{t('demoSnapshot')}</p>
           {!session.writable && (
             <p className="inline-warning" role="alert">
               {t('storageWarning')}
@@ -551,7 +554,10 @@ export default function App() {
                   value={String(
                     new Set(entries.map((entry) => entry.memberId)).size,
                   )}
-                  detail={t('acrossMembers')}
+                  detail={t('acrossMembers').replace(
+                    '{count}',
+                    String(groupMembers.length),
+                  )}
                   icon="people"
                 />
                 <Stat
@@ -584,7 +590,8 @@ export default function App() {
                         );
                         const percent = Number(
                           (count * 100n) /
-                            (BigInt(members.length) * BigInt(group.maxShares)),
+                            (BigInt(groupMembers.length) *
+                              BigInt(group.maxShares)),
                         );
                         return (
                           <div className="chart-column" key={date}>
@@ -667,8 +674,8 @@ export default function App() {
                       </span>
                       <strong>{item.name}</strong>
                       <span className="group-card-meta">
-                        {members.length} {t('members').toLowerCase()} ·{' '}
-                        {t('activeCycle')}
+                        {membersForGroup(item.id).length}{' '}
+                        {t('members').toLowerCase()} · {t('activeCycle')}
                       </span>
                       <span className="group-card-balance">
                         {formatAmount(cashBalance(state, item.id), item)}
@@ -762,7 +769,7 @@ export default function App() {
               <div className="panel-heading">
                 <h2>
                   {t('members')}{' '}
-                  <span className="count-badge">{members.length}</span>
+                  <span className="count-badge">{groupMembers.length}</span>
                 </h2>
                 <Search
                   value={search}
@@ -777,7 +784,7 @@ export default function App() {
                   <span>{t('contributions')}</span>
                   <span />
                 </div>
-                {members
+                {groupMembers
                   .filter((member) =>
                     member.name.toLowerCase().includes(search.toLowerCase()),
                   )
@@ -817,7 +824,7 @@ export default function App() {
                       </button>
                     );
                   })}
-                {!members.some((member) =>
+                {!groupMembers.some((member) =>
                   member.name.toLowerCase().includes(search.toLowerCase()),
                 ) && <div className="empty-state">{t('noMembers')}</div>}
               </div>
@@ -897,7 +904,7 @@ export default function App() {
                 onChange={(event) => setMemberId(event.target.value)}
               >
                 <option value="">{t('chooseMember')}</option>
-                {members.map((member) => (
+                {groupMembers.map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.name}
                   </option>

@@ -55,6 +55,12 @@ test('group workspace, share recording, persistence, reversal, limits and export
       .last(),
   ).toBeVisible();
   await noOverflow(page);
+  await expect(
+    page.locator('.group-card.selected .group-card-meta'),
+  ).toContainText('25 members');
+  await expect(
+    page.getByText(/Fixed sample snapshot: 15 August/),
+  ).toBeVisible();
   await page.screenshot({
     path: info.outputPath('dashboard.png'),
     fullPage: true,
@@ -96,6 +102,7 @@ test('group workspace, share recording, persistence, reversal, limits and export
     'Nakawa Community Savers',
   );
   await navigate(page, 'Members');
+  await expect(page.locator('.member-row')).toHaveCount(18);
   await page.getByRole('searchbox').fill('Amina');
   await expect(page.locator('.member-row')).toHaveCount(1);
   await page.locator('.member-row').click();

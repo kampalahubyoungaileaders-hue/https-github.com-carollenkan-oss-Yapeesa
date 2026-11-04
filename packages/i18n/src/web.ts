@@ -7,6 +7,8 @@ export const web = {
   workspace: 'Your workspace',
   workspaceSubtitle: 'A clearer picture of your group’s savings.',
   demoBadge: 'Demo workspace',
+  demoSnapshot:
+    'Fixed sample snapshot: 15 August - 31 October 2026. Fictional members and share purchases; reload the sample data to restore these figures.',
   demoNotice:
     'Sample records only. Changes stay in this browser and are not live financial records.',
   savedLocally: 'Saved in this browser',
@@ -22,7 +24,7 @@ export const web = {
   sharesPurchased: 'Net shares purchased',
   participatingMembers: 'Participating members',
   meetingsRecorded: 'Meetings recorded',
-  acrossMembers: 'Across 8 sample members',
+  acrossMembers: 'Across {count} sample members',
   contributionActivity: 'Share purchases over time',
   activityHelp: 'Net contributions by meeting · current cycle',
   yourGroups: 'Your savings groups',
@@ -107,7 +109,7 @@ export const web = {
   noRecordsHelp: 'Try a different search or record a sample share purchase.',
   noMembers: 'No members match your search.',
   noMeetings: 'No meetings have been recorded for this group.',
-  resetDemo: 'Reset demo',
+  resetDemo: 'Reload fixed sample data',
   resetTitle: 'Reset this browser’s demo?',
   resetHelp:
     'This removes your sample changes and restores the original sample records. Export any records you want to keep first.',
