@@ -709,6 +709,9 @@ export default function SecureApp() {
               <Icon name="people" size={30} />
               <h2>{t('noGroups')}</h2>
               <p>{t('noGroupsHelp')}</p>
+              <a className="button" href="#overview">
+                {t('sampleWorkspace')}
+              </a>
               {session.user.can_administer && (
                 <button
                   className="button primary"
