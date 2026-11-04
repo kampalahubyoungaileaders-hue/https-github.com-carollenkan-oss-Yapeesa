@@ -64,3 +64,14 @@ The generated Android source uses `expo-template-bare-minimum@58.0.31` (0BSD); s
 Runtime Auth/Data API requests use native fetch. HMAC and authenticated cookie
 encryption use Node's built-in cryptography. No application dependency adds a
 second ledger or authentication provider.
+
+## Server-generated statement additions
+
+| Package         | Pinned version | Purpose                                                    | Licence |
+| --------------- | -------------- | ---------------------------------------------------------- | ------- |
+| `pdfkit`        | 0.20.2         | Generate paginated PDF share statements on the API server. | MIT     |
+| `@types/pdfkit` | 0.17.7         | Type declarations for PDF generation.                      | MIT     |
+
+The embedded DejaVu Sans font uses the upstream Bitstream Vera/DejaVu font licence,
+included at `apps/api/assets/DejaVuSans-LICENSE.txt`. It supports common accented
+names without depending on a network font service.
