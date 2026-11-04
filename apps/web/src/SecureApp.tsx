@@ -342,6 +342,7 @@ export default function SecureApp() {
           <span className="subtle-tag">{t('savedWorkspace')}</span>
           <h1>{t('loginHeading')}</h1>
           <p>{t('loginDescription')}</p>
+          {busy && <p role="status">{t('connectingSecurely')}</p>}
           {loading ? (
             <p role="status">{t('loadingRecords')}</p>
           ) : invitation ? (
@@ -422,6 +423,7 @@ export default function SecureApp() {
         <div className="login-card">
           <h1>{t('secondFactor')}</h1>
           <p>{t('factorDescription')}</p>
+          {busy && <p role="status">{t('connectingSecurely')}</p>}
           {!session.user.factors.length && !factor && (
             <button
               className="button primary"

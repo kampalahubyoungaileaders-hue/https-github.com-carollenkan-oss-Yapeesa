@@ -61,14 +61,16 @@ sender omission/override, missing configuration, provider rejection, malformed
 responses, transport failure, no automatic retry and secret-free errors.
 `pnpm check` includes these tests and strict function TypeScript checking.
 
-The deployed GET endpoint returned 405 and unsigned POST returned 401. These are
-negative security checks, not evidence of real SMS delivery. The Auth hook is now
-enabled, all four secret names are present, and phone confirmation is enabled with
-public signup disabled. One approved recipient's confirmation request was accepted
-by Auth and recorded in `confirmation_sent_at`. Handset receipt and successful OTP
-verification remain pending. Do not treat an accepted request as proof of delivery
-or repeat it automatically. Enter codes only in the web application's first-time
-setup screen, never in chat.
+The deployed GET endpoint returned 405 and unsigned/forged POST requests returned 401. The Auth hook is enabled, all four secret names are present, and phone
+confirmation is enabled with public signup disabled. The approved recipient
+confirmed handset receipt, completed phone confirmation and verified a TOTP factor.
+The first administrator's previously inactive membership was activated only after
+checking its verified phone, factor and actual AAL2 session. That transaction is
+audited. No additional SMS is sent by tests or automatically retried.
+
+Enter future SMS codes and authenticator credentials only in the application.
+SMS recovery is separate later work; existing verified authenticator accounts
+cannot use the invitation PIN-setup flow as a recovery bypass.
 
 References:
 

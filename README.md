@@ -4,7 +4,9 @@ Digital records for savings groups, lenders and SACCOs, from Fencher Technologie
 This repository includes the **Phase 0 foundation** and a **web Groups workspace
 preview**. The web preview uses labelled sample records saved in this browser.
 The authenticated online share-purchase path is implemented separately and requires
-server/account configuration. The agreed scope
+server/account configuration. A development deployment is available at
+https://yapesa-web.onrender.com/#live with the first administrator activated.
+See [hosting and onboarding](docs/HOSTING.md). The agreed scope
 and later phases are in [the build brief](docs/BUILD_BRIEF.md).
 
 ## Saved organisation records
@@ -89,7 +91,8 @@ Ctrl+C stops the app processes; infrastructure stays running until
 CI runs code checks, an Android bundle export, and a Docker-backed stack smoke
 check. A device install and real 2 GB Android measurements remain separate manual
 checks. See [verification status](docs/VERIFICATION.md) for what has actually run.
-Branch protection must require both CI jobs before merging.
+Branch protection must require `checks`, `local-stack`, `secure-web` and
+`web-browser` before merging.
 
 ## Structure
 

@@ -99,16 +99,18 @@ email as well as their verified phone. Do not invent a real user's email or mark
 it verified without verification. Phone/PIN remains the sign-in method; ordinary
 members do not need an email. Disposable CI staff fixtures use reserved
 `example.invalid` labels and never send email.
-The first real administrator's verified phone/PIN handover and account provisioning
-must be completed before using the hosted workspace. Production signup/provider
-settings, SMS verification/recovery and public API/web deployment also remain to
-be configured. Secrets are never committed to GitHub or put in Vite variables.
+The first administrator has completed phone verification, private PIN setup and
+TOTP verification. Its role is active, with an audited activation transaction.
+The signed EgoSMS hook, phone confirmations and free Render web/API deployment are
+configured; public signup remains disabled. Secrets are held only by the servers.
+See `HOSTING.md` for the deployment and onboarding flow. SMS recovery remains later
+work; the initial invitation flow is not a recovery bypass for enrolled staff.
 
 ## Explicit remaining scope
 
 The EgoSMS Auth delivery function and its mocked security tests are described in
-[EgoSMS setup](EGOSMS.md). Its deployment alone does not enable phone login: the
-shared hook signing secret and Auth configuration must also be completed.
+[EgoSMS setup](EGOSMS.md). The shared signing secret and Auth configuration are now connected, and handset
+delivery and first-administrator verification have been confirmed.
 
 This is the first secure online share-purchase path, not the entire platform.
 Offline mobile storage/sync, writer-device transfer, live reversal endpoints,

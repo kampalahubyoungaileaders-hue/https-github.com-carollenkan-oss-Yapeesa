@@ -63,6 +63,7 @@ export default function InvitationForm({
   }
   return (
     <>
+      {busy && <p role="status">{t('connectingSecurely')}</p>}
       <p>{t('invitationDescription')}</p>
       <form onSubmit={requestCode}>
         <div className="form-group">

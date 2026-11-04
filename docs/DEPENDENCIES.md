@@ -49,16 +49,17 @@ The generated Android source uses `expo-template-bare-minimum@58.0.31` (0BSD); s
 
 ## Secure web additions
 
-| Package               | Pinned version | Purpose                                                                     | Licence |
-| --------------------- | -------------- | --------------------------------------------------------------------------- | ------- |
-| `@fastify/cookie`     | 11.1.5         | Read/write HttpOnly session cookies.                                        | MIT     |
-| `@fastify/rate-limit` | 10.3.0         | Throttle login/MFA requests.                                                | MIT     |
-| `@fastify/swagger`    | 9.9.3          | Publish the API OpenAPI contract.                                           | MIT     |
-| `openapi-typescript`  | 7.13.0         | Generate the client types from that contract.                               | MIT     |
-| `uuid`                | 14.0.3         | Generate UUID v7 transaction/device references.                             | MIT     |
-| `pg`                  | 8.23.1         | Disposable local test/provisioning connections only.                        | MIT     |
-| `@types/pg`           | 8.15.5         | Type the provisioning and database tests.                                   | MIT     |
-| `standardwebhooks`    | 1.0.0          | Verify signed Supabase Auth SMS hooks in the Edge Function and local tests. | MIT     |
+| Package               | Pinned version | Purpose                                                                                | Licence |
+| --------------------- | -------------- | -------------------------------------------------------------------------------------- | ------- |
+| `@fastify/cookie`     | 11.1.5         | Read/write HttpOnly session cookies.                                                   | MIT     |
+| `@fastify/rate-limit` | 10.3.0         | Throttle login/MFA requests.                                                           | MIT     |
+| `@fastify/static`     | 10.1.8         | Serve built web assets from the API origin; restrict files to the web build directory. | MIT     |
+| `@fastify/swagger`    | 9.9.3          | Publish the API OpenAPI contract.                                                      | MIT     |
+| `openapi-typescript`  | 7.13.0         | Generate the client types from that contract.                                          | MIT     |
+| `uuid`                | 14.0.3         | Generate UUID v7 transaction/device references.                                        | MIT     |
+| `pg`                  | 8.23.1         | Disposable local test/provisioning connections only.                                   | MIT     |
+| `@types/pg`           | 8.15.5         | Type the provisioning and database tests.                                              | MIT     |
+| `standardwebhooks`    | 1.0.0          | Verify signed Supabase Auth SMS hooks in the Edge Function and local tests.            | MIT     |
 
 Runtime Auth/Data API requests use native fetch. HMAC and authenticated cookie
 encryption use Node's built-in cryptography. No application dependency adds a

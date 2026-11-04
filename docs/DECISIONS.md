@@ -51,3 +51,17 @@ At the founder’s direction, Android source is prepared for a later local build
 - A calculation mismatch posts the server-calculated value while preserving the original submitted amount/version and marking the transaction for review. No historical input is overwritten.
 - Initial device designation is claimed atomically by the first accepted purchase. A different device is denied until an explicit transfer workflow is implemented.
 - These changes implement the online web path. Native Android compilation, SMS recovery and other phase acceptance requirements are still separately tracked.
+
+## Hosted web release — 4 November 2026
+
+The founder approved a free Render web/API service in Frankfurt and explicitly
+authorized its server configuration. The signed EgoSMS Auth hook is connected.
+The first administrator completed real phone and TOTP verification before its
+previously inactive role was activated in an audited transaction. No customer
+groups or financial records were created. Earlier local-only notes above describe
+the Phase 0 state, not the current deployment.
+
+The free service can sleep after inactivity. Client requests allow up to 90 seconds
+for startup, show a waiting status during authentication, and never automatically
+retry mutations. HTML host loading/error responses become a safe connection error.
+This does not change any financial calculation or authentication requirement.

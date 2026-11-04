@@ -28,12 +28,20 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      signal: AbortSignal.timeout(20000),
+      // Allow a sleeping host to start. Never retry a financial/auth mutation
+      // automatically: the first request may already have been processed.
+      signal: AbortSignal.timeout(90000),
     });
   } catch {
     throw new ClientError(0, 'NETWORK_ERROR');
   }
-  const value: unknown = await response.json();
+  let value: unknown;
+  try {
+    value = await response.json();
+  } catch {
+    // A starting host can return an HTML loading page instead of API JSON.
+    throw new ClientError(503, 'BACKEND_UNAVAILABLE');
+  }
   if (!response.ok) {
     const code =
       value &&

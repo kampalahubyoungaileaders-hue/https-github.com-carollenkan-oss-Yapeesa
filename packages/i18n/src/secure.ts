@@ -1,5 +1,6 @@
 export const secure = {
   firstTimeSetup: 'First-time account setup',
+  connectingSecurely: 'Connecting securely… Please keep this page open.',
   invitationDescription:
     'Use your invited phone number and SMS code, then choose a private PIN. You will set up an authenticator next.',
   requestSms: 'Request an SMS code',

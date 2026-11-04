@@ -14,11 +14,13 @@ These do not block Phase 0 code scaffolding.
 5. Phase 0 acceptance needs the Docker CI run plus a native development build on
    the reference device. Record failures rather than treating a JS export as a
    successful device test. Confirm PostgreSQL 17 against the pinned Fineract.
-6. Before merging, require the `checks` and `local-stack` CI jobs through GitHub
+6. Before merging, require the `checks`, `local-stack`, `secure-web` and `web-browser` CI jobs through GitHub
    branch protection/rulesets. CI configuration alone does not prevent bypasses.
 
-No payment features, new accounting rules, or production hosting are in scope.
+No payment features or new accounting rules are introduced by the current web
+release. Free development hosting is configured; production readiness is separate.
 
-7. Provision the first real administrator with a verified phone and controlled PIN
-   handover; configure SMS recovery before customer use. The hosted database has
-   no synthetic customer accounts. Public hosting is not yet configured.
+7. The first administrator is verified and active, and public development hosting
+   is configured. SMS recovery, organisation/group administration screens and
+   production backup/restore verification remain before customer onboarding.
+   No live savings groups or financial records have been invented.
