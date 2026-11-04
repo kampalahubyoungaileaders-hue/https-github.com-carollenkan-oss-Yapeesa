@@ -14,8 +14,9 @@ These do not block Phase 0 code scaffolding.
 5. Phase 0 acceptance needs the Docker CI run plus a native development build on
    the reference device. Record failures rather than treating a JS export as a
    successful device test. Confirm PostgreSQL 17 against the pinned Fineract.
-6. Before merging, require the `checks`, `local-stack`, `secure-web` and `web-browser` CI jobs through GitHub
-   branch protection/rulesets. CI configuration alone does not prevent bypasses.
+6. Main-branch protection now requires pull requests and the `checks`,
+   `local-stack`, `secure-web` and `web-browser` jobs, including for administrators.
+   Keep these requirements when changing CI.
 
 No payment features or new accounting rules are introduced by the current web
 release. Free development hosting is configured; production readiness is separate.

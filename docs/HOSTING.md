@@ -8,7 +8,7 @@ settings, not a Blueprint.
 - Build: `bash scripts/build-hosted.sh`.
 - Start: `pnpm --filter @yapesa/api start`.
 - Plan: Free, Frankfurt, one instance, no attached disk or new database.
-- Source: `codex/secure-web-shares` during review; move to `main` after merging.
+- Release source: `main`; use the review branch only before its release merge.
 - Health: `/health`; use `/api/session` to check authentication configuration.
 
 Server environment variables: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,

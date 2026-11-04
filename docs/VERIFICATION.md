@@ -42,10 +42,10 @@ This is not a claim of independent security certification or production readines
 
 ## Separate remaining work
 
-GitHub branch protection requiring the check jobs still needs owner settings
-access; the connected GitHub tools do not expose that configuration and the
-browser is currently signed out. A manual pass of CI is not equivalent to an
-enforced branch rule.
+GitHub main-branch protection is configured: pull requests and passing `checks`,
+`local-stack`, `secure-web` and `web-browser` jobs are required, branches must be
+up to date, and administrator bypass is disabled. Force pushes and deletions stay
+disallowed. The check jobs passed at `8b5da29`; the final PR records later runs.
 
 Organisation/group administration screens, customer data/cycle setup, SMS recovery,
 PDF statements, full meeting/loan/share-out engines, offline mobile sync and writer
