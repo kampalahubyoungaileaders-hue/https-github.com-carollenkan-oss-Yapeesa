@@ -1,6 +1,7 @@
 // Pure integer calculations shared with the API. Database functions independently
 // enforce authoritative posting, permissions and balanced journals.
 export const calcVersion = 'groups-shares-v1';
+export const meetingCalcVersion = 'groups-meetings-v1';
 declare const minorUnitBrand: unique symbol;
 export type MinorUnits = bigint & { readonly [minorUnitBrand]: true };
 export type Money = Readonly<{ minor: MinorUnits; currency: string }>;
@@ -21,6 +22,28 @@ export function money(minor: bigint, currency: string): Money {
     throw new Error('Invalid integer amount');
   if (!/^[A-Z]{3}$/.test(currency)) throw new Error('Invalid currency code');
   return Object.freeze({ minor: minor as MinorUnits, currency });
+}
+export function reconcileCash(
+  opening: Money,
+  cashIn: Money,
+  cashOut: Money,
+  counted: Money,
+) {
+  for (const value of [opening, cashIn, cashOut, counted]) {
+    if (value.currency !== opening.currency || value.minor < 0n)
+      throw new Error('Invalid cash count');
+    money(value.minor, value.currency);
+  }
+  const expected = money(
+    opening.minor + cashIn.minor - cashOut.minor,
+    opening.currency,
+  );
+  if (expected.minor < 0n) throw new Error('Cash cannot be negative');
+  return Object.freeze({
+    expected,
+    difference: money(counted.minor - expected.minor, opening.currency),
+    calcVersion: meetingCalcVersion,
+  });
 }
 export function shareJournal(
   id: string,

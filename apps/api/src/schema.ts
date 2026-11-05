@@ -241,3 +241,81 @@ export const adminRoleBody = object({
   role: { type: 'string', enum: ['member', 'secretary', 'treasurer', 'chair'] },
   enabled: boolean,
 });
+export const meetingCommandBody = object({
+  request_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  action: {
+    type: 'string',
+    enum: ['open', 'attendance', 'propose', 'approve'],
+  },
+  date: { anyOf: [{ type: 'string', format: 'date' }, { type: 'null' }] },
+  meeting_id: nullableUuid,
+  member_id: nullableUuid,
+  status: {
+    anyOf: [
+      { type: 'string', enum: ['present', 'absent', 'excused'] },
+      { type: 'null' },
+    ],
+  },
+  counted_cash: {
+    anyOf: [
+      { type: 'string', pattern: '^(0|[1-9][0-9]{0,18})$' },
+      { type: 'null' },
+    ],
+  },
+  explanation: {
+    anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }],
+  },
+  proposal_id: nullableUuid,
+});
+const nullableString = { anyOf: [string, { type: 'null' }] };
+export const meetingWorkspaceSchema = object({
+  currency: string,
+  can_record: boolean,
+  meetings: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      date: string,
+      status: { type: 'string', enum: ['open', 'closed'] },
+      opening_cash: nullableString,
+      cash_in: nullableString,
+      cash_out: nullableString,
+      expected_cash: nullableString,
+      roster: {
+        type: 'array',
+        items: object({
+          id: uuid,
+          name: string,
+          status: {
+            anyOf: [
+              { type: 'string', enum: ['present', 'absent', 'excused'] },
+              { type: 'null' },
+            ],
+          },
+        }),
+      },
+      proposal: {
+        anyOf: [
+          { type: 'null' },
+          object({
+            id: uuid,
+            expected_cash: string,
+            counted_cash: string,
+            difference: string,
+            explanation: string,
+            stale: boolean,
+            approvals: {
+              type: 'array',
+              items: object({
+                person_id: uuid,
+                name: string,
+                eligible: boolean,
+              }),
+            },
+          }),
+        ],
+      },
+    }),
+  },
+});

@@ -183,6 +183,42 @@ try {
       [orgId],
     );
   }
+  const meetingSecretary = await user(
+    'MEETING_SECRETARY',
+    '+256700000018',
+    true,
+  );
+  const meetingTreasurer = await user(
+    'MEETING_TREASURER',
+    '+256700000019',
+    true,
+  );
+  const meetingChair = await user('MEETING_CHAIR', '+256700000020', true);
+  const meetingMember = await user('MEETING_MEMBER', '+256700000021', false);
+  for (const label of ['INTEGRATION', 'DESKTOP', 'PHONE']) {
+    const org = await db.query<{ id: string }>(
+      "insert into public.organisation(name,type,country_code,currency,time_zone) values($1,'group','UG','UGX','Africa/Kampala') returning id",
+      [`Local meetings ${label.toLowerCase()}`],
+    );
+    const orgId = org.rows[0]!.id;
+    fixtures[`TEST_MEETING_ORG_${label}`] = orgId;
+    await db.query(
+      "insert into public.membership(person_id,organisation_id,role) values($1,$5,'secretary'),($1,$5,'member'),($2,$5,'treasurer'),($3,$5,'chair'),($4,$5,'member')",
+      [meetingSecretary, meetingTreasurer, meetingChair, meetingMember, orgId],
+    );
+    await db.query(
+      'insert into public.group_settings(organisation_id) values($1)',
+      [orgId],
+    );
+    await db.query(
+      'insert into public.cycle(organisation_id,starts_on,ends_on,share_price) values($1,current_date-30,current_date+330,5000)',
+      [orgId],
+    );
+    await db.query(
+      "insert into public.ledger_account(organisation_id,code) values($1,'cash'),($1,'share_capital')",
+      [orgId],
+    );
+  }
   const values = {
     SUPABASE_URL: status.API_URL,
     SUPABASE_PUBLISHABLE_KEY: status.ANON_KEY,
