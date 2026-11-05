@@ -14,6 +14,8 @@ export type Receipt =
   paths['/api/groups/{id}/shares']['post']['responses'][200]['content']['application/json'];
 export type ShareReversal =
   paths['/api/groups/{id}/reversals']['post']['requestBody']['content']['application/json'];
+export type ShareOutPreview =
+  paths['/api/groups/{id}/shareout-preview']['get']['responses'][200]['content']['application/json'];
 export type Factor =
   paths['/api/auth/mfa/enroll']['post']['responses'][200]['content']['application/json'];
 export type AdminWorkspace =
@@ -150,6 +152,10 @@ export const api = {
   groups: () => request<GroupList>('/api/groups'),
   workspace: (id: string) =>
     request<SavedWorkspace>(`/api/groups/${encodeURIComponent(id)}`),
+  shareOutPreview: (id: string) =>
+    request<ShareOutPreview>(
+      `/api/groups/${encodeURIComponent(id)}/shareout-preview`,
+    ),
   recordShares: (id: string, input: SharePurchase) =>
     request<Receipt>(`/api/groups/${encodeURIComponent(id)}/shares`, input),
   reverseShares: (id: string, input: ShareReversal) =>

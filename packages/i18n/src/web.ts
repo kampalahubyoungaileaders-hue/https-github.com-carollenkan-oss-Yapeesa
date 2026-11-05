@@ -42,6 +42,19 @@ export const web = {
   reversal: 'Reversal',
   statusLabel: 'Status',
   recorded: 'Recorded',
+  shareoutTitle: 'Share-out preview',
+  shareoutShow: 'Preview share-out',
+  shareoutRefresh: 'Refresh preview',
+  shareoutScope:
+    'Recorded share fund only. This estimate includes saved share purchases and corrections in the active cycle. Loan earnings, fines and the social fund are not included. It does not close the cycle or record payouts.',
+  shareoutFund: 'Recorded fund',
+  shareoutAllocation: 'Estimated allocation',
+  shareoutExact: 'Allocations match the fund exactly.',
+  shareoutRounding:
+    'Whole currency units use the largest-remainder method. Equal remainders use member ID order.',
+  shareoutEmpty: 'No shares recorded in this cycle yet.',
+  shareoutError:
+    'This preview could not be loaded. Refresh and check that you are a group officer and the group has an active cycle.',
   reversePurchase: 'Reverse this purchase',
   correctionReason: 'Reason for correction',
   correctionExplanation:

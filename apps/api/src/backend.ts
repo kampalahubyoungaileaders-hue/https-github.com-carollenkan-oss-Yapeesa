@@ -83,6 +83,11 @@ export class Backend {
       if (code === '23505') throw new ApiError(409, 'DUPLICATE_REFERENCE');
       if (code === '42501') throw new ApiError(403, 'PERMISSION_DENIED');
       if (
+        path === '/rest/v1/rpc/group_shareout_preview' &&
+        ['22023', '23514', 'P0001', 'P0002', '22003'].includes(code)
+      )
+        throw new ApiError(422, 'SHAREOUT_UNAVAILABLE');
+      if (
         path === '/rest/v1/rpc/reverse_share_purchase' &&
         ['22023', '23514', 'P0001', 'P0002', '22003'].includes(code)
       )

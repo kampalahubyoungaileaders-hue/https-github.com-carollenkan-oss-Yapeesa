@@ -1,5 +1,5 @@
-// Pure calculations for the explicitly labelled web demo. Database posting,
-// authorisation and authoritative server recalculation remain Phase 1 work.
+// Pure integer calculations shared with the API. Database functions independently
+// enforce authoritative posting, permissions and balanced journals.
 export const calcVersion = 'groups-shares-v1';
 declare const minorUnitBrand: unique symbol;
 export type MinorUnits = bigint & { readonly [minorUnitBrand]: true };
@@ -91,4 +91,60 @@ export function accountBalance(
     }
   }
   return money(balance, currency).minor;
+}
+
+export const shareOutCalcVersion = 'groups-shareout-preview-v1';
+export function shareOut(
+  fund: Money,
+  members: readonly Readonly<{ id: string; shares: bigint }>[],
+): readonly Readonly<{ id: string; amount: Money }>[] {
+  if (fund.minor < 0n) throw new Error('Fund cannot be negative');
+  const ids = new Set<string>();
+  let totalShares = 0n;
+  for (const member of members) {
+    if (
+      !member.id ||
+      ids.has(member.id) ||
+      typeof member.shares !== 'bigint' ||
+      member.shares < 0n
+    )
+      throw new Error('Invalid share-out member');
+    ids.add(member.id);
+    totalShares += member.shares;
+  }
+  if (totalShares === 0n && fund.minor !== 0n)
+    throw new Error('Fund has no shares');
+  const quotas = members.map((member) => ({
+    id: member.id,
+    minor: totalShares ? (fund.minor * member.shares) / totalShares : 0n,
+    remainder: totalShares ? (fund.minor * member.shares) % totalShares : 0n,
+  }));
+  const remaining =
+    fund.minor - quotas.reduce((sum, row) => sum + row.minor, 0n);
+  // Equal-width decimal strings sort exactly like nonnegative integers. This
+  // keeps the ordering step exact without converting a remainder to JS Number.
+  const buckets = new Map<string, string[]>();
+  const byId = new Map(quotas.map((row) => [row.id, row]));
+  const width = totalShares.toString().length;
+  for (const row of quotas) {
+    const key = row.remainder.toString().padStart(width, '0');
+    const bucket = buckets.get(key) ?? [];
+    bucket.push(row.id);
+    buckets.set(key, bucket);
+  }
+  const allocations = new Map<string, Money>();
+  let units = remaining;
+  for (const key of [...buckets.keys()].sort().reverse()) {
+    // Equal remainders use stable member IDs, independent of roster order.
+    for (const id of buckets.get(key)!.sort()) {
+      const extra = units > 0n ? 1n : 0n;
+      allocations.set(id, money(byId.get(id)!.minor + extra, fund.currency));
+      units -= extra;
+    }
+  }
+  return Object.freeze(
+    [...ids]
+      .sort()
+      .map((id) => Object.freeze({ id, amount: allocations.get(id)! })),
+  );
 }

@@ -91,3 +91,17 @@ meeting locks are retained; later-period adjustments await an explicit policy.
 Workspace, PDF and CSV totals include both purchases and reversals. Reversal
 journals use `groups-shares-reversal-v1`; share purchase calculations remain
 `groups-shares-v1`. No currency conversion or payment movement is introduced.
+
+## Recorded share-fund preview
+
+The saved Groups overview can preview distribution of the active cycle's recorded
+share fund. It is read-only and explicitly excludes not-yet-implemented loan
+income, fines and social-fund workflows. It neither closes the cycle nor records
+payouts. Future account types fail closed until the preview is extended.
+
+Largest remainders allocate whole minor units and preserve the exact fund total.
+Equal remainders use ascending canonical member ID as a deterministic tie-break,
+independent of roster order. TypeScript and SQL implementations are checked
+against generated cases; the API also compares them on each returned preview.
+Officers with verified MFA can view the full allocation. Former members' recorded
+shares are retained; reversals reduce their net shares and the recorded fund.
