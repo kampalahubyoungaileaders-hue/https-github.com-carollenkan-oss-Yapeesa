@@ -289,6 +289,138 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
     [env['TEST_ORG_A']],
   );
   assert.equal(journalCount.rows[0]!.count, '51');
+  // Corrections are real ledger postings, including under concurrent delivery.
+  const correctionDate = new Date();
+  correctionDate.setUTCDate(correctionDate.getUTCDate() + 80);
+  const purchase = {
+    ...input,
+    client_id: v7(),
+    shares: '5',
+    client_amount: '25000',
+    client_calc_version: 'groups-shares-v1',
+    meeting_date: correctionDate.toISOString().slice(0, 10),
+  };
+  const original = await call('A', 'POST', url, purchase);
+  assert.equal(original.statusCode, 200, original.body);
+  const reversalUrl = `/api/groups/${env['TEST_ORG_A']}/reversals`;
+  const correction = {
+    transaction_id: original.json().transaction_id,
+    client_id: v7(),
+    device_id: device,
+    reason: 'Recorded for the wrong meeting',
+  };
+  assert.equal(
+    (await call('MEMBER', 'POST', reversalUrl, correction)).statusCode,
+    403,
+  );
+  assert.equal(
+    (await call('B', 'POST', reversalUrl, correction)).statusCode,
+    403,
+  );
+  assert.equal(
+    (await call('A', 'POST', reversalUrl, { ...correction, reason: '   ' }))
+      .statusCode,
+    400,
+  );
+  assert.equal(
+    (await call('A', 'POST', reversalUrl, { ...correction, device_id: v7() }))
+      .statusCode,
+    403,
+  );
+  const competing = { ...correction, client_id: v7() };
+  const race = await Promise.all([
+    call('A', 'POST', reversalUrl, correction),
+    call('A', 'POST', reversalUrl, competing),
+  ]);
+  assert.deepEqual(
+    race.map((response) => response.statusCode).sort(),
+    [200, 409],
+  );
+  const winner = race[0]!.statusCode === 200 ? correction : competing;
+  const reversed = race.find((response) => response.statusCode === 200)!;
+  assert.equal(reversed.json().amount, '-25000');
+  const repeat = await call('A', 'POST', reversalUrl, winner);
+  assert.equal(repeat.statusCode, 200, repeat.body);
+  assert.deepEqual(repeat.json(), reversed.json());
+  assert.equal(
+    (
+      await call('A', 'POST', reversalUrl, {
+        ...winner,
+        reason: 'Changed payload',
+      })
+    ).statusCode,
+    409,
+  );
+  assert.equal(
+    (
+      await call('A', 'POST', reversalUrl, {
+        ...winner,
+        client_id: v7(),
+        transaction_id: reversed.json().transaction_id,
+      })
+    ).statusCode,
+    422,
+  );
+  const correctedWorkspace = (
+    await call('A', 'GET', `/api/groups/${env['TEST_ORG_A']}`)
+  ).json();
+  const correctionRow = correctedWorkspace.transactions.find(
+    (row: { id: string }) => row.id === reversed.json().transaction_id,
+  );
+  assert.equal(correctionRow.reverses, original.json().transaction_id);
+  assert.equal(correctionRow.shares, '-5');
+  const correctedJournals = await db.query<{ account_id: string; net: string }>(
+    `select account_id, sum(case when side='debit' then amount else -amount end)::text as net from public.journal_line where journal_id=any($1::uuid[]) group by account_id`,
+    [[original.json().journal_id, reversed.json().journal_id]],
+  );
+  assert.equal(correctedJournals.rows.length, 2);
+  assert(
+    correctedJournals.rows.every((row) => row.net === '0'),
+    'Every affected account is restored exactly',
+  );
+  // The full five-share limit is available again after reversing five shares.
+  const replacement = await call('A', 'POST', url, {
+    ...purchase,
+    client_id: v7(),
+  });
+  assert.equal(replacement.statusCode, 200, replacement.body);
+  assert.equal(
+    (
+      await call('A', 'POST', url, {
+        ...purchase,
+        client_id: v7(),
+        shares: '1',
+      })
+    ).statusCode,
+    422,
+  );
+  await db.query(
+    `update public.meeting set status='closed' where cycle_id=(select id from public.cycle where organisation_id=$1 and status='active') and meeting_date=$2`,
+    [env['TEST_ORG_A'], purchase.meeting_date],
+  );
+  try {
+    assert.equal(
+      (
+        await call('A', 'POST', reversalUrl, {
+          ...correction,
+          transaction_id: replacement.json().transaction_id,
+          client_id: v7(),
+        })
+      ).statusCode,
+      422,
+    );
+  } finally {
+    await db.query(
+      `update public.meeting set status='open' where organisation_id=$1 and meeting_date=$2`,
+      [env['TEST_ORG_A'], purchase.meeting_date],
+    );
+  }
+  const correctedPdf = await call(
+    'A',
+    'GET',
+    `/api/groups/${env['TEST_ORG_A']}/statement.pdf`,
+  );
+  assert.equal(correctedPdf.statusCode, 200, correctedPdf.body);
   await appendFile('.env', `TEST_DEVICE_A=${device}\n`);
   const direct = await fetch(
     `${config!.supabaseUrl}/auth/v1/token?grant_type=password`,

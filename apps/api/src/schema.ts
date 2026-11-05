@@ -2,6 +2,7 @@ const string = { type: 'string' } as const;
 const boolean = { type: 'boolean' } as const;
 const uuid = { type: 'string', format: 'uuid' } as const;
 const integerString = { type: 'string', pattern: '^[0-9]+$' } as const;
+const signedIntegerString = { type: 'string', pattern: '^-?[0-9]+$' } as const;
 const object = (
   properties: Record<string, unknown>,
   required = Object.keys(properties),
@@ -50,18 +51,33 @@ export const workspaceSchema = object({
   },
   transactions: {
     type: 'array',
-    items: object({
-      id: uuid,
-      member_id: uuid,
-      meeting_date: string,
-      recorded_at: string,
-      shares: integerString,
-      amount: integerString,
-      currency: string,
-      journal_id: uuid,
-      calculation_mismatch: boolean,
-      note: string,
-    }),
+    items: object(
+      {
+        id: uuid,
+        member_id: uuid,
+        meeting_date: string,
+        recorded_at: string,
+        shares: signedIntegerString,
+        amount: signedIntegerString,
+        currency: string,
+        journal_id: uuid,
+        calculation_mismatch: boolean,
+        note: string,
+        reverses: { anyOf: [uuid, { type: 'null' }] },
+      },
+      [
+        'id',
+        'member_id',
+        'meeting_date',
+        'recorded_at',
+        'shares',
+        'amount',
+        'currency',
+        'journal_id',
+        'calculation_mismatch',
+        'note',
+      ],
+    ),
   },
   journal_lines: {
     type: 'array',
@@ -91,10 +107,16 @@ export const receiptSchema = object({
   transaction_id: uuid,
   journal_id: uuid,
   client_id: uuid,
-  amount: integerString,
+  amount: signedIntegerString,
   currency: string,
   calculation_mismatch: boolean,
   calc_version: string,
+});
+export const reversalBody = object({
+  transaction_id: uuid,
+  client_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  reason: { type: 'string', minLength: 1, maxLength: 240, pattern: '\\S' },
 });
 export const factorSchema = object({ id: uuid, secret: string, uri: string });
 export const errorSchema = object({ error: string });

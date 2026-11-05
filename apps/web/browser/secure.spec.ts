@@ -97,6 +97,51 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe(`yapesa-${org}.pdf`);
   await download.saveAs(info.outputPath('statement.pdf'));
+  // Correct the saved purchase through the real API, even if its response is lost.
+  await page
+    .getByLabel('Reason for correction', { exact: true })
+    .fill(`Saved from ${info.project.name}: wrong share count`);
+  let reversalInterrupted = false;
+  await page.route('**/api/groups/*/reversals', async (route) => {
+    const response = await route.fetch();
+    if (!reversalInterrupted) {
+      reversalInterrupted = true;
+      await route.abort('failed');
+    } else await route.fulfill({ response });
+  });
+  await page
+    .getByRole('button', { name: 'Reverse this purchase', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Retry this correction', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel('Reason for correction', { exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole('button', { name: 'Retry this correction', exact: true })
+    .click();
+  await expect(page.locator('.record-row')).toHaveCount(2);
+  await expect(
+    page.locator('.record-row').filter({ hasText: 'Purchase reversed' }),
+  ).toHaveCount(1);
+  await expect(
+    page.locator('.record-row').filter({ hasText: 'Reversal' }),
+  ).toContainText('−UGX 5,000');
+  await page.locator('.record-row').filter({ hasText: 'Reversal' }).click();
+  await expect(page.getByText('Balanced', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Reverses transaction:/)).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Reverse this purchase', exact: true }),
+  ).toHaveCount(0);
+  await page.reload();
+  if ((page.viewportSize()?.width ?? 1440) < 760)
+    await page
+      .getByRole('button', { name: 'Open navigation', exact: true })
+      .click();
+  await page.getByRole('button', { name: 'Ledger', exact: true }).click();
+  await page.getByRole('searchbox').fill(`Saved from ${info.project.name}`);
+  await expect(page.locator('.record-row')).toHaveCount(2);
   await page.screenshot({
     path: info.outputPath('saved-workspace.png'),
     fullPage: true,

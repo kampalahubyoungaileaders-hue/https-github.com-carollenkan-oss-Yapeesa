@@ -55,8 +55,12 @@ export function statementData(raw: unknown, memberId?: string): Statement {
       const name = members.get(person);
       if (
         !name ||
-        !/^[0-9]{1,19}$/.test(amount) ||
-        !/^[0-9]{1,19}$/.test(shares) ||
+        !/^-?[0-9]{1,19}$/.test(amount) ||
+        !/^-?[0-9]{1,19}$/.test(shares) ||
+        ((BigInt(amount) < 0n || BigInt(shares) < 0n) &&
+          (typeof row['reverses'] !== 'string' ||
+            BigInt(amount) >= 0n ||
+            BigInt(shares) >= 0n)) ||
         textField(row, 'currency') !== currency
       )
         throw new ApiError(502, 'INVALID_BACKEND_RESPONSE');
@@ -68,7 +72,7 @@ export function statementData(raw: unknown, memberId?: string): Statement {
           date: textField(row, 'meeting_date'),
           recordedAt: textField(row, 'recorded_at'),
           journal: textField(row, 'journal_id'),
-          note: textField(row, 'note'),
+          note: `${typeof row['reverses'] === 'string' ? `${t('reversesReference')}: ${row['reverses']} · ` : ''}${textField(row, 'note')}`,
           review: row['calculation_mismatch'] === true,
         },
       ];
@@ -93,7 +97,8 @@ export function statementData(raw: unknown, memberId?: string): Statement {
 
 export function statementAmount(amount: bigint, digits: number): string {
   const scale = 10n ** BigInt(digits);
-  return `${amount / scale}${digits ? `.${String(amount % scale).padStart(digits, '0')}` : ''}`;
+  const absolute = amount < 0n ? -amount : amount;
+  return `${amount < 0n ? '-' : ''}${absolute / scale}${digits ? `.${String(absolute % scale).padStart(digits, '0')}` : ''}`;
 }
 
 export async function renderStatement(

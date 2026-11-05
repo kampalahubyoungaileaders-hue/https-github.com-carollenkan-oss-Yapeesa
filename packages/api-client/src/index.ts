@@ -12,6 +12,8 @@ export type SharePurchase =
   paths['/api/groups/{id}/shares']['post']['requestBody']['content']['application/json'];
 export type Receipt =
   paths['/api/groups/{id}/shares']['post']['responses'][200]['content']['application/json'];
+export type ShareReversal =
+  paths['/api/groups/{id}/reversals']['post']['requestBody']['content']['application/json'];
 export type Factor =
   paths['/api/auth/mfa/enroll']['post']['responses'][200]['content']['application/json'];
 export type AdminWorkspace =
@@ -150,6 +152,8 @@ export const api = {
     request<SavedWorkspace>(`/api/groups/${encodeURIComponent(id)}`),
   recordShares: (id: string, input: SharePurchase) =>
     request<Receipt>(`/api/groups/${encodeURIComponent(id)}/shares`, input),
+  reverseShares: (id: string, input: ShareReversal) =>
+    request<Receipt>(`/api/groups/${encodeURIComponent(id)}/reversals`, input),
 };
 export function newTransactionId(): string {
   return v7();

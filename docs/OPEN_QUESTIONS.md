@@ -26,3 +26,11 @@ release. Free development hosting is configured; production readiness is separat
    assignments and SMS PIN recovery are implemented. Additional Auth-account invitations, lost-authenticator recovery
    and production backup/restore verification remain before customer onboarding.
    No live savings groups or financial records have been invented.
+
+8. Define the approved adjustment process for a closed meeting or a cycle already
+   shared out. The current saved reversal workflow handles open meetings only and
+   keeps closed records locked.
+9. Before saved Group loans, confirm the configured interest rounding modes,
+   partial-repayment allocation, and monthly due-date/month-end conventions. The
+   brief specifies both interest methods, schedule residuals in the last payment,
+   and group-configured limits; those requirements remain unchanged.
