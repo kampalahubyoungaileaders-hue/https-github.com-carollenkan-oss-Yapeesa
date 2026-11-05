@@ -463,7 +463,7 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
     `with old_cycle as (
     insert into public.cycle(organisation_id,starts_on,ends_on,share_price,status) values($1,current_date-400,current_date-300,5000,'closed') returning id
   ), old_meeting as (
-    insert into public.meeting(organisation_id,cycle_id,meeting_date,status) select $1,id,current_date-350,'closed' from old_cycle returning id
+    insert into public.meeting(organisation_id,cycle_id,meeting_date,status) select $1,id,current_date-350,'open' from old_cycle returning id
   ), old_journal as (
     insert into public.journal(organisation_id,currency,calc_version) select organisation_id,currency,calc_version from public.group_txn where id=$2 returning id
   ), old_lines as (
@@ -471,6 +471,10 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   ) insert into public.group_txn(organisation_id,meeting_id,member_id,client_id,device_id,shares,amount,currency,entered_by,journal_id,note,calc_version,client_calc_version,client_amount,calculation_mismatch)
     select t.organisation_id,m.id,t.member_id,$3,t.device_id,t.shares,t.amount,t.currency,t.entered_by,j.id,'Historical cycle fixture',t.calc_version,t.client_calc_version,t.client_amount,t.calculation_mismatch from public.group_txn t cross join old_meeting m cross join old_journal j where t.id=$2`,
     [env['TEST_ORG_A'], original.json().transaction_id, v7()],
+  );
+  await db.query(
+    `update public.meeting set status='closed' where organisation_id=$1 and id in (select meeting_id from public.group_txn where organisation_id=$1 and note='Historical cycle fixture')`,
+    [env['TEST_ORG_A']],
   );
   const afterHistory = await call('A', 'GET', previewUrl);
   assert.equal(afterHistory.statusCode, 200, afterHistory.body);
