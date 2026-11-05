@@ -32,7 +32,7 @@ test('recover PIN explicitly by SMS, retain staff authenticator and sign in agai
   );
   expect(sends).toBe(1);
   await page
-    .getByLabel('SMS code', { exact: true })
+    .getByLabel('SMS verification code', { exact: true })
     .fill(env['TEST_RECOVERY_CODE']!);
   await page
     .getByRole('button', { name: 'Verify SMS code', exact: true })
