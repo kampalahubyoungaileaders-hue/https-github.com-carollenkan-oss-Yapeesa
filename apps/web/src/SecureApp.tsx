@@ -16,6 +16,7 @@ import { Icon } from './icons';
 import { exportRows } from './workspace';
 import InvitationForm from './InvitationForm';
 import Administration from './Administration';
+import RecoveryForm from './RecoveryForm';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -58,6 +59,7 @@ function day(value: string, zone: string) {
 export default function SecureApp() {
   const [session, setSession] = useState<Session | null>(null);
   const [invitation, setInvitation] = useState(false);
+  const [recovering, setRecovering] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -359,6 +361,8 @@ export default function SecureApp() {
           {busy && <p role="status">{t('connectingSecurely')}</p>}
           {loading ? (
             <p role="status">{t('loadingRecords')}</p>
+          ) : recovering ? (
+            <RecoveryForm onCancel={() => setRecovering(false)} />
           ) : invitation ? (
             <InvitationForm
               onComplete={setSession}
@@ -412,7 +416,7 @@ export default function SecureApp() {
               </button>
             </form>
           )}
-          {!loading && !invitation && session?.configured && (
+          {!loading && !invitation && !recovering && session?.configured && (
             <button
               className="text-button signout-link"
               onClick={() => {
@@ -421,6 +425,17 @@ export default function SecureApp() {
               }}
             >
               {t('firstTimeSetup')}
+            </button>
+          )}
+          {!loading && !invitation && !recovering && session?.configured && (
+            <button
+              className="text-button signout-link"
+              onClick={() => {
+                setError('');
+                setRecovering(true);
+              }}
+            >
+              {t('forgotPin')}
             </button>
           )}
           <a className="back-link sample-link" href="#overview">

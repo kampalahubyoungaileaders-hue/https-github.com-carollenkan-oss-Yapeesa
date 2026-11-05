@@ -1,4 +1,20 @@
 export const secure = {
+  forgotPin: 'Forgot your PIN?',
+  recoveryTitle: 'Recover your PIN',
+  recoveryHelp:
+    'Verify your registered phone by SMS. Staff and accounts with an authenticator must also verify their existing authenticator. This does not replace a lost authenticator.',
+  recoveryRequested:
+    'If this phone has an eligible account, an SMS code has been requested. Check your phone before requesting another.',
+  recoveryVerify: 'Verify SMS code',
+  recoverySave: 'Set new PIN',
+  recoverySuccess: 'Your PIN is updated. Sign in again using your new PIN.',
+  recoveryCleanup:
+    'Your PIN is updated, but session cleanup is not confirmed. Retry cleanup; do not submit your PIN again.',
+  recoveryRetry: 'Retry session cleanup',
+  recoveryError:
+    'Recovery could not be completed. Check the SMS or authenticator code. If this attempt expired, return to sign-in and start again. A missing authenticator needs verified support recovery.',
+  recoveryUncertain:
+    'The connection was interrupted. Your PIN may already have changed. Try signing in with the new PIN before requesting another SMS code.',
   exportPdf: 'Download PDF statement',
   pdfStatement: 'Share purchase statement',
   pdfAmount: 'Amount',

@@ -6,10 +6,15 @@ import { spawn } from 'node:child_process';
 // No SMS is sent: users are created confirmed by the local fixture provisioner.
 const path = 'supabase/config.toml';
 const original = await readFile(path, 'utf8');
-const testConfig = original.replace(
-  /\[auth\.sms\.twilio\][\s\S]*?(?=\n\[auth\.mfa\])/,
-  '[auth.sms.twilio]\nenabled = true\naccount_sid = "local-test-only"\nmessage_service_sid = "local-test-only"\nauth_token = "local-test-only"\n',
-);
+const testConfig = original
+  .replace(
+    '# [auth.sms.test_otp]',
+    '[auth.sms.test_otp]\n256700000016 = "654321"\n256700000017 = "654321"',
+  )
+  .replace(
+    /\[auth\.sms\.twilio\][\s\S]*?(?=\n\[auth\.mfa\])/,
+    '[auth.sms.twilio]\nenabled = true\naccount_sid = "local-test-only"\nmessage_service_sid = "local-test-only"\nauth_token = "local-test-only"\n',
+  );
 if (testConfig === original)
   throw new Error('SMS configuration section missing');
 try {

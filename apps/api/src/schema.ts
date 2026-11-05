@@ -113,6 +113,20 @@ export const invitationBody = object({
   ...phonePinBody.properties,
   code: { type: 'string', pattern: '^[0-9]{6}$' },
 });
+export const recoveryCodeBody = object({
+  phone: phonePinBody.properties.phone,
+  code: mfaBody.properties.code,
+});
+export const recoveryPinBody = object({ pin: phonePinBody.properties.pin });
+export const recoverySchema = object({
+  requires_mfa: boolean,
+  mfa_verified: boolean,
+  factors: { type: 'array', items: object({ id: uuid, name: string }) },
+});
+export const recoveryResultSchema = object({
+  ok: boolean,
+  cleanup_complete: boolean,
+});
 const nullableUuid = { anyOf: [uuid, { type: 'null' }] };
 const adminCycle = object({
   starts_on: { type: 'string', format: 'date' },

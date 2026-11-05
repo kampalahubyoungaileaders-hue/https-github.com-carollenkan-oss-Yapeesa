@@ -129,6 +129,20 @@ try {
   const m = await user('MEMBER', '+256700000013', false);
   await user('LOCK', '+256700000014', false);
   const admin = await user('ADMIN', '+256700000015', true);
+  await user('REC_MEMBER', '+256700000016', false);
+  const recoveryStaff = await user('REC_STAFF', '+256700000017', true);
+  fixtures['TEST_RECOVERY_CODE'] = '654321';
+  const recoveryOrg = await db.query<{ id: string }>(
+    "insert into public.organisation(name,type,country_code,currency,time_zone) values('Local recovery group','group','UG','UGX','Africa/Kampala') returning id",
+  );
+  await db.query(
+    "insert into public.membership(person_id,organisation_id,role) values($1,$2,'secretary')",
+    [recoveryStaff, recoveryOrg.rows[0]!.id],
+  );
+  await db.query(
+    'insert into public.group_settings(organisation_id) values($1)',
+    [recoveryOrg.rows[0]!.id],
+  );
   const platform = await db.query<{ id: string }>(
     "insert into public.organisation(name,type,country_code,currency,time_zone) values('Local platform','fencher','UG','UGX','Africa/Kampala') returning id",
   );

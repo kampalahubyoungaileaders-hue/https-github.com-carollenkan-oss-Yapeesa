@@ -1,5 +1,7 @@
 import { v7 } from 'uuid';
 import type { paths } from './schema';
+export type Recovery =
+  paths['/api/auth/recovery/verify']['post']['responses'][200]['content']['application/json'];
 export type Session =
   paths['/api/session']['get']['responses'][200]['content']['application/json'];
 export type GroupList =
@@ -65,6 +67,24 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   return value as T;
 }
 export const api = {
+  recoveryCode: (phone: string) =>
+    request<{ ok: boolean }>('/api/auth/recovery/code', { phone }),
+  recoveryVerify: (phone: string, code: string) =>
+    request<Recovery>('/api/auth/recovery/verify', { phone, code }),
+  recoveryMfa: (factor_id: string, code: string) =>
+    request<Recovery>('/api/auth/recovery/mfa', { factor_id, code }),
+  recoveryComplete: (pin: string) =>
+    request<{ ok: boolean; cleanup_complete: boolean }>(
+      '/api/auth/recovery/complete',
+      { pin },
+    ),
+  recoveryFinish: () =>
+    request<{ ok: boolean; cleanup_complete: boolean }>(
+      '/api/auth/recovery/finish',
+      {},
+    ),
+  recoveryCancel: () =>
+    request<{ ok: boolean }>('/api/auth/recovery/cancel', {}),
   statement: async (id: string, memberId?: string): Promise<Blob> => {
     let response: Response;
     try {
