@@ -144,6 +144,11 @@ test('meeting attendance, immutable snapshots, distinct live officers, cash carr
     403,
   );
   const opened = await call('MEETING_SECRETARY', 'POST', endpoint, open);
+  if (opened.statusCode !== 200) {
+    const access = openTokens(cookies.get('MEETING_SECRETARY')!.slice('yapesa_session='.length), config!.cookieKey).access_token;
+    const detail = await fetch(`${config!.supabaseUrl}/rest/v1/rpc/meeting_command`, { method: 'POST', headers: { apikey: config!.publishableKey, Authorization: `Bearer ${access}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_org: org, p_action: open.action, p_request: open.request_id, p_device: open.device_id, p_date: open.date }) });
+    assert.equal(detail.status, 200, await detail.text());
+  }
   assert.equal(opened.statusCode, 200, opened.body);
   const meeting = opened.json().id as string;
   const replay = await call('MEETING_SECRETARY', 'POST', endpoint, open);
