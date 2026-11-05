@@ -33,7 +33,11 @@ export const groupSchema = object({
   can_record: boolean,
 });
 export const workspaceSchema = object({
-  group: object({ ...groupSchema.properties, max_shares: integerString }),
+  group: object({
+    ...groupSchema.properties,
+    max_shares: integerString,
+    can_preview_shareout: boolean,
+  }),
   cycle: {
     anyOf: [
       { type: 'null' },
@@ -119,6 +123,23 @@ export const reversalBody = object({
   reason: { type: 'string', minLength: 1, maxLength: 240, pattern: '\\S' },
 });
 export const factorSchema = object({ id: uuid, secret: string, uri: string });
+export const shareoutSchema = object({
+  cycle_id: uuid,
+  currency: string,
+  fund: integerString,
+  total_shares: integerString,
+  calc_version: string,
+  scope: { type: 'string', enum: ['recorded-shares-only'] },
+  members: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      name: string,
+      shares: integerString,
+      amount: integerString,
+    }),
+  },
+});
 export const errorSchema = object({ error: string });
 export const phonePinBody = object({
   phone: { type: 'string', pattern: '^\\+[1-9][0-9]{6,14}$' },

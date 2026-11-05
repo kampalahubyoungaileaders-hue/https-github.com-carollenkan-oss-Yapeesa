@@ -11,6 +11,7 @@ import {
   money,
   shareJournal,
   accountBalance,
+  shareOut,
 } from '../packages/domain/src/index.ts';
 import { totp } from '../scripts/totp.js';
 const env = process.env;
@@ -89,6 +90,16 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   assert.equal(csrf.statusCode, 403);
   await login('A');
   assert.equal(
+    (
+      await call(
+        'A',
+        'GET',
+        `/api/groups/${env['TEST_ORG_A']}/shareout-preview`,
+      )
+    ).statusCode,
+    403,
+  );
+  assert.equal(
     (await call('A', 'GET', `/api/groups/${env['TEST_ORG_A']}/statement.pdf`))
       .statusCode,
     403,
@@ -111,6 +122,13 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
     403,
   );
   const device = v7();
+  const previewUrl = `/api/groups/${env['TEST_ORG_A']}/shareout-preview`;
+  assert.equal((await call('NONE', 'GET', previewUrl)).statusCode, 401);
+  assert.equal((await call('B', 'GET', previewUrl)).statusCode, 403);
+  const emptyPreview = await call('A', 'GET', previewUrl);
+  assert.equal(emptyPreview.statusCode, 200, emptyPreview.body);
+  assert.equal(emptyPreview.json().fund, '0');
+  assert.deepEqual(emptyPreview.json().members, []);
   const client = v7();
   const input = {
     member_id: env['TEST_A_PERSON'],
@@ -200,6 +218,7 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   );
   const member = await login('MEMBER');
   assert.equal(member.json().user.requires_mfa, false);
+  assert.equal((await call('MEMBER', 'GET', previewUrl)).statusCode, 403);
   const restricted = await call(
     'MEMBER',
     'GET',
@@ -421,6 +440,112 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
     `/api/groups/${env['TEST_ORG_A']}/statement.pdf`,
   );
   assert.equal(correctedPdf.statusCode, 200, correctedPdf.body);
+  const preview = await call('A', 'GET', previewUrl);
+  assert.equal(preview.statusCode, 200, preview.body);
+  assert.equal(preview.headers['cache-control'], 'no-store');
+  const cycleTotals = await db.query<{ fund: string; shares: string }>(
+    `select sum(t.amount)::text as fund,sum(t.shares)::text as shares from public.group_txn t join public.meeting m on m.id=t.meeting_id join public.cycle c on c.id=m.cycle_id where t.organisation_id=$1 and c.status='active'`,
+    [env['TEST_ORG_A']],
+  );
+  assert.equal(preview.json().fund, cycleTotals.rows[0]!.fund);
+  assert.equal(preview.json().total_shares, cycleTotals.rows[0]!.shares);
+  assert.equal(
+    preview
+      .json()
+      .members.reduce(
+        (sum: bigint, row: { amount: string }) => sum + BigInt(row.amount),
+        0n,
+      ),
+    BigInt(preview.json().fund),
+  );
+  // A historical closed-cycle purchase must not enter the active-cycle fund.
+  await db.query(
+    `with old_cycle as (
+    insert into public.cycle(organisation_id,starts_on,ends_on,share_price,status) values($1,current_date-400,current_date-300,5000,'closed') returning id
+  ), old_meeting as (
+    insert into public.meeting(organisation_id,cycle_id,meeting_date,status) select $1,id,current_date-350,'closed' from old_cycle returning id
+  ), old_journal as (
+    insert into public.journal(organisation_id,currency,calc_version) select organisation_id,currency,calc_version from public.group_txn where id=$2 returning id
+  ), old_lines as (
+    insert into public.journal_line(organisation_id,journal_id,account_id,side,amount) select l.organisation_id,j.id,l.account_id,l.side,l.amount from public.journal_line l cross join old_journal j where l.journal_id=(select journal_id from public.group_txn where id=$2)
+  ) insert into public.group_txn(organisation_id,meeting_id,member_id,client_id,device_id,shares,amount,currency,entered_by,journal_id,note,calc_version,client_calc_version,client_amount,calculation_mismatch)
+    select t.organisation_id,m.id,t.member_id,$3,t.device_id,t.shares,t.amount,t.currency,t.entered_by,j.id,'Historical cycle fixture',t.calc_version,t.client_calc_version,t.client_amount,t.calculation_mismatch from public.group_txn t cross join old_meeting m cross join old_journal j where t.id=$2`,
+    [env['TEST_ORG_A'], original.json().transaction_id, v7()],
+  );
+  const afterHistory = await call('A', 'GET', previewUrl);
+  assert.equal(afterHistory.statusCode, 200, afterHistory.body);
+  assert.deepEqual(afterHistory.json(), preview.json());
+  await db.query(
+    `update public.membership set ends_at=now() where organisation_id=$1 and person_id=$2 and role='secretary'`,
+    [env['TEST_ORG_A'], env['TEST_A_PERSON']],
+  );
+  try {
+    assert.equal((await call('A', 'GET', previewUrl)).statusCode, 403);
+  } finally {
+    await db.query(
+      `update public.membership set ends_at=null where organisation_id=$1 and person_id=$2 and role='secretary'`,
+      [env['TEST_ORG_A'], env['TEST_A_PERSON']],
+    );
+  }
+  // SQL and TypeScript allocate the same generated funds, including rounding ties
+  // and values beyond JavaScript's safe integer range.
+  await fc.assert(
+    fc.asyncProperty(
+      fc.bigInt({ min: 0n, max: 9223372036854775807n }),
+      fc.array(fc.bigInt({ min: 1n, max: 1000000000000000000n }), {
+        minLength: 1,
+        maxLength: 25,
+      }),
+      async (fund, weights) => {
+        const members = weights.map((shares, index) => ({
+          id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+          shares,
+        }));
+        const result = await db.query<{
+          allocation: { id: string; amount: string }[];
+        }>('select private.shareout_allocation($1,$2::jsonb) as allocation', [
+          String(fund),
+          JSON.stringify(
+            members.map((row) => ({ ...row, shares: String(row.shares) })),
+          ),
+        ]);
+        assert.deepEqual(
+          result.rows[0]!.allocation,
+          shareOut(money(fund, 'UGX'), members).map((row) => ({
+            id: row.id,
+            amount: String(row.amount.minor),
+          })),
+        );
+      },
+    ),
+    { numRuns: 100 },
+  );
+  for (const [fund, members] of [
+    [
+      '2',
+      [
+        { id: '00000000-0000-4000-8000-000000000003', shares: '1' },
+        { id: '00000000-0000-4000-8000-000000000001', shares: '1' },
+        { id: '00000000-0000-4000-8000-000000000002', shares: '1' },
+      ],
+    ],
+    ['0', []],
+    ['0', [{ id: '00000000-0000-4000-8000-000000000001', shares: '0' }]],
+  ] as const) {
+    const result = await db.query<{
+      allocation: { id: string; amount: string }[];
+    }>('select private.shareout_allocation($1,$2::jsonb) as allocation', [
+      fund,
+      JSON.stringify(members),
+    ]);
+    assert.deepEqual(
+      result.rows[0]!.allocation,
+      shareOut(
+        money(BigInt(fund), 'UGX'),
+        members.map((row) => ({ id: row.id, shares: BigInt(row.shares) })),
+      ).map((row) => ({ id: row.id, amount: String(row.amount.minor) })),
+    );
+  }
   await appendFile('.env', `TEST_DEVICE_A=${device}\n`);
   const direct = await fetch(
     `${config!.supabaseUrl}/auth/v1/token?grant_type=password`,
@@ -481,6 +606,7 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
     423,
   );
   await call('A', 'POST', '/api/auth/logout', {});
+  assert.equal((await call('A', 'GET', previewUrl)).statusCode, 401);
   assert.equal((await call('A', 'GET', '/api/groups')).statusCode, 401);
   assert.equal(
     (await call('A', 'GET', `/api/groups/${env['TEST_ORG_A']}/statement.pdf`))

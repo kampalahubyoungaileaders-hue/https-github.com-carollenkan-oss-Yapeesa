@@ -142,6 +142,37 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
   await page.getByRole('button', { name: 'Ledger', exact: true }).click();
   await page.getByRole('searchbox').fill(`Saved from ${info.project.name}`);
   await expect(page.locator('.record-row')).toHaveCount(2);
+  if ((page.viewportSize()?.width ?? 1440) < 760)
+    await page
+      .getByRole('button', { name: 'Open navigation', exact: true })
+      .click();
+  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  const previewResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/shareout-preview') && response.status() === 200,
+  );
+  await page
+    .getByRole('button', { name: 'Preview share-out', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText(
+    'Allocations match the fund exactly.',
+  );
+  await expect(
+    page.getByRole('table', { name: 'Share-out preview', exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('.shareout-panel')).toContainText(
+    'Recorded share fund only.',
+  );
+  const previewData = await (await previewResponse).json();
+  const fund = `UGX ${new Intl.NumberFormat('en-UG', { maximumFractionDigits: 0 }).format(BigInt(previewData.fund))}`;
+  await expect(page.locator('.shareout-panel')).toContainText(
+    `Recorded fund: ${fund}`,
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   await page.screenshot({
     path: info.outputPath('saved-workspace.png'),
     fullPage: true,

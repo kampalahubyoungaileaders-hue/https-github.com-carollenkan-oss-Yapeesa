@@ -2189,3 +2189,54 @@ dialog::backdrop {
   color: var(--muted);
   margin: 0 0 20px;
 }
+
+.shareout-panel {
+  margin: 24px 0;
+  padding: 24px;
+}
+.shareout-panel > p,
+.correction-panel p {
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 13px;
+}
+.shareout-panel .panel-heading {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.shareout-table-wrap {
+  overflow-x: auto;
+}
+.shareout-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.shareout-panel th,
+.shareout-panel td {
+  text-align: left;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.shareout-panel th:last-child,
+.shareout-panel td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+.correction-panel {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.correction-panel label {
+  display: block;
+  margin: 12px 0 8px;
+}
+.correction-panel input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+}

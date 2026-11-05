@@ -18,6 +18,7 @@ import InvitationForm from './InvitationForm';
 import Administration from './Administration';
 import RecoveryForm from './RecoveryForm';
 import ShareCorrection from './ShareCorrection';
+import ShareOutPreview from './ShareOutPreview';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -941,6 +942,13 @@ export default function SecureApp() {
                     </div>
                   </section>
                 </div>
+              )}
+              {tab === 'overview' && workspace.group.can_preview_shareout && (
+                <ShareOutPreview
+                  key={`${selected}-${savedRows.length}`}
+                  group={selected}
+                  format={(minor) => amount(minor, workspace)}
+                />
               )}
               {tab === 'members' && (
                 <section className="panel">

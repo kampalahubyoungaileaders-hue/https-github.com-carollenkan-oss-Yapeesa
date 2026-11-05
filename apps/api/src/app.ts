@@ -9,6 +9,7 @@ import { Backend, ApiError, object, textField, tokensFrom } from './backend.js';
 import { acceptInvitation, pendingInvitation } from './invitation.js';
 import { renderStatement, statementData } from './statement.js';
 import { registerRecovery } from './recovery.js';
+import { checkedShareOut } from './shareout.js';
 import {
   deriveAuthPassword,
   openTokens,
@@ -21,6 +22,7 @@ import {
   workspaceSchema,
   purchaseBody,
   reversalBody,
+  shareoutSchema,
   receiptSchema,
   factorSchema,
   errorSchema,
@@ -619,6 +621,29 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             p_reason: input.reason,
           },
           user.tokens.access_token,
+        );
+      },
+    );
+    app.get<{ Params: { id: string } }>(
+      '/api/groups/:id/shareout-preview',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          response: { 200: shareoutSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        return checkedShareOut(
+          await configured().backend.rpc(
+            'group_shareout_preview',
+            { p_org: request.params.id },
+            user.tokens.access_token,
+          ),
         );
       },
     );
