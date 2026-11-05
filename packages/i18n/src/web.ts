@@ -42,6 +42,23 @@ export const web = {
   reversal: 'Reversal',
   statusLabel: 'Status',
   recorded: 'Recorded',
+  reversePurchase: 'Reverse this purchase',
+  correctionReason: 'Reason for correction',
+  correctionExplanation:
+    'This records an equal opposite entry. The original stays visible. Use this for a recording mistake, then enter the correct purchase separately. Only open meetings in the active cycle can be corrected.',
+  correctionSaved:
+    'Reversal saved. The original purchase remains in the ledger.',
+  correctionRefresh:
+    'The reversal was saved. Refresh the workspace to see the updated balances.',
+  correctionRejected:
+    'Correction rejected. Refresh and check that the purchase has not already been reversed, the meeting is open, and this is the designated writer device.',
+  correctionUncertain:
+    'The response was interrupted. Retry this correction with the same reference before leaving. Refreshing the ledger will show whether it was saved.',
+  correctionRetry: 'Retry this correction',
+  reversalEntry: 'Reversal',
+  reversedPurchase: 'Purchase reversed',
+  reversesReference: 'Reverses transaction',
+  reversedReference: 'Reversed by transaction',
   reversed: 'Reversed',
   groupSettings: 'Cycle details',
   sharePrice: 'Price per share',

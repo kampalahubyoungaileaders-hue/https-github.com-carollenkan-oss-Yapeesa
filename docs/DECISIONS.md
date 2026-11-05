@@ -79,3 +79,15 @@ The existing fixed cycle share-price rule is retained from creation. Other initi
 settings can be corrected before posting; all configuration locks afterward under
 the same organisation lock as posting. Revoking membership excludes a person from
 new purchases while retaining names needed to read historical transactions.
+
+## Saved share corrections
+
+A share correction appends an exact opposite journal and a linked signed
+transaction. It cannot edit an original, reverse another reversal, or duplicate
+an existing reversal. The same group lock and writer-device authority used for
+purchases apply. Replays bind the actor as well as the payload. Existing closed
+meeting locks are retained; later-period adjustments await an explicit policy.
+
+Workspace, PDF and CSV totals include both purchases and reversals. Reversal
+journals use `groups-shares-reversal-v1`; share purchase calculations remain
+`groups-shares-v1`. No currency conversion or payment movement is introduced.

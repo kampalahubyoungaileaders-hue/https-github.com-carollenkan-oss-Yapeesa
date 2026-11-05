@@ -1847,6 +1847,8 @@ export interface paths {
                 journal_id: string;
                 calculation_mismatch: boolean;
                 note: string;
+                /** Format: uuid */
+                reverses?: string | null;
               }[];
               journal_lines: {
                 /** Format: uuid */
@@ -2117,6 +2119,142 @@ export interface paths {
             client_amount: string;
             client_calc_version: string;
             note: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              transaction_id: string;
+              /** Format: uuid */
+              journal_id: string;
+              /** Format: uuid */
+              client_id: string;
+              amount: string;
+              currency: string;
+              calculation_mismatch: boolean;
+              calc_version: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/{id}/reversals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            transaction_id: string;
+            client_id: string;
+            /** Format: uuid */
+            device_id: string;
+            reason: string;
           };
         };
       };

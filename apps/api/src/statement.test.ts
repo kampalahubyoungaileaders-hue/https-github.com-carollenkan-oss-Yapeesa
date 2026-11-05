@@ -69,6 +69,49 @@ test('statement amounts preserve minor units beyond JavaScript safe integers', (
   assert.equal(statementAmount(9007199254740993n, 0), '9007199254740993');
   assert.equal(statementAmount(9007199254740993n, 2), '90071992547409.93');
   assert.equal(statementAmount(1n, 4), '0.0001');
+  assert.equal(statementAmount(-1n, 2), '-0.01');
+  assert.equal(statementAmount(-10001n, 2), '-100.01');
+});
+test('statements retain linked reversals and signed totals without accepting arbitrary negative purchases', async () => {
+  const reversed = {
+    ...transaction,
+    shares: '-2',
+    amount: '-10000',
+    reverses: 'original-transaction',
+    journal_id: 'reversal-journal',
+  };
+  const data = statementData({
+    ...workspace,
+    transactions: [transaction, reversed],
+  });
+  assert.equal(
+    data.rows.reduce((sum, row) => sum + BigInt(row.amount), 0n),
+    0n,
+  );
+  assert.equal(
+    data.rows.reduce((sum, row) => sum + BigInt(row.shares), 0n),
+    0n,
+  );
+  assert.match(
+    data.rows.find((row) => row.journal === 'reversal-journal')!.note,
+    /original-transaction/,
+  );
+  assert.equal(
+    (await renderStatement(data)).subarray(0, 5).toString(),
+    '%PDF-',
+  );
+  assert.throws(() =>
+    statementData({
+      ...workspace,
+      transactions: [{ ...reversed, reverses: null }],
+    }),
+  );
+  assert.throws(() =>
+    statementData({
+      ...workspace,
+      transactions: [{ ...reversed, shares: '2' }],
+    }),
+  );
 });
 test('PDF uses an embedded font and paginates long names and notes', async () => {
   const data = statementData(workspace);

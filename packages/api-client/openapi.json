@@ -2632,11 +2632,11 @@
                           },
                           "shares": {
                             "type": "string",
-                            "pattern": "^[0-9]+$"
+                            "pattern": "^-?[0-9]+$"
                           },
                           "amount": {
                             "type": "string",
-                            "pattern": "^[0-9]+$"
+                            "pattern": "^-?[0-9]+$"
                           },
                           "currency": {
                             "type": "string"
@@ -2650,6 +2650,11 @@
                           },
                           "note": {
                             "type": "string"
+                          },
+                          "reverses": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
                           }
                         },
                         "required": [
@@ -3108,7 +3113,227 @@
                     },
                     "amount": {
                       "type": "string",
-                      "pattern": "^[0-9]+$"
+                      "pattern": "^-?[0-9]+$"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "calculation_mismatch": {
+                      "type": "boolean"
+                    },
+                    "calc_version": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "transaction_id",
+                    "journal_id",
+                    "client_id",
+                    "amount",
+                    "currency",
+                    "calculation_mismatch",
+                    "calc_version"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/reversals": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "transaction_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "transaction_id",
+                  "client_id",
+                  "device_id",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "transaction_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "journal_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "client_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^-?[0-9]+$"
                     },
                     "currency": {
                       "type": "string"

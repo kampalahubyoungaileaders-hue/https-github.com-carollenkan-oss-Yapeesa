@@ -17,6 +17,7 @@ import { exportRows } from './workspace';
 import InvitationForm from './InvitationForm';
 import Administration from './Administration';
 import RecoveryForm from './RecoveryForm';
+import ShareCorrection from './ShareCorrection';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -319,6 +320,8 @@ export default function SecureApp() {
         t('sharesLabel'),
         t('signedAmount'),
         t('currencyLabel'),
+        t('reversesReference'),
+        t('correctionReason'),
       ],
       ...workspace.transactions
         .filter((row) => !memberFilter || row.member_id === memberFilter)
@@ -329,6 +332,8 @@ export default function SecureApp() {
           row.shares,
           row.amount,
           row.currency,
+          row.reverses ?? '',
+          row.note,
         ]),
     ];
     const url = URL.createObjectURL(
@@ -551,6 +556,12 @@ export default function SecureApp() {
           .includes(search.toLowerCase()),
     ) ?? [];
   const savedRows = workspace?.transactions ?? [];
+  const inspectedTransaction = savedRows.find(
+    (row) => row.journal_id === journal,
+  );
+  const inspectedReversal =
+    inspectedTransaction &&
+    savedRows.find((row) => row.reverses === inspectedTransaction.id);
   const total = savedRows.reduce((sum, row) => sum + BigInt(row.amount), 0n);
   const netShares = savedRows.reduce(
     (sum, row) => sum + BigInt(row.shares),
@@ -1050,9 +1061,15 @@ export default function SecureApp() {
                           </strong>
                           <small>
                             {day(row.meeting_date, workspace.group.time_zone)} ·{' '}
-                            {row.calculation_mismatch
-                              ? t('flaggedRecord')
-                              : t('recorded')}
+                            {row.reverses
+                              ? t('reversalEntry')
+                              : savedRows.some(
+                                    (item) => item.reverses === row.id,
+                                  )
+                                ? t('reversedPurchase')
+                                : row.calculation_mismatch
+                                  ? t('flaggedRecord')
+                                  : t('recorded')}
                           </small>
                         </span>
                         <span className="record-value">
@@ -1125,6 +1142,31 @@ export default function SecureApp() {
                         {t('balanced')}
                       </p>
                     )}
+                  {inspectedTransaction && (
+                    <>
+                      <p>{inspectedTransaction.note}</p>
+                      {inspectedTransaction.reverses ? (
+                        <p className="break-reference">
+                          {t('reversesReference')}:{' '}
+                          {inspectedTransaction.reverses}
+                        </p>
+                      ) : inspectedReversal ? (
+                        <p className="break-reference">
+                          {t('reversedReference')}: {inspectedReversal.id}
+                        </p>
+                      ) : (
+                        workspace.group.can_record && (
+                          <ShareCorrection
+                            key={inspectedTransaction.id}
+                            group={selected}
+                            transaction={inspectedTransaction.id}
+                            device={deviceId(selected)}
+                            onSaved={refresh}
+                          />
+                        )
+                      )}
+                    </>
+                  )}
                 </section>
               )}
             </>

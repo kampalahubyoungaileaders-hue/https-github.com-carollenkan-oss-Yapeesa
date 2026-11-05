@@ -20,6 +20,7 @@ import {
   groupSchema,
   workspaceSchema,
   purchaseBody,
+  reversalBody,
   receiptSchema,
   factorSchema,
   errorSchema,
@@ -579,6 +580,43 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             p_client_amount: input.client_amount,
             p_client_version: input.client_calc_version,
             p_note: input.note,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        transaction_id: string;
+        client_id: string;
+        device_id: string;
+        reason: string;
+      };
+    }>(
+      '/api/groups/:id/reversals',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: reversalBody,
+          response: { 200: receiptSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        const input = request.body;
+        return configured().backend.rpc(
+          'reverse_share_purchase',
+          {
+            p_org: request.params.id,
+            p_transaction: input.transaction_id,
+            p_client: input.client_id,
+            p_device: input.device_id,
+            p_reason: input.reason,
           },
           user.tokens.access_token,
         );
