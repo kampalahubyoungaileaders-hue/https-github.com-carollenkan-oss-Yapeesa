@@ -56,7 +56,11 @@ Server-side PDF share statements are implemented with member filtering, exact
 integer totals, journal references and embedded fonts. The statement PR records
 its current CI and browser download results; sample rendering is checked with Poppler.
 
-Additional Auth-account invitations, customer-supplied group data, SMS recovery,
+SMS PIN recovery retains staff authenticator checks, uses a purpose-bound expiring
+cookie, clears the PIN lock and revokes sessions. The recovery pull request records
+the current real-Auth/browser verification and deployment status.
+
+Additional Auth-account invitations, customer-supplied group data, lost-factor recovery,
 full meeting/loan/share-out engines, offline mobile sync and writer
 transfer, live reversal endpoints, programme views and Fineract staff/tenant flows
 remain later phases. Production backup/restore drills and monitoring are not yet

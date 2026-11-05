@@ -8,6 +8,7 @@ import type { ApiConfig } from './config.js';
 import { Backend, ApiError, object, textField, tokensFrom } from './backend.js';
 import { acceptInvitation, pendingInvitation } from './invitation.js';
 import { renderStatement, statementData } from './statement.js';
+import { registerRecovery } from './recovery.js';
 import {
   deriveAuthPassword,
   openTokens,
@@ -204,6 +205,7 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
     return user;
   }
   app.after(() => {
+    registerRecovery(app, config, clearTokens);
     const errors = {
       400: errorSchema,
       401: errorSchema,

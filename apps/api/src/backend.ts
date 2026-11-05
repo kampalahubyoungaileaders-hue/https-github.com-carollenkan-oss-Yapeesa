@@ -64,11 +64,15 @@ export class Backend {
     }
     if (!response.ok) {
       const code =
-        result && typeof result === 'object' && 'code' in result
-          ? String(result.code)
+        result &&
+        typeof result === 'object' &&
+        ('error_code' in result || 'code' in result)
+          ? String('error_code' in result ? result.error_code : result.code)
           : '';
       if (path.startsWith('/auth/') && response.status === 429)
         throw new ApiError(429, 'TOO_MANY_ATTEMPTS');
+      if (path === '/auth/v1/user' && code === 'same_password')
+        throw new ApiError(409, 'PIN_UNCHANGED');
       if (path.startsWith('/auth/'))
         throw new ApiError(
           response.status >= 500 ? 503 : 401,

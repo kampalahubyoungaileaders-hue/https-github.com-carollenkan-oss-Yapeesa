@@ -23,6 +23,9 @@ groups, people or financial entries.
 The saved workspace also provides server-generated [PDF share statements](docs/STATEMENTS.md)
 for the selected group or member, with the same account permissions as the ledger.
 
+Sign-in includes [SMS PIN recovery](docs/RECOVERY.md), retaining existing staff
+authenticator verification. Lost-authenticator recovery remains separate.
+
 ## Open the web workspace
 
 After `pnpm install --frozen-lockfile`, run `pnpm --filter @yapesa/web dev` and open

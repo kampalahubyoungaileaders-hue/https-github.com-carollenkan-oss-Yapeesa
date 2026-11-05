@@ -23,6 +23,6 @@ release. Free development hosting is configured; production readiness is separat
 
 7. The first administrator is verified and active, and public development hosting
    is configured. Group administration, ledger-member registration and existing verified staff
-   assignments are implemented. Additional Auth-account invitations, SMS recovery
+   assignments and SMS PIN recovery are implemented. Additional Auth-account invitations, lost-authenticator recovery
    and production backup/restore verification remain before customer onboarding.
    No live savings groups or financial records have been invented.
