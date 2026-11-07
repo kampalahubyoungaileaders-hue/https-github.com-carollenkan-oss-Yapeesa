@@ -19,7 +19,9 @@ or reverse a receipt exactly. Cash receipts cannot exceed the outstanding amount
 partial receipts are allowed only if the charge's saved rule permits them.
 Outstanding balances can be collected at a later open meeting, including when the
 original meeting is closed. The receipt belongs to the collection meeting and
-cannot change the older cash count or approvals.
+cannot change the older cash count or approvals. A former member settling an
+old fine is not added to the current member roster or charged its new social
+contribution.
 
 Marking attendance absent automatically assesses the saved absence fine, once per
 transition into absence. Repeated absent saves do not duplicate it. Present or

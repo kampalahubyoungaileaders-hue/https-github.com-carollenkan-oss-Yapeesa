@@ -68,7 +68,21 @@ end $$;
 revoke all on function private.capture_fine_policy() from public,anon,authenticated;
 create trigger capture_fine_policy after insert on public.meeting_session for each row execute function private.capture_fine_policy();
 create trigger guard_fine_charge before insert on public.fine_charge for each row execute function private.guard_meeting_post();
-create trigger guard_fine_event before insert on public.fine_event for each row execute function private.guard_meeting_post();
+-- Collecting an existing obligation from a former member must not enrol them
+-- into this meeting's new social contribution requirement.
+create function private.guard_fine_event() returns trigger language plpgsql security invoker set search_path='' as $$
+declare target public.meeting; boundary date; begin
+ perform pg_advisory_xact_lock(hashtextextended(new.organisation_id::text,0));
+ select * into strict target from public.meeting where id=new.meeting_id and organisation_id=new.organisation_id;
+ select max(m.meeting_date) into boundary from public.meeting m where m.organisation_id=new.organisation_id and (m.status='closed' or exists(select 1 from public.meeting_session s where s.meeting_id=m.id));
+ if target.status<>'open' or target.meeting_date<boundary then raise exception 'Meeting history is locked' using errcode='22023'; end if;
+ if exists(select 1 from public.membership where organisation_id=new.organisation_id and person_id=new.member_id and role='member' and starts_at<=now() and (ends_at is null or ends_at>now())) then
+  insert into public.meeting_roster(organisation_id,meeting_id,member_id) values(new.organisation_id,new.meeting_id,new.member_id) on conflict do nothing;
+ end if;
+ return new;
+end $$;
+revoke all on function private.guard_fine_event() from public,anon,authenticated;
+create trigger guard_fine_event before insert on public.fine_event for each row execute function private.guard_fine_event();
 
 create function private.admin_fine_policy(p_request uuid,p_device uuid,p_org uuid,p_rules jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
 declare prior jsonb; payload jsonb; rule jsonb; policy_uuid uuid; begin

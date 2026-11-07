@@ -447,6 +447,96 @@ test('configured unpaid fines, absence corrections, permanent receipts, later co
     ).statusCode,
     403,
   );
+  // A former member may settle an old obligation without being made liable
+  // for this meeting's new mandatory social contribution.
+  const carried = await save('assess', {
+    meeting_id: second,
+    member_id: member,
+    code: 'late',
+  });
+  await meet('propose', {
+    meeting_id: second,
+    counted_cash: '11000',
+    explanation: '',
+  });
+  const secondProposal = (await call('MEETING_SECRETARY', 'GET', meetingPath))
+    .json()
+    .meetings.find((r: { id: string }) => r.id === second).proposal.id;
+  await meet('approve', { meeting_id: second, proposal_id: secondProposal });
+  await meet(
+    'approve',
+    { meeting_id: second, proposal_id: secondProposal, device_id: v7() },
+    'MEETING_TREASURER',
+  );
+  await db.query(
+    "update public.membership set ends_at=now() where organisation_id=$1 and person_id=$2 and role='member'",
+    [org, member],
+  );
+  const socialSettings = await call(
+    'MEETING_ADMIN',
+    'POST',
+    `/api/admin/groups/${org}/social`,
+    {
+      request_id: v7(),
+      device_id: device,
+      amount: '100',
+      roles: ['treasurer'],
+      separate: true,
+      require_all: true,
+    },
+  );
+  assert.equal(socialSettings.statusCode, 200, socialSettings.body);
+  const third = (await meet('open', { date: dates[2] })).id;
+  await meet('attendance', {
+    meeting_id: third,
+    member_id: secretary,
+    status: 'present',
+  });
+  await save('pay', {
+    meeting_id: third,
+    target_id: carried.id,
+    amount: '2000',
+  });
+  let thirdRow = (await call('MEETING_SECRETARY', 'GET', meetingPath))
+    .json()
+    .meetings.find((r: { id: string }) => r.id === third);
+  assert.deepEqual(
+    thirdRow.roster.map((r: { id: string }) => r.id),
+    [secretary],
+  );
+  const contribution = await call(
+    'MEETING_SECRETARY',
+    'POST',
+    `/api/groups/${org}/social`,
+    {
+      request_id: v7(),
+      device_id: device,
+      action: 'contribute',
+      meeting_id: third,
+      member_id: secretary,
+      target_id: null,
+      amount: null,
+      reason: '',
+    },
+  );
+  assert.equal(contribution.statusCode, 200, contribution.body);
+  await meet('propose', {
+    meeting_id: third,
+    counted_cash: '13100',
+    explanation: '',
+  });
+  thirdRow = (await call('MEETING_SECRETARY', 'GET', meetingPath))
+    .json()
+    .meetings.find((r: { id: string }) => r.id === third);
+  await meet('approve', {
+    meeting_id: third,
+    proposal_id: thirdRow.proposal.id,
+  });
+  await meet(
+    'approve',
+    { meeting_id: third, proposal_id: thirdRow.proposal.id, device_id: v7() },
+    'MEETING_TREASURER',
+  );
   const token = openTokens(
     cookies.get('B')!.slice('yapesa_session='.length),
     config!.cookieKey,
@@ -492,10 +582,10 @@ test('configured unpaid fines, absence corrections, permanent receipts, later co
     "select a.code,sum(case when l.side='debit' then l.amount else -l.amount end)::text as net from public.journal_line l join public.ledger_account a on a.id=l.account_id where l.organisation_id=$1 group by a.code",
     [org],
   );
-  assert.equal(balances.rows.find((r) => r.code === 'cash').net, '11000');
+  assert.equal(balances.rows.find((r) => r.code === 'cash').net, '13100');
   assert.equal(
     balances.rows.find((r) => r.code === 'fines_income').net,
-    '-1000',
+    '-3000',
   );
   assert.equal(
     balances.rows.find((r) => r.code === 'share_capital').net,
@@ -506,7 +596,7 @@ test('configured unpaid fines, absence corrections, permanent receipts, later co
     'GET',
     `/api/groups/${org}/shareout-preview`,
   );
-  assert.equal(preview.json().fund, '11000');
+  assert.equal(preview.json().fund, '13000');
 });
 test.after(async () => {
   await app.close();
