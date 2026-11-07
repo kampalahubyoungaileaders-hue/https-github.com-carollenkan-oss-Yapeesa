@@ -19,6 +19,7 @@ import Administration from './Administration';
 import RecoveryForm from './RecoveryForm';
 import ShareCorrection from './ShareCorrection';
 import ShareOutPreview from './ShareOutPreview';
+import Meetings from './Meetings';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -770,7 +771,7 @@ export default function SecureApp() {
                 <section className="stat-card">
                   <span className="stat-top">{t('meetingsRecorded')}</span>
                   <strong className="stat-value">
-                    {new Set(savedRows.map((row) => row.meeting_date)).size}
+                    {workspace.meeting_count}
                   </strong>
                   <small>{workspace.group.currency}</small>
                 </section>
@@ -978,7 +979,21 @@ export default function SecureApp() {
                   ))}
                 </section>
               )}
-              {tab === 'meetings' && (
+              {tab === 'meetings' && workspace.group.can_preview_shareout && (
+                <Meetings
+                  key={selected}
+                  group={selected}
+                  person={session.user.person_id}
+                  device={deviceId(selected)}
+                  timeZone={workspace.group.time_zone}
+                  cycle={workspace.cycle}
+                  format={(minor) => amount(minor, workspace)}
+                  onChanged={async () => {
+                    setWorkspace(await api.workspace(selected));
+                  }}
+                />
+              )}
+              {tab === 'meetings' && !workspace.group.can_preview_shareout && (
                 <section className="panel">
                   <div className="panel-heading">
                     <h2>{t('meetingRecords')}</h2>

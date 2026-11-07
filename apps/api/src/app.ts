@@ -10,6 +10,7 @@ import { acceptInvitation, pendingInvitation } from './invitation.js';
 import { renderStatement, statementData } from './statement.js';
 import { registerRecovery } from './recovery.js';
 import { checkedShareOut } from './shareout.js';
+import { checkedMeetings } from './meeting.js';
 import {
   deriveAuthPassword,
   openTokens,
@@ -23,6 +24,8 @@ import {
   purchaseBody,
   reversalBody,
   shareoutSchema,
+  meetingCommandBody,
+  meetingWorkspaceSchema,
   receiptSchema,
   factorSchema,
   errorSchema,
@@ -644,6 +647,78 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             { p_org: request.params.id },
             user.tokens.access_token,
           ),
+        );
+      },
+    );
+    app.get<{ Params: { id: string } }>(
+      '/api/groups/:id/meetings',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          response: { 200: meetingWorkspaceSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        const backend = configured().backend;
+        const raw = await backend.rpc(
+          'meeting_workspace',
+          { p_org: request.params.id },
+          user.tokens.access_token,
+        );
+        return checkedMeetings(raw);
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        device_id: string;
+        action: string;
+        date: string | null;
+        meeting_id: string | null;
+        member_id: string | null;
+        status: string | null;
+        counted_cash: string | null;
+        explanation: string | null;
+        proposal_id: string | null;
+      };
+    }>(
+      '/api/groups/:id/meetings',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: meetingCommandBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        const b = request.body;
+        return configured().backend.rpc(
+          'meeting_command',
+          {
+            p_org: request.params.id,
+            p_action: b.action,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_date: b.date,
+            p_meeting: b.meeting_id,
+            p_member: b.member_id,
+            p_status: b.status,
+            p_counted: b.counted_cash,
+            p_explanation: b.explanation,
+            p_proposal: b.proposal_id,
+          },
+          user.tokens.access_token,
         );
       },
     );

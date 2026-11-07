@@ -36,6 +36,10 @@ export class ClientError extends Error {
     super(code);
   }
 }
+export type MeetingWorkspace =
+  paths['/api/groups/{id}/meetings']['get']['responses'][200]['content']['application/json'];
+export type MeetingCommand =
+  paths['/api/groups/{id}/meetings']['post']['requestBody']['content']['application/json'];
 async function request<T>(url: string, body?: unknown): Promise<T> {
   let response: Response;
   try {
@@ -71,6 +75,13 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   return value as T;
 }
 export const api = {
+  meetings: (id: string) =>
+    request<MeetingWorkspace>(`/api/groups/${encodeURIComponent(id)}/meetings`),
+  meetingCommand: (id: string, input: MeetingCommand) =>
+    request<{ id: string }>(
+      `/api/groups/${encodeURIComponent(id)}/meetings`,
+      input,
+    ),
   recoveryCode: (phone: string) =>
     request<{ ok: boolean }>('/api/auth/recovery/code', { phone }),
   recoveryVerify: (phone: string, code: string) =>

@@ -105,3 +105,22 @@ independent of roster order. TypeScript and SQL implementations are checked
 against generated cases; the API also compares them on each returned preview.
 Officers with verified MFA can view the full allocation. Former members' recorded
 shares are retained; reversals reduce their net shares and the recorded fund.
+
+## Online attendance and two-officer meeting close
+
+Meeting cash closes use immutable opening, attendance, proposal and approval
+records. A fingerprint includes the opening, cash totals, transaction IDs and
+latest attendance revisions. A changed snapshot or superseding proposal cannot
+reuse prior approvals. One person counts once; the final command rechecks current
+officer roles under the organisation posting lock before locking the meeting.
+
+The next opening carries the last verified counted cash. Count differences are
+recorded rather than silently posted as income, expense or a balancing journal.
+The first opening uses earlier recorded cash, with no unverified opening amount
+accepted from the client. Closed legacy records without a cash snapshot require
+reconciliation. After an opening is fixed, earlier financial entries are blocked.
+
+Online officers approve through their own PIN/MFA sessions, including from a
+separate browser. Existing signatures record consent at the time of approval;
+logout does not erase them. Revoked group roles no longer count toward closing.
+This does not define or implement the outstanding offline approval PIN policy.
