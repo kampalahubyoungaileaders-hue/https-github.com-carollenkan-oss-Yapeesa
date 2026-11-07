@@ -29,6 +29,15 @@ create table public.meeting_approval(
  officer_id uuid not null references public.person(id), device_id uuid not null, recorded_at timestamptz not null default now(), unique(closing_id,officer_id),
  foreign key(closing_id,meeting_id,organisation_id) references public.meeting_closing(id,meeting_id,organisation_id), foreign key(device_id,organisation_id) references public.device(id,organisation_id)
 );
+create index meeting_org_date on public.meeting(organisation_id,meeting_date);
+create index group_txn_meeting on public.group_txn(meeting_id,organisation_id);
+create index meeting_session_org on public.meeting_session(organisation_id,meeting_id);
+create index meeting_roster_org on public.meeting_roster(organisation_id,meeting_id);
+create index meeting_roster_member on public.meeting_roster(member_id,organisation_id);
+create index attendance_org on public.attendance(organisation_id,meeting_id);
+create index meeting_closing_org on public.meeting_closing(organisation_id,meeting_id);
+create index meeting_approval_org on public.meeting_approval(organisation_id,closing_id);
+create index meeting_approval_officer on public.meeting_approval(officer_id,organisation_id);
 alter table public.meeting add column closed_proposal_id uuid;
 alter table public.meeting add constraint meeting_closed_proposal foreign key(closed_proposal_id,id,organisation_id) references public.meeting_closing(id,meeting_id,organisation_id);
 
@@ -120,7 +129,7 @@ grant execute on function private.officer_eligible(uuid,uuid) to authenticated,y
 -- cannot provide an actor, expected cash, opening balance or approval count.
 create function private.meeting_command(p_org uuid,p_action text,p_request uuid,p_device uuid,p_date date,p_meeting uuid,p_member uuid,p_status text,p_counted text,p_explanation text,p_proposal uuid)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare actor uuid; request_data jsonb; prior public.sync_receipt; target public.meeting; cyc public.cycle; settings public.group_settings; previous public.meeting; opening numeric; snapshot jsonb; proposal public.meeting_closing; counted bigint; approvals bigint; result_data jsonb;
+declare actor uuid; record_uuid uuid; request_data jsonb; prior public.sync_receipt; target public.meeting; cyc public.cycle; settings public.group_settings; previous public.meeting; opening numeric; snapshot jsonb; proposal public.meeting_closing; counted bigint; approvals bigint; result_data jsonb;
 begin
  if not private.is_officer(p_org) then raise exception 'Not permitted' using errcode='42501'; end if;
  if p_action not in ('open','attendance','propose','approve') or p_action is null or (p_action<>'approve' and not private.can_record(p_org)) then raise exception 'Not permitted' using errcode='42501'; end if;
@@ -166,6 +175,7 @@ begin
    if opening<0 or opening>9223372036854775807 then raise exception 'Invalid opening cash' using errcode='22023'; end if;
    insert into public.meeting_session(organisation_id,meeting_id,opening_cash,entered_by,device_id) values(p_org,target.id,opening::bigint,actor,p_device);
   end if;
+  select id into strict record_uuid from public.meeting_session where meeting_id=target.id;
   insert into public.meeting_roster(organisation_id,meeting_id,member_id)
    select p_org,target.id,person_id from public.membership where organisation_id=p_org and role='member' and starts_at<=now() and (ends_at is null or ends_at>now())
    union select p_org,target.id,member_id from public.group_txn where meeting_id=target.id on conflict do nothing;
@@ -174,7 +184,7 @@ begin
   if p_action='attendance' then
    if not exists(select 1 from public.meeting_roster where meeting_id=target.id and member_id=p_member) and not exists(select 1 from public.membership where organisation_id=p_org and person_id=p_member and role='member' and starts_at<=now() and (ends_at is null or ends_at>now())) then raise exception 'Invalid roster member' using errcode='22023'; end if;
    insert into public.meeting_roster(organisation_id,meeting_id,member_id) values(p_org,target.id,p_member) on conflict do nothing;
-   insert into public.attendance(organisation_id,meeting_id,member_id,status,entered_by,device_id) values(p_org,target.id,p_member,p_status,actor,p_device);
+   insert into public.attendance(organisation_id,meeting_id,member_id,status,entered_by,device_id) values(p_org,target.id,p_member,p_status,actor,p_device) returning id into record_uuid;
   else
    snapshot:=private.meeting_snapshot(p_org,target.id);
    if exists(select 1 from jsonb_array_elements(snapshot->'roster') r where r->>'status' is null) then raise exception 'Complete attendance first' using errcode='22023'; end if;
@@ -183,19 +193,19 @@ begin
     perform private.cash_reconciliation(snapshot->>'opening_cash',snapshot->>'cash_in',snapshot->>'cash_out',p_counted);
     if counted<>(snapshot->>'expected_cash')::bigint and p_explanation !~ '[^[:space:]]' then raise exception 'Explain the cash difference' using errcode='22023'; end if;
     insert into public.meeting_closing(organisation_id,meeting_id,snapshot_hash,expected_cash,counted_cash,difference,explanation,calc_version,entered_by,device_id)
-    values(p_org,target.id,private.meeting_hash(snapshot),(snapshot->>'expected_cash')::bigint,counted,counted-(snapshot->>'expected_cash')::bigint,p_explanation,'groups-meetings-v1',actor,p_device);
+    values(p_org,target.id,private.meeting_hash(snapshot),(snapshot->>'expected_cash')::bigint,counted,counted-(snapshot->>'expected_cash')::bigint,p_explanation,'groups-meetings-v1',actor,p_device) returning id into record_uuid;
    else
     select * into strict proposal from public.meeting_closing where id=p_proposal and meeting_id=target.id and organisation_id=p_org;
     if proposal.id is distinct from (select id from public.meeting_closing where meeting_id=target.id order by revision desc limit 1) or proposal.snapshot_hash<>private.meeting_hash(snapshot) then raise exception 'Closing snapshot changed' using errcode='22023'; end if;
-    insert into public.meeting_approval(organisation_id,meeting_id,closing_id,officer_id,device_id) values(p_org,target.id,proposal.id,actor,p_device);
+    insert into public.meeting_approval(organisation_id,meeting_id,closing_id,officer_id,device_id) values(p_org,target.id,proposal.id,actor,p_device) returning id into record_uuid;
     select count(*) into approvals from public.meeting_approval a where closing_id=proposal.id and private.officer_eligible(p_org,a.officer_id);
     if approvals>=2 then update public.meeting set status='closed',closed_proposal_id=proposal.id where id=target.id; end if;
    end if;
   end if;
  end if;
- result_data:=jsonb_build_object('id',target.id);
+ result_data:=jsonb_build_object('id',target.id,'record_id',record_uuid);
  insert into public.sync_receipt(client_id,organisation_id,request,result) values(p_request,p_org,request_data,result_data);
- insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,actor,p_device,'meeting_'||p_action,target.id,request_data||result_data);
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,actor,p_device,'meeting_'||p_action,record_uuid,request_data||result_data);
  return result_data;
 end $$;
 grant create on schema private to yapesa_meetings;
@@ -236,3 +246,17 @@ create or replace function private.person_visible(p_person uuid) returns boolean
  or exists(select 1 from public.meeting_roster r where r.member_id=p_person and private.is_officer(r.organisation_id))
  or exists(select 1 from public.meeting_approval a where a.officer_id=p_person and private.is_officer(a.organisation_id)));
 $$;
+
+create or replace function public.group_workspace(p_org uuid) returns jsonb language plpgsql stable security invoker set search_path='' as $$
+declare data jsonb; begin
+ if not private.can_read_org(p_org) then raise exception 'Not permitted' using errcode='42501'; end if;
+ select jsonb_build_object(
+ 'group',jsonb_build_object('id',o.id,'name',o.name,'currency',o.currency,'time_zone',o.time_zone,'country_code',o.country_code,'minor_digits',cr.minor_digits,'max_shares',gs.max_shares_per_meeting::text,'can_record',private.can_record(o.id),'can_preview_shareout',private.is_officer(o.id)),
+ 'cycle',(select jsonb_build_object('id',c.id,'starts_on',c.starts_on,'ends_on',c.ends_on,'share_price',c.share_price::text) from public.cycle c where c.organisation_id=o.id and c.status='active'),
+ 'members',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'name',p.display_name,'active',exists(select 1 from public.membership m where m.person_id=p.id and m.organisation_id=o.id and m.role='member' and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now()))) order by p.display_name) from public.person p where exists(select 1 from public.membership m where m.person_id=p.id and m.organisation_id=o.id and m.role='member' and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now())) or exists(select 1 from public.group_txn t where t.member_id=p.id and t.organisation_id=o.id)),'[]'::jsonb),
+ 'transactions',coalesce((select jsonb_agg(jsonb_build_object('id',t.id,'member_id',t.member_id,'meeting_date',m.meeting_date,'recorded_at',t.recorded_at,'shares',t.shares::text,'amount',t.amount::text,'currency',t.currency,'journal_id',t.journal_id,'calculation_mismatch',t.calculation_mismatch,'note',t.note,'reverses',t.reverses) order by t.recorded_at desc) from public.group_txn t join public.meeting m on m.id=t.meeting_id where t.organisation_id=o.id),'[]'::jsonb),
+ 'meeting_count',(select count(*)::text from public.meeting where organisation_id=o.id),
+ 'journal_lines',coalesce((select jsonb_agg(jsonb_build_object('journal_id',l.journal_id,'account',a.code,'side',l.side,'amount',l.amount::text)) from public.journal_line l join public.ledger_account a on a.id=l.account_id where l.organisation_id=o.id),'[]'::jsonb)) into data
+ from public.organisation o join public.currency_reference cr on cr.code=o.currency join public.group_settings gs on gs.organisation_id=o.id where o.id=p_org and o.type='group' and o.status='active';
+ return data;
+end $$;

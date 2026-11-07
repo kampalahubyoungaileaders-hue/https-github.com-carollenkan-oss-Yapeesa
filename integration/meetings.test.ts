@@ -134,6 +134,7 @@ test('meeting attendance, immutable snapshots, distinct live officers, cash carr
   await login('MEETING_TREASURER');
   await login('MEETING_CHAIR');
   await login('MEETING_MEMBER', false);
+  await login('MEETING_ADMIN');
   await login('B');
   assert.equal((await call('MEETING_MEMBER', 'GET', endpoint)).statusCode, 403);
   assert.equal((await call('B', 'GET', endpoint)).statusCode, 403);
@@ -265,6 +266,25 @@ test('meeting attendance, immutable snapshots, distinct live officers, cash carr
   });
   let row = (await workspace()).meetings[0];
   assert.equal(row.proposal.difference, '-5000');
+  const adminView = await call('MEETING_ADMIN', 'GET', endpoint);
+  assert.equal(adminView.statusCode, 200, adminView.body);
+  assert.equal(adminView.json().can_approve, false);
+  assert.equal(
+    (
+      await call(
+        'MEETING_ADMIN',
+        'POST',
+        endpoint,
+        command('approve', {
+          meeting_id: meeting,
+          proposal_id: row.proposal.id,
+          device_id: v7(),
+        }),
+      )
+    ).statusCode,
+    403,
+    'Platform administration does not grant group signing rights',
+  );
   const firstProposal = row.proposal.id as string;
   const approval = command('approve', {
     meeting_id: meeting,
@@ -500,6 +520,61 @@ test('meeting attendance, immutable snapshots, distinct live officers, cash carr
       /Append-only record/,
     );
   }
+  const memberAccess = openTokens(
+    cookies.get('MEETING_MEMBER')!.slice('yapesa_session='.length),
+    config!.cookieKey,
+  ).access_token;
+  const own = await fetch(
+    `${config!.supabaseUrl}/rest/v1/attendance?organisation_id=eq.${org}`,
+    {
+      headers: {
+        apikey: config!.publishableKey,
+        Authorization: `Bearer ${memberAccess}`,
+      },
+    },
+  );
+  assert.equal(own.status, 200);
+  const ownRows = (await own.json()) as { member_id: string }[];
+  assert(ownRows.length >= 2);
+  assert(
+    ownRows.every((row) => row.member_id === env['TEST_MEETING_MEMBER_PERSON']),
+    'A member can read only their own attendance',
+  );
+  const staffAccess = openTokens(
+    cookies.get('MEETING_SECRETARY')!.slice('yapesa_session='.length),
+    config!.cookieKey,
+  ).access_token;
+  const forged = await fetch(
+    `${config!.supabaseUrl}/rest/v1/meeting_approval`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: config!.publishableKey,
+        Authorization: `Bearer ${staffAccess}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        organisation_id: org,
+        meeting_id: meeting,
+        closing_id: proposal,
+        officer_id: env['TEST_MEETING_TREASURER_PERSON'],
+        device_id: device,
+      }),
+    },
+  );
+  assert.equal(
+    forged.status,
+    403,
+    'Direct forged approvals have no table-write privilege',
+  );
+  const audits = await db.query<{ count: string }>(
+    "select count(*)::text as count from public.audit_log where organisation_id=$1 and action='meeting_propose' and record_id in (select id from public.meeting_closing where organisation_id=$1)",
+    [org],
+  );
+  assert(
+    Number(audits.rows[0]!.count) >= 2,
+    'Audits link directly to immutable closing records',
+  );
   const role = await db.query<{ ledger: boolean; auth: boolean }>(
     "select has_table_privilege('yapesa_meetings','public.journal','INSERT') as ledger,has_table_privilege('yapesa_meetings','auth.users','UPDATE') as auth",
   );

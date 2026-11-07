@@ -771,7 +771,7 @@ export default function SecureApp() {
                 <section className="stat-card">
                   <span className="stat-top">{t('meetingsRecorded')}</span>
                   <strong className="stat-value">
-                    {new Set(savedRows.map((row) => row.meeting_date)).size}
+                    {workspace.meeting_count}
                   </strong>
                   <small>{workspace.group.currency}</small>
                 </section>

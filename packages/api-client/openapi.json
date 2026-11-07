@@ -2524,6 +2524,10 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "meeting_count": {
+                      "type": "string",
+                      "pattern": "^[0-9]+$"
+                    },
                     "group": {
                       "type": "object",
                       "additionalProperties": false,
@@ -2703,6 +2707,7 @@
                     }
                   },
                   "required": [
+                    "meeting_count",
                     "group",
                     "cycle",
                     "members",

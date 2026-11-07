@@ -173,7 +173,7 @@ export default function Meetings({
     <section className="panel saved-meetings">
       <div className="panel-heading">
         <div>
-          <h2>{t('meetingRecords')}</h2>
+          <h2>{t('onlineMeetingRecords')}</h2>
           <p>{t('meetingScope')}</p>
         </div>
         <button
@@ -395,7 +395,7 @@ export default function Meetings({
                       row.roster.some((member) => !member.status)
                     }
                   >
-                    {t('prepareClosing')}
+                    {t(proposal ? 'replaceClosing' : 'prepareClosing')}
                   </button>
                 </form>
               )}

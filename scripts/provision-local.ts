@@ -195,6 +195,11 @@ try {
   );
   const meetingChair = await user('MEETING_CHAIR', '+256700000020', true);
   const meetingMember = await user('MEETING_MEMBER', '+256700000021', false);
+  const meetingAdmin = await user('MEETING_ADMIN', '+256700000022', true);
+  await db.query(
+    "insert into public.membership(person_id,organisation_id,role) values($1,$2,'fencher_admin')",
+    [meetingAdmin, fixtures['TEST_PLATFORM_ORG']],
+  );
   for (const label of ['INTEGRATION', 'DESKTOP', 'PHONE']) {
     const org = await db.query<{ id: string }>(
       "insert into public.organisation(name,type,country_code,currency,time_zone) values($1,'group','UG','UGX','Africa/Kampala') returning id",

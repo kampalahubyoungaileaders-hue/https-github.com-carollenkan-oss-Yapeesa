@@ -57,6 +57,8 @@ The executor role has no login, RLS bypass, Auth writes or ledger-posting grants
 New records are append-only and RLS-protected. Members can read their own
 attendance rows; officers can review their group. API responses are not cached.
 The domain bigint and SQL numeric cash calculators are checked for parity.
+Audit entries link directly to each immutable attendance, opening, closing and
+approval record. Meeting counts include meetings without share purchases.
 
 CI covers replay conflicts, stale approvals, role revocation, closed-history
 locking, count carry-forward, concurrent last approval versus financial posting,

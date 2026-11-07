@@ -1809,6 +1809,7 @@ export interface paths {
           };
           content: {
             'application/json': {
+              meeting_count: string;
               group: {
                 /** Format: uuid */
                 id: string;

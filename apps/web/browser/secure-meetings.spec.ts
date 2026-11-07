@@ -25,6 +25,9 @@ async function login(page: Page, label: string, org: string) {
   await page
     .getByLabel('Choose a savings group', { exact: true })
     .selectOption(org);
+  await expect(
+    page.getByLabel('Choose a savings group', { exact: true }),
+  ).toHaveValue(org);
 }
 async function meetings(page: Page) {
   if ((page.viewportSize()?.width ?? 1440) < 760)
@@ -48,8 +51,10 @@ test('secretary records attendance and two independently signed-in officers lock
   const env = process.env;
   const org = env[`TEST_MEETING_ORG_${info.project.name.toUpperCase()}`]!;
   await context.addInitScript(
-    ({ org }) =>
-      localStorage.setItem(`yapesa-device-${org}`, crypto.randomUUID()),
+    ({ org }) => {
+      if (!localStorage.getItem(`yapesa-device-${org}`))
+        localStorage.setItem(`yapesa-device-${org}`, crypto.randomUUID());
+    },
     { org },
   );
   const errors: string[] = [];
@@ -82,6 +87,7 @@ test('secretary records attendance and two independently signed-in officers lock
     .getByRole('button', { name: 'Retry this meeting action', exact: true })
     .click();
   await expect(page.locator('.attendance-row')).toHaveCount(2);
+  await expect(page.locator('.live-stats .stat-value').nth(2)).toHaveText('1');
   await page
     .locator('.attendance-row')
     .filter({ hasText: 'Local MEETING_SECRETARY' })
@@ -185,6 +191,9 @@ test('secretary records attendance and two independently signed-in officers lock
   await page
     .getByLabel('Choose a savings group', { exact: true })
     .selectOption(org);
+  await expect(
+    page.getByLabel('Choose a savings group', { exact: true }),
+  ).toHaveValue(org);
   await meetings(page);
   await expect(
     page.getByText('Meeting closed and locked.', { exact: true }),

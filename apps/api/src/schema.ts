@@ -33,6 +33,7 @@ export const groupSchema = object({
   can_record: boolean,
 });
 export const workspaceSchema = object({
+  meeting_count: integerString,
   group: object({
     ...groupSchema.properties,
     max_shares: integerString,

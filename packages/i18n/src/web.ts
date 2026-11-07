@@ -42,6 +42,8 @@ export const web = {
   reversal: 'Reversal',
   statusLabel: 'Status',
   recorded: 'Recorded',
+  onlineMeetingRecords: 'Meeting records',
+  replaceClosing: 'Replace closing record',
   meetingScope:
     'Saved online attendance and cash reconciliation. Two different officers must approve the same closing record.',
   meetingLoadError:
@@ -85,7 +87,7 @@ export const web = {
   cashDifference: 'Cash difference',
   cashExplanation: 'Explanation of cash difference',
   closingHelp:
-    'Count the physical cash. Explain any difference. Preparing a closing does not change the ledger or close the meeting.',
+    'Count the physical cash. Explain any difference. Preparing a closing does not change the ledger or close the meeting. Replacing a closing requires new approvals.',
   closingSnapshot: 'Closing record for approval',
   officerApprovals: 'Active officer approvals',
   approvalRecorded: 'Approved',
