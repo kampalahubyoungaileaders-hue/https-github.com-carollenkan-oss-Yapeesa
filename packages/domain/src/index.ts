@@ -5,7 +5,7 @@ export const meetingCalcVersion = 'groups-meetings-v1';
 declare const minorUnitBrand: unique symbol;
 export type MinorUnits = bigint & { readonly [minorUnitBrand]: true };
 export type Money = Readonly<{ minor: MinorUnits; currency: string }>;
-export type Account = 'cash' | 'share_capital' | 'social_fund';
+export type Account = 'cash' | 'share_capital' | 'social_fund' | 'fines_income';
 export type JournalLine = Readonly<{
   account: Account;
   side: 'debit' | 'credit';
@@ -90,6 +90,47 @@ export function socialJournal(id: string, cash: Money): Journal {
       } as const),
     ]),
   });
+}
+export const fineCalcVersion = 'groups-fines-v1';
+export function fineJournal(id: string, cash: Money): Journal {
+  if (cash.minor === 0n) throw new Error('Fine cash movement must be nonzero');
+  const amount = money(
+    cash.minor < 0n ? -cash.minor : cash.minor,
+    cash.currency,
+  );
+  return Object.freeze({
+    id,
+    calcVersion: fineCalcVersion,
+    lines: Object.freeze([
+      Object.freeze({
+        account: 'cash',
+        side: cash.minor > 0n ? 'debit' : 'credit',
+        amount,
+      } as const),
+      Object.freeze({
+        account: 'fines_income',
+        side: cash.minor > 0n ? 'credit' : 'debit',
+        amount,
+      } as const),
+    ]),
+  });
+}
+export function fineOutstanding(
+  amount: Money,
+  paid: Money,
+  waived: Money,
+): Money {
+  if (
+    paid.currency !== amount.currency ||
+    waived.currency !== amount.currency ||
+    amount.minor <= 0n ||
+    paid.minor < 0n ||
+    waived.minor < 0n
+  )
+    throw new Error('Invalid fine balance');
+  const due = money(amount.minor - paid.minor - waived.minor, amount.currency);
+  if (due.minor < 0n) throw new Error('Fine overpaid or overwaived');
+  return due;
 }
 export function reverseJournal(id: string, original: Journal): Journal {
   journalBalance(original);

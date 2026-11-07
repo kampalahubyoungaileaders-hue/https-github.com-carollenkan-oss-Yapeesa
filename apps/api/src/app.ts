@@ -11,6 +11,7 @@ import { renderStatement, statementData } from './statement.js';
 import { registerRecovery } from './recovery.js';
 import { checkedShareOut } from './shareout.js';
 import { checkedMeetings } from './meeting.js';
+import { checkedFines } from './fines.js';
 import { checkedSocial } from './social.js';
 import {
   deriveAuthPassword,
@@ -27,6 +28,9 @@ import {
   shareoutSchema,
   meetingCommandBody,
   meetingWorkspaceSchema,
+  finePolicyBody,
+  fineCommandBody,
+  fineWorkspaceSchema,
   socialRuleBody,
   socialCommandBody,
   socialWorkspaceSchema,
@@ -830,6 +834,117 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             p_roles: b.roles,
             p_separate: b.separate,
             p_require_all: b.require_all,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.get<{ Params: { id: string } }>(
+      '/api/groups/:id/fines',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          response: { 200: fineWorkspaceSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        return checkedFines(
+          await configured().backend.rpc(
+            'fine_workspace',
+            { p_org: request.params.id },
+            user.tokens.access_token,
+          ),
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        device_id: string;
+        action: string;
+        meeting_id: string;
+        member_id: string | null;
+        target_id: string | null;
+        code: string | null;
+        amount: string | null;
+        reason: string;
+      };
+    }>(
+      '/api/groups/:id/fines',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: fineCommandBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        const b = request.body;
+        return configured().backend.rpc(
+          'fine_command',
+          {
+            p_org: request.params.id,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_action: b.action,
+            p_meeting: b.meeting_id,
+            p_member: b.member_id,
+            p_code: b.code,
+            p_amount: b.amount,
+            p_reason: b.reason,
+            p_target: b.target_id,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        device_id: string;
+        rules: {
+          code: string;
+          name: string;
+          amount: string;
+          trigger: string;
+          partial: boolean;
+        }[];
+      };
+    }>(
+      '/api/admin/groups/:id/fines',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: finePolicyBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        const b = request.body;
+        return configured().backend.rpc(
+          'admin_fine_policy',
+          {
+            p_org: request.params.id,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_rules: b.rules,
           },
           user.tokens.access_token,
         );

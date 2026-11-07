@@ -133,7 +133,10 @@ export const shareoutSchema = object({
   fund: integerString,
   total_shares: integerString,
   calc_version: string,
-  scope: { type: 'string', enum: ['recorded-shares-only'] },
+  scope: {
+    type: 'string',
+    enum: ['recorded-shares-only', 'recorded-shares-and-paid-fines'],
+  },
   members: {
     type: 'array',
     items: object({
@@ -432,6 +435,92 @@ export const meetingWorkspaceSchema = object({
             },
           }),
         ],
+      },
+    }),
+  },
+});
+export const fineRuleSchema = object({
+  code: { type: 'string', pattern: '^[a-z][a-z0-9_-]{0,39}$' },
+  name: { type: 'string', minLength: 1, maxLength: 80 },
+  amount: { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+  trigger: { type: 'string', enum: ['manual', 'absence'] },
+  partial: boolean,
+});
+export const finePolicyBody = object({
+  request_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  rules: { type: 'array', maxItems: 20, items: fineRuleSchema },
+});
+export const fineCommandBody = object({
+  request_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  action: { type: 'string', enum: ['assess', 'pay', 'waive', 'reverse'] },
+  meeting_id: uuid,
+  member_id: nullableUuid,
+  target_id: nullableUuid,
+  code: { anyOf: [string, { type: 'null' }] },
+  amount: {
+    anyOf: [
+      { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+      { type: 'null' },
+    ],
+  },
+  reason: { type: 'string', minLength: 1, maxLength: 240 },
+});
+export const fineWorkspaceSchema = object({
+  can_record: boolean,
+  can_configure: boolean,
+  currency: string,
+  rules: { type: 'array', items: fineRuleSchema },
+  meetings: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      date: string,
+      status: { type: 'string', enum: ['open', 'closed'] },
+      ready: boolean,
+      rules: { type: 'array', items: fineRuleSchema },
+    }),
+  },
+  charges: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      meeting_id: uuid,
+      date: string,
+      member_id: uuid,
+      name: string,
+      fine: string,
+      amount: integerString,
+      partial: boolean,
+      paid: integerString,
+      waived: integerString,
+      due: integerString,
+      reason: string,
+      automatic: boolean,
+    }),
+  },
+  events: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      meeting_id: uuid,
+      date: string,
+      charge_id: uuid,
+      name: string,
+      kind: { type: 'string', enum: ['payment', 'reversal', 'waiver'] },
+      cash: signedIntegerString,
+      waived: integerString,
+      reverses: nullableUuid,
+      reason: string,
+      journal_id: nullableUuid,
+      journal: {
+        type: 'array',
+        items: object({
+          account: string,
+          side: { type: 'string', enum: ['debit', 'credit'] },
+          amount: integerString,
+        }),
       },
     }),
   },

@@ -36,6 +36,12 @@ export class ClientError extends Error {
     super(code);
   }
 }
+export type FineWorkspace =
+  paths['/api/groups/{id}/fines']['get']['responses'][200]['content']['application/json'];
+export type FineCommand =
+  paths['/api/groups/{id}/fines']['post']['requestBody']['content']['application/json'];
+export type FinePolicyInput =
+  paths['/api/admin/groups/{id}/fines']['post']['requestBody']['content']['application/json'];
 export type SocialWorkspace =
   paths['/api/groups/{id}/social']['get']['responses'][200]['content']['application/json'];
 export type SocialCommand =
@@ -81,6 +87,18 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   return value as T;
 }
 export const api = {
+  fines: (id: string) =>
+    request<FineWorkspace>(`/api/groups/${encodeURIComponent(id)}/fines`),
+  fineCommand: (id: string, input: FineCommand) =>
+    request<{ id: string }>(
+      `/api/groups/${encodeURIComponent(id)}/fines`,
+      input,
+    ),
+  finePolicy: (id: string, input: FinePolicyInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/fines`,
+      input,
+    ),
   social: (id: string) =>
     request<SocialWorkspace>(`/api/groups/${encodeURIComponent(id)}/social`),
   socialCommand: (id: string, input: SocialCommand) =>
