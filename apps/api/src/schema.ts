@@ -270,6 +270,7 @@ export const meetingCommandBody = object({
 });
 const nullableString = { anyOf: [string, { type: 'null' }] };
 export const meetingWorkspaceSchema = object({
+  can_approve: boolean,
   currency: string,
   can_record: boolean,
   meetings: {

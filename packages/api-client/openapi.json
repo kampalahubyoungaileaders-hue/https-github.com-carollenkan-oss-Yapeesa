@@ -3711,6 +3711,9 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "can_approve": {
+                      "type": "boolean"
+                    },
                     "currency": {
                       "type": "string"
                     },
@@ -3842,7 +3845,12 @@
                       }
                     }
                   },
-                  "required": ["currency", "can_record", "meetings"]
+                  "required": [
+                    "can_approve",
+                    "currency",
+                    "can_record",
+                    "meetings"
+                  ]
                 }
               }
             }

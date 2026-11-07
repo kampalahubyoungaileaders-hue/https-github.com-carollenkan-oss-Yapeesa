@@ -47,6 +47,7 @@ end $$;
 create policy attendance_own_read on public.attendance for select to authenticated using(private.can_read_org(organisation_id) and member_id=private.current_person());
 grant usage,select on sequence public.attendance_revision_seq,public.meeting_closing_revision_seq to yapesa_meetings;
 grant usage on schema public,private,auth,extensions to yapesa_meetings;
+grant execute on function private.is_platform_admin() to yapesa_meetings;
 grant execute on function private.session_active(boolean),private.current_person(),private.has_role(uuid,text[]),private.requires_mfa(),private.can_read_org(uuid),private.is_officer(uuid),private.can_record(uuid),private.person_visible(uuid),private.can_read_journal(uuid) to yapesa_meetings;
 grant select on public.person,public.membership,public.organisation,public.cycle,public.meeting,public.group_settings,public.device,public.group_txn,public.journal_line,public.ledger_account,public.sync_receipt to yapesa_meetings;
 grant insert on public.meeting,public.device,public.sync_receipt,public.audit_log to yapesa_meetings;
@@ -124,6 +125,7 @@ begin
  if not private.is_officer(p_org) then raise exception 'Not permitted' using errcode='42501'; end if;
  if p_action not in ('open','attendance','propose','approve') or p_action is null or (p_action<>'approve' and not private.can_record(p_org)) then raise exception 'Not permitted' using errcode='42501'; end if;
  actor:=private.current_person();
+ if p_action='approve' and not private.officer_eligible(p_org,actor) then raise exception 'Group officer role required' using errcode='42501'; end if;
  if p_request is null or p_request::text !~ '^[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$' or p_device is null then raise exception 'Invalid meeting command' using errcode='22023'; end if;
  if (p_action='open' and (p_date is null or p_meeting is not null or p_member is not null or p_status is not null or p_counted is not null or p_explanation is not null or p_proposal is not null)) or
  (p_action='attendance' and (p_meeting is null or p_member is null or p_status is null or p_status not in ('present','absent','excused') or p_date is not null or p_counted is not null or p_explanation is not null or p_proposal is not null)) or
@@ -220,7 +222,7 @@ declare meetings jsonb:='[]'::jsonb; target public.meeting; snapshot jsonb; prop
   meetings:=meetings||jsonb_build_array(jsonb_build_object('id',target.id,'date',target.meeting_date,'status',target.status,'opening_cash',snapshot->>'opening_cash','cash_in',snapshot->>'cash_in','cash_out',snapshot->>'cash_out','expected_cash',snapshot->>'expected_cash','proposal',info,
    'roster',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'name',p.display_name,'status',a.status) order by p.display_name,p.id) from public.meeting_roster r join public.person p on p.id=r.member_id left join lateral(select status from public.attendance where meeting_id=r.meeting_id and member_id=r.member_id order by revision desc limit 1) a on true where r.meeting_id=target.id),'[]'::jsonb)));
  end loop;
- return jsonb_build_object('currency',(select currency from public.organisation where id=p_org),'can_record',private.can_record(p_org),'meetings',meetings);
+ return jsonb_build_object('currency',(select currency from public.organisation where id=p_org),'can_record',private.can_record(p_org),'can_approve',private.session_active(true) and private.has_role(p_org,array['secretary','treasurer','chair']),'meetings',meetings);
 end $$;
 revoke all on function public.meeting_workspace(uuid) from public,anon,authenticated;
 grant execute on function public.meeting_workspace(uuid) to authenticated;

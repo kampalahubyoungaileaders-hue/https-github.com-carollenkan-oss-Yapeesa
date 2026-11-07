@@ -42,6 +42,60 @@ export const web = {
   reversal: 'Reversal',
   statusLabel: 'Status',
   recorded: 'Recorded',
+  meetingScope:
+    'Saved online attendance and cash reconciliation. Two different officers must approve the same closing record.',
+  meetingLoadError:
+    'Meeting records could not be loaded. Check your connection and group officer access, then refresh.',
+  meetingSaved: 'Meeting record saved.',
+  meetingSavedRefresh:
+    'The record was saved. Refresh meeting records to see the latest state.',
+  meetingRejected:
+    'This action was rejected. Refresh and check the writer device, earlier open meetings, attendance and current closing record. Closed meetings cannot be changed.',
+  meetingUncertain:
+    'The response was interrupted. Retry this same action before leaving. If you reload, inspect the saved meeting before submitting again.',
+  retryMeeting: 'Retry this meeting action',
+  refreshMeetings: 'Refresh meetings',
+  newMeetingDate: 'New meeting date',
+  openMeeting: 'Open meeting',
+  openSelectedMeeting: 'Open selected meeting',
+  chooseMeeting: 'Choose meeting',
+  noSavedMeetings: 'No meetings saved yet.',
+  meetingOpenLabel: 'Open',
+  meetingClosedLabel: 'Closed',
+  meetingLocked: 'Meeting closed and locked.',
+  meetingLegacyClose:
+    'This older closed meeting has no verified cash snapshot. Reconciliation is required before its cash can be carried forward.',
+  meetingNeedsOpening:
+    'Open this meeting to record attendance and reconcile its saved purchases.',
+  openingCashHelp:
+    'Opening cash comes from the previous verified counted close. The first meeting uses earlier recorded cash. Unrecorded opening balances require a separate reconciled import.',
+  openingCash: 'Opening cash',
+  cashIn: 'Recorded cash in',
+  cashOut: 'Recorded cash out',
+  expectedClosingCash: 'Expected closing cash',
+  attendanceTitle: 'Attendance',
+  attendanceHelp:
+    'Mark each member present, absent or excused. Attendance changes stay in the history. Absence fines are not recorded by this workflow.',
+  attendanceUnmarked: 'Unmarked',
+  attendancePresent: 'Present',
+  attendanceAbsent: 'Absent',
+  attendanceExcused: 'Excused',
+  prepareClosing: 'Prepare closing',
+  countedClosingCash: 'Counted closing cash',
+  cashDifference: 'Cash difference',
+  cashExplanation: 'Explanation of cash difference',
+  closingHelp:
+    'Count the physical cash. Explain any difference. Preparing a closing does not change the ledger or close the meeting.',
+  closingSnapshot: 'Closing record for approval',
+  officerApprovals: 'Active officer approvals',
+  approvalRecorded: 'Approved',
+  approvalRoleEnded: 'Officer role ended; approval is not counted',
+  closingStale:
+    'The ledger or attendance changed after this closing was prepared. Prepare a new closing and collect approvals again.',
+  ownOfficerSignIn:
+    'Each officer must sign in with their own PIN and authenticator. The meeting locks when two different active officers approve this record.',
+  alreadyApproved: 'You already approved',
+  approveClosing: 'Approve closing',
   shareoutTitle: 'Share-out preview',
   shareoutShow: 'Preview share-out',
   shareoutRefresh: 'Refresh preview',
