@@ -84,6 +84,14 @@ export class Backend {
       if (code === '42501') throw new ApiError(403, 'PERMISSION_DENIED');
       if (
         [
+          '/rest/v1/rpc/social_command',
+          '/rest/v1/rpc/social_workspace',
+        ].includes(path) &&
+        ['22023', '23514', 'P0001', 'P0002', '22003', '23503'].includes(code)
+      )
+        throw new ApiError(422, 'INVALID_SOCIAL_REQUEST');
+      if (
+        [
           '/rest/v1/rpc/meeting_command',
           '/rest/v1/rpc/meeting_workspace',
         ].includes(path) &&

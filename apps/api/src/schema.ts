@@ -88,7 +88,10 @@ export const workspaceSchema = object({
     type: 'array',
     items: object({
       journal_id: uuid,
-      account: { type: 'string', enum: ['cash', 'share_capital'] },
+      account: {
+        type: 'string',
+        enum: ['cash', 'share_capital', 'social_fund'],
+      },
       side: { type: 'string', enum: ['debit', 'credit'] },
       amount: integerString,
     }),
@@ -241,6 +244,115 @@ export const adminRoleBody = object({
   person_id: uuid,
   role: { type: 'string', enum: ['member', 'secretary', 'treasurer', 'chair'] },
   enabled: boolean,
+});
+export const socialRuleBody = object({
+  request_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  amount: {
+    anyOf: [
+      { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+      { type: 'null' },
+    ],
+  },
+  roles: {
+    type: 'array',
+    uniqueItems: true,
+    maxItems: 3,
+    items: { type: 'string', enum: ['secretary', 'treasurer', 'chair'] },
+  },
+  separate: boolean,
+  require_all: boolean,
+});
+export const socialCommandBody = object({
+  request_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  action: {
+    type: 'string',
+    enum: ['start', 'contribute', 'grant', 'reverse', 'approve', 'cancel'],
+  },
+  meeting_id: nullableUuid,
+  member_id: nullableUuid,
+  target_id: nullableUuid,
+  amount: {
+    anyOf: [
+      { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+      { type: 'null' },
+    ],
+  },
+  reason: { type: 'string', maxLength: 240 },
+});
+export const socialWorkspaceSchema = object({
+  can_record: boolean,
+  can_configure: boolean,
+  currency: string,
+  balance: { anyOf: [integerString, { type: 'null' }] },
+  rule: {
+    anyOf: [
+      { type: 'null' },
+      object({
+        id: uuid,
+        contribution: integerString,
+        roles: { type: 'array', items: string },
+        separate: boolean,
+        require_all: boolean,
+      }),
+    ],
+  },
+  meetings: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      date: string,
+      status: { type: 'string', enum: ['open', 'closed'] },
+      ready: boolean,
+      contribution: { anyOf: [integerString, { type: 'null' }] },
+      started: boolean,
+    }),
+  },
+  transactions: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      meeting_id: uuid,
+      date: string,
+      member_id: uuid,
+      name: string,
+      kind: { type: 'string', enum: ['contribution', 'grant', 'reversal'] },
+      cash: signedIntegerString,
+      reverses: nullableUuid,
+      journal_id: uuid,
+      note: string,
+      recorded_at: string,
+      journal: {
+        type: 'array',
+        items: object({
+          account: { type: 'string', enum: ['cash', 'social_fund'] },
+          side: { type: 'string', enum: ['debit', 'credit'] },
+          amount: integerString,
+        }),
+      },
+    }),
+  },
+  requests: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      meeting_id: uuid,
+      date: string,
+      name: string,
+      kind: { type: 'string', enum: ['grant', 'reversal'] },
+      cash: signedIntegerString,
+      reason: string,
+      entered_by: uuid,
+      outcome: {
+        anyOf: [
+          { type: 'string', enum: ['approved', 'cancelled'] },
+          { type: 'null' },
+        ],
+      },
+      can_approve: boolean,
+    }),
+  },
 });
 export const meetingCommandBody = object({
   request_id: purchaseBody.properties.client_id,

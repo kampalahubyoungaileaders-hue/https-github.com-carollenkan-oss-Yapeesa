@@ -1856,7 +1856,7 @@ export interface paths {
                 /** Format: uuid */
                 journal_id: string;
                 /** @enum {string} */
-                account: 'cash' | 'share_capital';
+                account: 'cash' | 'share_capital' | 'social_fund';
                 /** @enum {string} */
                 side: 'debit' | 'credit';
                 amount: string;
@@ -2669,6 +2669,440 @@ export interface paths {
             explanation: string | null;
             /** Format: uuid */
             proposal_id: string | null;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/{id}/social': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              can_record: boolean;
+              can_configure: boolean;
+              currency: string;
+              balance: string | null;
+              rule: {
+                /** Format: uuid */
+                id: string;
+                contribution: string;
+                roles: string[];
+                separate: boolean;
+                require_all: boolean;
+              } | null;
+              meetings: {
+                /** Format: uuid */
+                id: string;
+                date: string;
+                /** @enum {string} */
+                status: 'open' | 'closed';
+                ready: boolean;
+                contribution: string | null;
+                started: boolean;
+              }[];
+              transactions: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                meeting_id: string;
+                date: string;
+                /** Format: uuid */
+                member_id: string;
+                name: string;
+                /** @enum {string} */
+                kind: 'contribution' | 'grant' | 'reversal';
+                cash: string;
+                /** Format: uuid */
+                reverses: string | null;
+                /** Format: uuid */
+                journal_id: string;
+                note: string;
+                recorded_at: string;
+                journal: {
+                  /** @enum {string} */
+                  account: 'cash' | 'social_fund';
+                  /** @enum {string} */
+                  side: 'debit' | 'credit';
+                  amount: string;
+                }[];
+              }[];
+              requests: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                meeting_id: string;
+                date: string;
+                name: string;
+                /** @enum {string} */
+                kind: 'grant' | 'reversal';
+                cash: string;
+                reason: string;
+                /** Format: uuid */
+                entered_by: string;
+                /** @enum {string|null} */
+                outcome: 'approved' | 'cancelled' | null;
+                can_approve: boolean;
+              }[];
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            /** @enum {string} */
+            action:
+              | 'start'
+              | 'contribute'
+              | 'grant'
+              | 'reverse'
+              | 'approve'
+              | 'cancel';
+            /** Format: uuid */
+            meeting_id: string | null;
+            /** Format: uuid */
+            member_id: string | null;
+            /** Format: uuid */
+            target_id: string | null;
+            amount: string | null;
+            reason: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/groups/{id}/social': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            amount: string | null;
+            roles: ('secretary' | 'treasurer' | 'chair')[];
+            separate: boolean;
+            require_all: boolean;
           };
         };
       };

@@ -5,7 +5,7 @@ export const meetingCalcVersion = 'groups-meetings-v1';
 declare const minorUnitBrand: unique symbol;
 export type MinorUnits = bigint & { readonly [minorUnitBrand]: true };
 export type Money = Readonly<{ minor: MinorUnits; currency: string }>;
-export type Account = 'cash' | 'share_capital';
+export type Account = 'cash' | 'share_capital' | 'social_fund';
 export type JournalLine = Readonly<{
   account: Account;
   side: 'debit' | 'credit';
@@ -61,6 +61,31 @@ export function shareJournal(
       Object.freeze({
         account: 'share_capital',
         side: 'credit',
+        amount,
+      } as const),
+    ]),
+  });
+}
+export const socialCalcVersion = 'groups-social-v1';
+export function socialJournal(id: string, cash: Money): Journal {
+  if (cash.minor === 0n)
+    throw new Error('Social cash movement must be nonzero');
+  const amount = money(
+    cash.minor < 0n ? -cash.minor : cash.minor,
+    cash.currency,
+  );
+  return Object.freeze({
+    id,
+    calcVersion: socialCalcVersion,
+    lines: Object.freeze([
+      Object.freeze({
+        account: 'cash',
+        side: cash.minor > 0n ? 'debit' : 'credit',
+        amount,
+      } as const),
+      Object.freeze({
+        account: 'social_fund',
+        side: cash.minor > 0n ? 'credit' : 'debit',
         amount,
       } as const),
     ]),

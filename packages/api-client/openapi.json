@@ -2691,7 +2691,7 @@
                           },
                           "account": {
                             "type": "string",
-                            "enum": ["cash", "share_capital"]
+                            "enum": ["cash", "share_capital", "social_fund"]
                           },
                           "side": {
                             "type": "string",
@@ -4049,6 +4049,817 @@
                   "counted_cash",
                   "explanation",
                   "proposal_id"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": ["id"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/social": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "can_record": {
+                      "type": "boolean"
+                    },
+                    "can_configure": {
+                      "type": "boolean"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "balance": {
+                      "type": "string",
+                      "pattern": "^[0-9]+$",
+                      "nullable": true
+                    },
+                    "rule": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "contribution": {
+                          "type": "string",
+                          "pattern": "^[0-9]+$"
+                        },
+                        "roles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "separate": {
+                          "type": "boolean"
+                        },
+                        "require_all": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "contribution",
+                        "roles",
+                        "separate",
+                        "require_all"
+                      ],
+                      "nullable": true
+                    },
+                    "meetings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "date": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["open", "closed"]
+                          },
+                          "ready": {
+                            "type": "boolean"
+                          },
+                          "contribution": {
+                            "type": "string",
+                            "pattern": "^[0-9]+$",
+                            "nullable": true
+                          },
+                          "started": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "date",
+                          "status",
+                          "ready",
+                          "contribution",
+                          "started"
+                        ]
+                      }
+                    },
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "meeting_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "date": {
+                            "type": "string"
+                          },
+                          "member_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": ["contribution", "grant", "reversal"]
+                          },
+                          "cash": {
+                            "type": "string",
+                            "pattern": "^-?[0-9]+$"
+                          },
+                          "reverses": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
+                          },
+                          "journal_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "note": {
+                            "type": "string"
+                          },
+                          "recorded_at": {
+                            "type": "string"
+                          },
+                          "journal": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "account": {
+                                  "type": "string",
+                                  "enum": ["cash", "social_fund"]
+                                },
+                                "side": {
+                                  "type": "string",
+                                  "enum": ["debit", "credit"]
+                                },
+                                "amount": {
+                                  "type": "string",
+                                  "pattern": "^[0-9]+$"
+                                }
+                              },
+                              "required": ["account", "side", "amount"]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "meeting_id",
+                          "date",
+                          "member_id",
+                          "name",
+                          "kind",
+                          "cash",
+                          "reverses",
+                          "journal_id",
+                          "note",
+                          "recorded_at",
+                          "journal"
+                        ]
+                      }
+                    },
+                    "requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "meeting_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "date": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": ["grant", "reversal"]
+                          },
+                          "cash": {
+                            "type": "string",
+                            "pattern": "^-?[0-9]+$"
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "entered_by": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "outcome": {
+                            "type": "string",
+                            "enum": ["approved", "cancelled"],
+                            "nullable": true
+                          },
+                          "can_approve": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "meeting_id",
+                          "date",
+                          "name",
+                          "kind",
+                          "cash",
+                          "reason",
+                          "entered_by",
+                          "outcome",
+                          "can_approve"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "can_record",
+                    "can_configure",
+                    "currency",
+                    "balance",
+                    "rule",
+                    "meetings",
+                    "transactions",
+                    "requests"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "request_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "start",
+                      "contribute",
+                      "grant",
+                      "reverse",
+                      "approve",
+                      "cancel"
+                    ]
+                  },
+                  "meeting_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "member_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "target_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "amount": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,18}$",
+                    "nullable": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 240
+                  }
+                },
+                "required": [
+                  "request_id",
+                  "device_id",
+                  "action",
+                  "meeting_id",
+                  "member_id",
+                  "target_id",
+                  "amount",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": ["id"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/groups/{id}/social": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "request_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "amount": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,18}$",
+                    "nullable": true
+                  },
+                  "roles": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "string",
+                      "enum": ["secretary", "treasurer", "chair"]
+                    }
+                  },
+                  "separate": {
+                    "type": "boolean"
+                  },
+                  "require_all": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "request_id",
+                  "device_id",
+                  "amount",
+                  "roles",
+                  "separate",
+                  "require_all"
                 ]
               }
             }
