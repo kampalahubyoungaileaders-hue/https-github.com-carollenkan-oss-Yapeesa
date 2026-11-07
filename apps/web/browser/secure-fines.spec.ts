@@ -5,6 +5,7 @@ test.skip(
   'Disposable fine fixtures required',
 );
 async function login(page: Page, label: string, org: string) {
+  page.setDefaultTimeout(15000);
   const env = process.env;
   await page.goto('/#live');
   await page

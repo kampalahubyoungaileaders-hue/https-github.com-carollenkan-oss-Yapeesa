@@ -314,7 +314,9 @@ begin
  if fund<>recorded or fund<0 or fund>9223372036854775807 or shares<0 then raise exception 'Fund cannot be previewed' using errcode='22023'; end if;
  select coalesce(jsonb_agg(jsonb_build_object('id',member_id,'shares',net::text) order by member_id),'[]'::jsonb) into members
  from (select t.member_id,sum(t.shares) as net from public.group_txn t join public.meeting m on m.id=t.meeting_id where t.organisation_id=p_org and m.cycle_id=cyc.id group by t.member_id) w;
- select coalesce(sum(e.cash),0) into fine_income from public.fine_event e join public.meeting m on m.id=e.meeting_id where e.organisation_id=p_org and m.cycle_id=cyc.id;
+ select coalesce(sum(e.cash),0) into recorded from public.fine_event e join public.meeting m on m.id=e.meeting_id where e.organisation_id=p_org and m.cycle_id=cyc.id;
+ select coalesce(sum(case when l.side='debit' then l.amount else -l.amount end),0) into fine_income from public.journal_line l join public.ledger_account a on a.id=l.account_id join public.fine_event e on e.journal_id=l.journal_id join public.meeting m on m.id=e.meeting_id where e.organisation_id=p_org and m.cycle_id=cyc.id and a.code='cash';
+ if fine_income<>recorded then raise exception 'Fine journal mismatch' using errcode='23514'; end if;
  fund:=fund+fine_income;
  if fund<0 or fund>9223372036854775807 then raise exception 'Invalid distributable fund' using errcode='22023'; end if;
  allocations:=private.shareout_allocation(fund::text,members);

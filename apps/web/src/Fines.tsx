@@ -62,7 +62,7 @@ function Settings({
               {t('fineCode')}
               <input
                 required
-                pattern="[a-z][a-z0-9_-]{0,39}"
+                pattern="[a-z][a-z0-9_\-]{0,39}"
                 maxLength={40}
                 value={row.code}
                 onChange={(e) => change(i, { code: e.target.value })}
@@ -91,6 +91,7 @@ function Settings({
             <label className="form-group">
               {t('fineTrigger')}
               <select
+                aria-label={t('fineTrigger')}
                 required
                 value={row.trigger}
                 onChange={(e) =>
@@ -105,6 +106,7 @@ function Settings({
             <label className="form-group">
               {t('finePartial')}
               <select
+                aria-label={t('finePartial')}
                 required
                 value={row.partial}
                 onChange={(e) =>
@@ -367,6 +369,7 @@ export default function Fines({
           <label className="form-group">
             {t('finesMeeting')}
             <select
+              aria-label={t('finesMeeting')}
               value={selected}
               disabled={frozen}
               onChange={(e) => {
@@ -426,6 +429,7 @@ export default function Fines({
                 <label className="form-group">
                   {t('fineMember')}
                   <select
+                    aria-label={t('fineMember')}
                     required
                     value={member}
                     onChange={(e) => setMember(e.target.value)}
@@ -443,6 +447,7 @@ export default function Fines({
                 <label className="form-group">
                   {t('fineType')}
                   <select
+                    aria-label={t('fineType')}
                     required
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
