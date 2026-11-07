@@ -2815,6 +2815,9 @@ export interface paths {
                 status: 'open' | 'closed';
                 ready: boolean;
                 contribution: string | null;
+                roles: string[];
+                separate: boolean | null;
+                require_all: boolean | null;
                 started: boolean;
               }[];
               transactions: {

@@ -20,6 +20,7 @@ import RecoveryForm from './RecoveryForm';
 import ShareCorrection from './ShareCorrection';
 import ShareOutPreview from './ShareOutPreview';
 import Meetings from './Meetings';
+import SocialFund from './SocialFund';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -43,6 +44,7 @@ const titleKeys = {
   meetings: 'meetings',
   members: 'members',
   ledger: 'ledger',
+  social: 'socialFund',
 } as const;
 type Tab = keyof typeof titleKeys;
 function amount(value: string | bigint, workspace: SavedWorkspace): string {
@@ -599,7 +601,7 @@ export default function SecureApp() {
           </span>
         </div>
         <nav aria-label={t('workspace')}>
-          {(Object.keys(titleKeys) as Tab[]).map((key, index) => (
+          {(Object.keys(titleKeys) as Tab[]).map((key) => (
             <button
               className={`live-nav ${tab === key ? 'active' : ''}`}
               key={key}
@@ -613,7 +615,15 @@ export default function SecureApp() {
             >
               <Icon
                 name={
-                  (['grid', 'calendar', 'people', 'ledger'] as const)[index]!
+                  (
+                    {
+                      overview: 'grid',
+                      meetings: 'calendar',
+                      members: 'people',
+                      ledger: 'ledger',
+                      social: 'people',
+                    } as const
+                  )[key]
                 }
               />
               {t(titleKeys[key])}
@@ -673,22 +683,26 @@ export default function SecureApp() {
               <p className="page-subtitle">{t('savedDescription')}</p>
             </div>
             <div className="heading-actions">
-              <button
-                className="button"
-                disabled={busy || !workspace}
-                onClick={() => void exportPdf()}
-              >
-                <Icon name="download" size={17} />
-                {t('exportPdf')}
-              </button>
-              <button
-                className="button"
-                disabled={busy || !workspace}
-                onClick={exportCsv}
-              >
-                <Icon name="download" size={17} />
-                {t('exportCsv')}
-              </button>
+              {tab !== 'social' && (
+                <>
+                  <button
+                    className="button"
+                    disabled={busy || !workspace}
+                    onClick={() => void exportPdf()}
+                  >
+                    <Icon name="download" size={17} />
+                    {t('exportPdf')}
+                  </button>
+                  <button
+                    className="button"
+                    disabled={busy || !workspace}
+                    onClick={exportCsv}
+                  >
+                    <Icon name="download" size={17} />
+                    {t('exportCsv')}
+                  </button>
+                </>
+              )}
               <button
                 className="button"
                 disabled={busy || !selected}
@@ -949,6 +963,18 @@ export default function SecureApp() {
                   key={`${selected}-${savedRows.length}`}
                   group={selected}
                   format={(minor) => amount(minor, workspace)}
+                />
+              )}
+              {tab === 'social' && (
+                <SocialFund
+                  key={selected}
+                  group={selected}
+                  device={deviceId(selected)}
+                  members={workspace.members}
+                  format={(minor) => amount(minor, workspace)}
+                  onChanged={async () => {
+                    setWorkspace(await api.workspace(selected));
+                  }}
                 />
               )}
               {tab === 'members' && (

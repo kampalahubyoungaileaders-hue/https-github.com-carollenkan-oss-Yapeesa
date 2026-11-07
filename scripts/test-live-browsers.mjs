@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { readdir } from 'node:fs/promises';
+import { basename } from 'node:path';
 import { setTimeout, clearTimeout } from 'node:timers';
 
 function loopback(value) {
@@ -37,9 +38,11 @@ async function stop(child) {
   });
 }
 let failed = false;
-for (const project of ['desktop', 'phone']) {
+for (const { project, file } of ['desktop', 'phone'].flatMap((project) =>
+  files.map((file) => ({ project, file })),
+)) {
   // Separate API instances isolate in-memory per-IP counters between independent
-  // browser profiles. All production rate limits remain enabled and unchanged.
+  // browser scenarios. All production rate limits remain enabled and unchanged.
   const api = spawn(
     process.execPath,
     ['--import', 'tsx', 'apps/api/src/server.ts'],
@@ -79,10 +82,10 @@ for (const project of ['desktop', 'phone']) {
         [
           'node_modules/@playwright/test/cli.js',
           'test',
-          ...files,
+          file,
           '--workers=1',
           `--project=${project}`,
-          `--output=test-results/live-${project}`,
+          `--output=test-results/live-${project}/${basename(file, '.spec.ts')}`,
         ],
         { stdio: 'inherit' },
       );

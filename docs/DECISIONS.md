@@ -124,3 +124,18 @@ Online officers approve through their own PIN/MFA sessions, including from a
 separate browser. Existing signatures record consent at the time of approval;
 logout does not erase them. Revoked group roles no longer count toward closing.
 This does not define or implement the outstanding offline approval PIN policy.
+
+## Online social fund and deferred offline workflows
+
+The founder's current priority is the online web workflow; offline workflows are
+explicitly deferred. Social funds use a separate liability account and their own
+append-only records, keeping existing share statements and share-out calculations
+separate. Meeting reconciliation includes both sources of cash.
+
+Each group explicitly chooses its social amount, approval roles, requester
+separation and closing contribution requirement. A meeting captures an immutable
+rule. Later settings do not change an existing meeting's terms. An officer's
+approval atomically records a grant or exact correction, subject to both the
+social fund and physical cash availability. Unresolved requests block closing;
+new social activity invalidates earlier closing approvals. No loan rounding or
+repayment-allocation rule is inferred by this change.

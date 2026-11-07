@@ -622,6 +622,28 @@ test('separate social balance, fixed meeting contributions, role-approved grants
       /Append-only record/,
     );
   }
+  const access = openTokens(
+    cookies.get('MEETING_SECRETARY')!.slice('yapesa_session='.length),
+    config!.cookieKey,
+  ).access_token;
+  const existing = await db.query<{ row: Record<string, unknown> }>(
+    'select to_jsonb(t) as row from public.social_txn t where organisation_id=$1 limit 1',
+    [org],
+  );
+  const forged = await fetch(`${config!.supabaseUrl}/rest/v1/social_txn`, {
+    method: 'POST',
+    headers: {
+      apikey: config!.publishableKey,
+      Authorization: `Bearer ${access}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ...existing.rows[0]!.row, id: v7() }),
+  });
+  assert.equal(
+    forged.status,
+    403,
+    'Authenticated staff cannot bypass the posting function',
+  );
   const balances = await db.query<{ code: string; net: string }>(
     "select a.code,sum(case when l.side='debit' then l.amount else -l.amount end)::text as net from public.journal_line l join public.ledger_account a on a.id=l.account_id where l.organisation_id=$1 group by a.code",
     [org],

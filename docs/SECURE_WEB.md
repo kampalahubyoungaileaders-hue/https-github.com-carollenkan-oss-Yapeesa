@@ -121,7 +121,7 @@ programme views, SMS recovery and Fineract staff/tenant workflows remain later w
 Android native compilation stays deferred by the founder's instruction.
 
 The `pnpm test:live` command manages its own local API process. Stop any manually
-started API on port 3000 first. Desktop and phone checks each use a fresh API
+started API on port 3000 first. Each desktop/phone browser scenario uses a fresh API
 instance so their per-IP rate counters do not accumulate across independent
 profiles. Production limits stay enabled. Auth and financial records persist in
 the same disposable database across both runs. Results are retained separately

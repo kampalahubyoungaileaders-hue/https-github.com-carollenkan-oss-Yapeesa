@@ -4301,6 +4301,20 @@
                             "pattern": "^[0-9]+$",
                             "nullable": true
                           },
+                          "roles": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "separate": {
+                            "type": "boolean",
+                            "nullable": true
+                          },
+                          "require_all": {
+                            "type": "boolean",
+                            "nullable": true
+                          },
                           "started": {
                             "type": "boolean"
                           }
@@ -4311,6 +4325,9 @@
                           "status",
                           "ready",
                           "contribution",
+                          "roles",
+                          "separate",
+                          "require_all",
                           "started"
                         ]
                       }
