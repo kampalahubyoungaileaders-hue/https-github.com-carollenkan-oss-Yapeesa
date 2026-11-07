@@ -58,7 +58,7 @@ function Settings({
             <legend>
               {t('fineType')} {i + 1}
             </legend>
-            <label>
+            <label className="form-group">
               {t('fineCode')}
               <input
                 required
@@ -68,7 +68,7 @@ function Settings({
                 onChange={(e) => change(i, { code: e.target.value })}
               />
             </label>
-            <label>
+            <label className="form-group">
               {t('fineName')}
               <input
                 required
@@ -77,7 +77,7 @@ function Settings({
                 onChange={(e) => change(i, { name: e.target.value })}
               />
             </label>
-            <label>
+            <label className="form-group">
               {t('fineAmount')}
               <input
                 required
@@ -88,7 +88,7 @@ function Settings({
                 onChange={(e) => change(i, { amount: e.target.value })}
               />
             </label>
-            <label>
+            <label className="form-group">
               {t('fineTrigger')}
               <select
                 required
@@ -102,7 +102,7 @@ function Settings({
                 <option value="absence">{t('fineAbsence')}</option>
               </select>
             </label>
-            <label>
+            <label className="form-group">
               {t('finePartial')}
               <select
                 required
@@ -336,11 +336,11 @@ export default function Fines({
         <>
           <div className="fine-balances">
             <div className="social-balance">
-              {t('fineOutstanding')}
+              <span>{t('fineOutstanding')}</span>
               <strong>{format(String(due))}</strong>
             </div>
             <div className="social-balance">
-              {t('fineCollected')}
+              <span>{t('fineCollected')}</span>
               <strong>{format(String(paid))}</strong>
             </div>
           </div>
@@ -423,7 +423,7 @@ export default function Fines({
             >
               <h3>{t('fineAssess')}</h3>
               <fieldset disabled={frozen}>
-                <label>
+                <label className="form-group">
                   {t('fineMember')}
                   <select
                     required
@@ -440,7 +440,7 @@ export default function Fines({
                       ))}
                   </select>
                 </label>
-                <label>
+                <label className="form-group">
                   {t('fineType')}
                   <select
                     required
@@ -455,7 +455,7 @@ export default function Fines({
                     ))}
                   </select>
                 </label>
-                <label>
+                <label className="form-group">
                   {t('fineReason')}
                   <input
                     required
@@ -506,7 +506,7 @@ export default function Fines({
               </p>
               <fieldset disabled={frozen}>
                 {action.kind === 'pay' && (
-                  <label>
+                  <label className="form-group">
                     {t('finePaymentAmount')}
                     <input
                       required
@@ -519,7 +519,7 @@ export default function Fines({
                     />
                   </label>
                 )}
-                <label>
+                <label className="form-group">
                   {t('fineReason')}
                   <input
                     required
@@ -586,7 +586,7 @@ export default function Fines({
           </div>
           {!data.charges.length && <p>{t('fineNoCharges')}</p>}
           {data.charges.map((row) => (
-            <article className="social-record" key={row.id}>
+            <article className="social-record social-entry" key={row.id}>
               <h4>
                 {row.name} · {row.fine}
               </h4>
@@ -671,7 +671,7 @@ export default function Fines({
             </button>
           </div>
           {data.events.map((row) => (
-            <article className="social-record" key={row.id}>
+            <article className="social-record social-entry" key={row.id}>
               <h4>
                 {row.name} ·{' '}
                 {t(
