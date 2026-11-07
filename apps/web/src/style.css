@@ -2324,3 +2324,86 @@ dialog::backdrop {
   padding: 10px;
   margin-bottom: 12px;
 }
+
+.social-panel {
+  padding: 24px;
+  margin-top: 24px;
+}
+.social-panel .panel-heading {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.social-panel p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.social-balance {
+  padding: 22px;
+  background: #edf6f0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+.social-balance span {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.social-balance strong {
+  font-size: 27px;
+  overflow-wrap: anywhere;
+}
+.social-settings,
+.social-request,
+.social-entry {
+  border-top: 1px solid var(--border);
+  padding: 20px 0;
+}
+.social-settings fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0 0 18px;
+}
+.social-settings legend {
+  padding: 6px;
+  font-size: 13px;
+}
+.social-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  font-size: 13px;
+}
+.social-settings button,
+.social-request button {
+  margin: 0 10px 10px 0;
+}
+.social-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 28px;
+  margin: 24px 0;
+}
+.social-entry table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.social-entry th,
+.social-entry td {
+  text-align: left;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.social-entry summary {
+  cursor: pointer;
+  padding: 10px 0;
+  font-size: 13px;
+}
+.social-entry .text-button {
+  margin-top: 16px;
+}

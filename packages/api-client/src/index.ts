@@ -36,6 +36,12 @@ export class ClientError extends Error {
     super(code);
   }
 }
+export type SocialWorkspace =
+  paths['/api/groups/{id}/social']['get']['responses'][200]['content']['application/json'];
+export type SocialCommand =
+  paths['/api/groups/{id}/social']['post']['requestBody']['content']['application/json'];
+export type SocialRuleInput =
+  paths['/api/admin/groups/{id}/social']['post']['requestBody']['content']['application/json'];
 export type MeetingWorkspace =
   paths['/api/groups/{id}/meetings']['get']['responses'][200]['content']['application/json'];
 export type MeetingCommand =
@@ -75,6 +81,18 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   return value as T;
 }
 export const api = {
+  social: (id: string) =>
+    request<SocialWorkspace>(`/api/groups/${encodeURIComponent(id)}/social`),
+  socialCommand: (id: string, input: SocialCommand) =>
+    request<{ id: string }>(
+      `/api/groups/${encodeURIComponent(id)}/social`,
+      input,
+    ),
+  socialRule: (id: string, input: SocialRuleInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/social`,
+      input,
+    ),
   meetings: (id: string) =>
     request<MeetingWorkspace>(`/api/groups/${encodeURIComponent(id)}/meetings`),
   meetingCommand: (id: string, input: MeetingCommand) =>

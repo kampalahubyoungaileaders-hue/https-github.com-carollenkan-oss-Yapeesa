@@ -200,7 +200,14 @@ try {
     "insert into public.membership(person_id,organisation_id,role) values($1,$2,'fencher_admin')",
     [meetingAdmin, fixtures['TEST_PLATFORM_ORG']],
   );
-  for (const label of ['INTEGRATION', 'DESKTOP', 'PHONE']) {
+  for (const label of [
+    'INTEGRATION',
+    'DESKTOP',
+    'PHONE',
+    'SOCIAL_INTEGRATION',
+    'SOCIAL_DESKTOP',
+    'SOCIAL_PHONE',
+  ]) {
     const org = await db.query<{ id: string }>(
       "insert into public.organisation(name,type,country_code,currency,time_zone) values($1,'group','UG','UGX','Africa/Kampala') returning id",
       [`Local meetings ${label.toLowerCase()}`],
