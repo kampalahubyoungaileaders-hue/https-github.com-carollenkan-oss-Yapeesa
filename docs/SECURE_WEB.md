@@ -59,11 +59,13 @@ pnpm install --frozen-lockfile
 pnpm local:test-stack
 pnpm local:provision
 pnpm test:integration
-pnpm --filter @yapesa/api start
+pnpm exec playwright install chromium
+pnpm test:live
 ```
 
-In another terminal run the web dev server, or run `pnpm test:live` after installing
-Chromium with `pnpm exec playwright install chromium`. Start the disposable test
+For manual browser checks, start the API with `pnpm --filter @yapesa/api start`
+and the web dev server in another terminal. Stop that API before `pnpm test:live`,
+which manages its own API process. Start the disposable test
 stack using `pnpm local:test-stack`; it temporarily enables a placeholder SMS
 provider locally so phone/password login is available, then restores the config.
 It never sends SMS or modifies the hosted project's Auth settings. Local provisioning refuses
@@ -117,3 +119,10 @@ Offline mobile storage/sync, writer-device transfer, live reversal endpoints,
 attendance, loans, social fund, meeting approvals/close, share-out, PDF export,
 programme views, SMS recovery and Fineract staff/tenant workflows remain later work.
 Android native compilation stays deferred by the founder's instruction.
+
+The `pnpm test:live` command manages its own local API process. Stop any manually
+started API on port 3000 first. Desktop and phone checks each use a fresh API
+instance so their per-IP rate counters do not accumulate across independent
+profiles. Production limits stay enabled. Auth and financial records persist in
+the same disposable database across both runs. Results are retained separately
+under `test-results/live-desktop` and `test-results/live-phone`.

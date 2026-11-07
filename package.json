@@ -26,7 +26,7 @@
     "local:provision": "node --import tsx scripts/provision-local.ts",
     "local:test-stack": "node scripts/start-test-stack.mjs",
     "test:integration": "node --env-file=.env --import tsx --test integration/*.test.ts",
-    "test:live": "node --env-file=.env node_modules/@playwright/test/cli.js test apps/web/browser/secure*.spec.ts --workers=1"
+    "test:live": "node --env-file=.env scripts/test-live-browsers.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
