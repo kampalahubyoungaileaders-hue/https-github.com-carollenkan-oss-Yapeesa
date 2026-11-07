@@ -141,6 +141,9 @@ begin
  (p_action='propose' and (p_meeting is null or p_counted is null or p_counted !~ '^(0|[1-9][0-9]{0,18})$' or p_explanation is null or length(p_explanation)>500 or p_date is not null or p_member is not null or p_status is not null or p_proposal is not null)) or
  (p_action='approve' and (p_meeting is null or p_proposal is null or p_date is not null or p_member is not null or p_status is not null or p_counted is not null or p_explanation is not null)) then raise exception 'Invalid meeting command' using errcode='22023'; end if;
  perform pg_advisory_xact_lock(hashtextextended(p_org::text,0));
+ -- An administrator can change roles while this command waits for the lock.
+ if not private.is_officer(p_org) or (p_action<>'approve' and not private.can_record(p_org)) or (p_action='approve' and not private.officer_eligible(p_org,actor)) then raise exception 'Meeting authority changed' using errcode='42501'; end if;
+
  request_data:=jsonb_build_object('action',p_action,'actor',actor,'device',p_device,'date',p_date,'meeting',p_meeting,'member',p_member,'status',p_status,'counted',p_counted,'explanation',p_explanation,'proposal',p_proposal);
  select * into prior from public.sync_receipt where client_id=p_request;
  if found then

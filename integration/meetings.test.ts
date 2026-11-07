@@ -236,6 +236,65 @@ test('meeting attendance, immutable snapshots, distinct live officers, cash carr
     member_id: env['TEST_MEETING_SECRETARY_PERSON'],
     status: 'present',
   });
+  // A role change committed while a command waits for the organisation lock
+  // must be rechecked, even if the former secretary remains another officer.
+  await db.query('begin');
+  await db.query('select pg_advisory_xact_lock(hashtextextended($1::text,0))', [
+    org,
+  ]);
+  const waiting = call(
+    'MEETING_SECRETARY',
+    'POST',
+    endpoint,
+    command('attendance', {
+      meeting_id: meeting,
+      member_id: env['TEST_MEETING_MEMBER_PERSON'],
+      status: 'excused',
+    }),
+  );
+  let observed = false;
+  try {
+    for (let i = 0; i < 40; i++) {
+      await db.query('select pg_stat_clear_snapshot()');
+      const activity = await db.query<{ waiting: boolean }>(
+        "select exists(select 1 from pg_stat_activity where pid<>pg_backend_pid() and wait_event='advisory' and query like '%meeting_command%') as waiting",
+      );
+      if (activity.rows[0]!.waiting) {
+        observed = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    assert(
+      observed,
+      'The command must reach the advisory lock before changing its role',
+    );
+    await db.query(
+      "update public.membership set ends_at=now() where organisation_id=$1 and person_id=$2 and role='secretary'",
+      [org, env['TEST_MEETING_SECRETARY_PERSON']],
+    );
+    await db.query(
+      "insert into public.membership(person_id,organisation_id,role) values($1,$2,'chair')",
+      [env['TEST_MEETING_SECRETARY_PERSON'], org],
+    );
+    await db.query('commit');
+    assert.equal(
+      (await waiting).statusCode,
+      403,
+      'Holding another officer role cannot preserve revoked recording authority',
+    );
+  } finally {
+    await db.query('rollback');
+    await waiting;
+    await db.query(
+      "update public.membership set ends_at=null where organisation_id=$1 and person_id=$2 and role='secretary'",
+      [org, env['TEST_MEETING_SECRETARY_PERSON']],
+    );
+    await db.query(
+      "delete from public.membership where organisation_id=$1 and person_id=$2 and role='chair'",
+      [org, env['TEST_MEETING_SECRETARY_PERSON']],
+    );
+  }
   const share = await call(
     'MEETING_SECRETARY',
     'POST',
