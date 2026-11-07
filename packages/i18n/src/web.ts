@@ -280,7 +280,13 @@ export const web = {
   signedAmount: 'Signed amount (minor units)',
   groupName: 'Group',
   notesColumn: 'Note',
+  fineReference: 'Record ID',
+  fineCurrency: 'Currency',
+  fineChargeReference: 'Fine ID',
+  fineJournalReference: 'Journal ID',
   fineDate: 'Meeting date',
+  finesReadOnly:
+    'Your visible fines and receipts. Only the group secretary can record changes.',
   finesTitle: 'Fines',
   finesHelp:
     'Unpaid fines are tracked separately. Cash and fine income increase only when a payment is recorded. These records do not transfer money.',

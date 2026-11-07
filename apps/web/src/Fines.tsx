@@ -406,7 +406,9 @@ export default function Fines({
               )}
             </>
           )}
-          {!canRecord && <p>{t('finesClosed')}</p>}
+          {!canRecord && (
+            <p>{t(data.can_record ? 'finesClosed' : 'finesReadOnly')}</p>
+          )}
           {canRecord && manual.length > 0 && (
             <form
               className="social-settings"
@@ -551,6 +553,8 @@ export default function Fines({
                 download(
                   [
                     [
+                      t('fineReference'),
+                      t('fineCurrency'),
                       t('fineMember'),
                       t('fineDate'),
                       t('fineType'),
@@ -561,6 +565,8 @@ export default function Fines({
                       t('fineReason'),
                     ],
                     ...data.charges.map((r) => [
+                      r.id,
+                      data.currency,
                       r.name,
                       r.date,
                       r.fine,
@@ -631,20 +637,30 @@ export default function Fines({
                 download(
                   [
                     [
+                      t('fineReference'),
+                      t('fineCurrency'),
                       t('fineMember'),
                       t('fineDate'),
                       t('fineType'),
                       t('signedAmount'),
                       t('fineWaived'),
                       t('fineReason'),
+                      t('fineChargeReference'),
+                      t('fineJournalReference'),
+                      t('reversesReference'),
                     ],
                     ...data.events.map((r) => [
+                      r.id,
+                      data.currency,
                       r.name,
                       r.date,
                       r.kind,
                       r.cash,
                       r.waived,
                       r.reason,
+                      r.charge_id,
+                      r.journal_id ?? '',
+                      r.reverses ?? '',
                     ]),
                   ],
                   'yapesa-fine-history.csv',

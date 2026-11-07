@@ -53,3 +53,6 @@ Disposable database and desktop/phone browser tests cover obligations, automatic
 absence corrections, saved terms, partial/full-only rules, replay, overpayment,
 waiver, reversal, later collection, cash/share-out parity, privacy and closing.
 Offline workflows remain deferred.
+
+Integration test files run sequentially because they share disposable Auth
+identities and TOTP factors. Production authentication limits are unchanged.

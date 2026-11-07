@@ -188,7 +188,7 @@ test('configured unpaid fines, absence corrections, permanent receipts, later co
         rules: [{ ...rules[0], amount: '0' }],
       })
     ).statusCode,
-    422,
+    400,
   );
   const dates = [2, 1, 0].map((days) => {
     const d = new Date();

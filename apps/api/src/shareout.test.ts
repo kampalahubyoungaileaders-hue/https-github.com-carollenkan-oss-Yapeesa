@@ -14,6 +14,8 @@ const preview = {
 };
 test('API accepts only SQL allocations matching the shared calculator and totals', () => {
   assert.deepEqual(checkedShareOut(preview), preview);
+  const withFines = { ...preview, scope: 'recorded-shares-and-paid-fines' };
+  assert.deepEqual(checkedShareOut(withFines), withFines);
   assert.throws(() => checkedShareOut({ ...preview, total_shares: '4' }));
   assert.throws(() => checkedShareOut({ ...preview, fund: '6' }));
   assert.throws(() => checkedShareOut({ ...preview, fund: '5.0' }));

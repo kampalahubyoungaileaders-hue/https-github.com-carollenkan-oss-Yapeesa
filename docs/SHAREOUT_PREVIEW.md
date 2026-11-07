@@ -5,14 +5,15 @@ with verified MFA see the active cycle's recorded fund, net shares, and estimate
 allocation per member. Use **Refresh preview** for a new snapshot. Saving a new
 purchase or reversal clears the previous preview so it cannot appear current.
 
-This first preview covers saved share purchases and their corrections only. It
-excludes loan earnings, fines and social-fund handling, which require their saved
-workflows. It is not a final full-cycle distribution. No payout or cycle closure
+The preview covers saved share purchases, collected fine income, and their
+corrections in the active cycle. Unpaid or waived fines, loan earnings and social
+money are excluded. It is not a final full-cycle distribution. No payout or cycle closure
 is recorded. Repaid-loan and two-officer approval checks belong to the eventual
 final share-out command.
 
 The fund is independently read from cash journal lines and checked against the
-signed transaction total for the active cycle. Each member receives their floor
+signed share-transaction total for the active cycle. Net fine receipts from the
+cycle are then added, independently checked through their balanced journals. Each member receives their floor
 quota, with remaining minor units allocated in descending fractional-remainder
 order. Ties use ascending member ID. No JavaScript floating-point money is used.
 The allocations always sum exactly to the fund, including with many tiny shares.
