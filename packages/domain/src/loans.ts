@@ -86,8 +86,6 @@ export function loanSchedule(
     !['original_day', 'month_end'].includes(terms.dates)
   )
     throw new Error('Invalid loan terms');
-  if (principal.minor < terms.months)
-    throw new Error('Principal must cover each instalment');
   const base = principal.minor / terms.months;
   let rawTotal = 0n;
   for (let period = 1n; period <= terms.months; period++)

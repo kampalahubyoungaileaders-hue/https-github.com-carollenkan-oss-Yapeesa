@@ -46,7 +46,7 @@ test('scheduled principal and interest are exact, with residues in the final ins
   );
   fc.assert(
     fc.property(
-      fc.bigInt({ min: 120n, max: 1000000000000000n }),
+      fc.bigInt({ min: 1n, max: 1000000000000000n }),
       fc.bigInt({ min: 1n, max: 120n }),
       fc.bigInt({ min: 0n, max: 10000n }),
       fc.boolean(),
@@ -75,7 +75,7 @@ test('scheduled principal and interest are exact, with residues in the final ins
           totalI,
         );
         assert(
-          rows.every((r) => r.principal.minor > 0n && r.interest.minor >= 0n),
+          rows.every((r) => r.principal.minor >= 0n && r.interest.minor >= 0n),
         );
         const allocation = allocateLoanPayment(
           rows,
@@ -143,7 +143,12 @@ test('loan cash movements balance independently from shares and social money', (
     assert.equal(accountBalance([j], 'interest_income', 'UGX'), -i!);
     assert.equal(accountBalance([j], 'social_fund', 'UGX'), 0n);
   }
-  assert.throws(() => loanSchedule(money(2n, 'UGX'), '2026-01-01', base));
+  assert.deepEqual(
+    loanSchedule(money(2n, 'UGX'), '2026-01-01', base).map(
+      (r) => r.principal.minor,
+    ),
+    [0n, 0n, 2n],
+  );
   assert.throws(() =>
     loanSchedule(money(9223372036854775807n, 'UGX'), '2026-01-01', base),
   );

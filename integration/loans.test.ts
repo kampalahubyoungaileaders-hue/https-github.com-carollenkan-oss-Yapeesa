@@ -699,7 +699,7 @@ test('scheduled loans require group approvals, protect social cash, allocate par
 test('SQL and shared scheduled-loan calculations agree on generated exact amounts and dates', async () => {
   for (const [principal, n, rate, flat, up, end] of fc.sample(
     fc.tuple(
-      fc.bigInt({ min: 120n, max: 1000000000000n }),
+      fc.bigInt({ min: 1n, max: 1000000000000n }),
       fc.bigInt({ min: 1n, max: 120n }),
       fc.bigInt({ min: 0n, max: 10000n }),
       fc.boolean(),

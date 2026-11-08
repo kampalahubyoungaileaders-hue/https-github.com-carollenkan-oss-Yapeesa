@@ -60,7 +60,6 @@ declare principal numeric; n integer; rate numeric; base numeric; raw_total nume
  perform private.check_loan_policy(p_terms);
  if p_start is null or p_start<'0001-01-01'::date or p_principal is null or p_principal !~ '^[1-9][0-9]{0,18}$' or p_principal::numeric>9223372036854775807 or p_months is null or p_months !~ '^[1-9][0-9]{0,2}$' or p_months::numeric>(p_terms->>'max_months')::numeric then raise exception 'Invalid loan schedule' using errcode='22023'; end if;
  principal:=p_principal::numeric;n:=p_months::integer;rate:=(p_terms->>'monthly_rate_bps')::numeric;
- if principal<n then raise exception 'Principal must cover every instalment' using errcode='22023'; end if;
  base:=trunc(principal/n);
  for period in 1..n loop raw_total:=raw_total+(case when p_terms->>'method'='flat' then principal else principal-base*(period-1) end)*rate; end loop;
  total_i:=trunc((raw_total+case when p_terms->>'rounding'='half_up' then 5000 else 0 end)/10000);

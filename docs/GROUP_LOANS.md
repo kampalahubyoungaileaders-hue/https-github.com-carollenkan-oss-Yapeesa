@@ -14,8 +14,8 @@ requests; existing requests and loans retain their saved policy.
 
 Rates are exact integer basis points per month, entered as a percentage with up to
 two decimal places. A rate above 10% per month shows the brief's warning. The term
-is bounded to 120 monthly instalments as a technical limit. Principal must provide
-at least one minor unit per instalment. The group chooses its own maximum term.
+is bounded to 120 monthly instalments as a technical limit. Tiny principal amounts may produce zero principal in earlier instalments, with
+the remaining principal in the final one. The group chooses its own maximum term.
 
 Principal uses equal whole-unit instalments with the residual in the last one.
 Flat interest uses original principal for every scheduled month. Scheduled
