@@ -14,6 +14,31 @@ for (const url of [config.supabaseUrl, env['TEST_DB_URL']!])
     ['localhost', '127.0.0.1'].includes(new URL(url).hostname),
     'Disposable staff accounts only',
   );
+// Diagnostics are limited to disposable local RPC errors, never Auth payloads.
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  const response = await originalFetch(input, init);
+  const url = new URL(String(input));
+  if (
+    !response.ok &&
+    ['localhost', '127.0.0.1'].includes(url.hostname) &&
+    url.pathname.startsWith('/rest/v1/rpc/staff_')
+  ) {
+    const error = (await response.clone().json()) as {
+      code?: string;
+      message?: string;
+      hint?: string;
+    };
+    console.error(
+      'Local staff RPC diagnostic',
+      url.pathname,
+      error.code,
+      error.message,
+      error.hint,
+    );
+  }
+  return response;
+};
 const app = buildApp(config),
   db = new pg.Client({ connectionString: env['TEST_DB_URL'] });
 await db.connect();
@@ -236,6 +261,7 @@ test('real staff invitation requires live administrator and phone, PIN and TOTP 
   );
 });
 test.after(async () => {
+  globalThis.fetch = originalFetch;
   await app.close();
   await db.end();
 });
