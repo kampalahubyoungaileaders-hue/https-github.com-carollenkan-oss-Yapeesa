@@ -144,7 +144,7 @@ export default function FinalShareout({
   }
   return (
     <section
-      className="panel shareout-panel final-shareout"
+      className="panel final-shareout"
       aria-labelledby="final-shareout-title"
     >
       <div className="panel-heading">

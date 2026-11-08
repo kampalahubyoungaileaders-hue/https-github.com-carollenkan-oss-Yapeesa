@@ -2190,7 +2190,7 @@ dialog::backdrop {
   margin: 0 0 20px;
 }
 
-.shareout-panel {
+:is(.shareout-panel, .final-shareout) {
   margin: 24px 0;
   padding: 24px;
 }
@@ -2278,32 +2278,32 @@ dialog::backdrop {
   line-height: 1.8;
   padding-left: 20px;
 }
-.shareout-panel > p,
+:is(.shareout-panel, .final-shareout) > p,
 .correction-panel p {
   color: var(--muted);
   line-height: 1.6;
   font-size: 13px;
 }
-.shareout-panel .panel-heading {
+:is(.shareout-panel, .final-shareout) .panel-heading {
   gap: 16px;
   flex-wrap: wrap;
 }
 .shareout-table-wrap {
   overflow-x: auto;
 }
-.shareout-panel table {
+:is(.shareout-panel, .final-shareout) table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
-.shareout-panel th,
-.shareout-panel td {
+:is(.shareout-panel, .final-shareout) th,
+:is(.shareout-panel, .final-shareout) td {
   text-align: left;
   padding: 12px 8px;
   border-bottom: 1px solid var(--border);
 }
-.shareout-panel th:last-child,
-.shareout-panel td:last-child {
+:is(.shareout-panel, .final-shareout) th:last-child,
+:is(.shareout-panel, .final-shareout) td:last-child {
   text-align: right;
   white-space: nowrap;
 }

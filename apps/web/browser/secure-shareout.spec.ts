@@ -151,6 +151,9 @@ test('two officers approve a final allocation and separate cash receipts close t
       }),
     );
     await sec.reload();
+    await sec
+      .getByLabel('Choose a savings group', { exact: true })
+      .selectOption(org);
     const panel = sec.locator('.final-shareout');
     await expect(panel).toContainText('Ready to prepare an allocation');
     await panel
@@ -179,6 +182,9 @@ test('two officers approve a final allocation and separate cash receipts close t
       panel.getByRole('button', { name: 'Record cash payout', exact: true }),
     ).toHaveCount(0);
     await treas.reload();
+    await treas
+      .getByLabel('Choose a savings group', { exact: true })
+      .selectOption(org);
     const tp = treas.locator('.final-shareout');
     await expect(tp).toContainText('Current officer approvals: 1 / 2');
     await tp
