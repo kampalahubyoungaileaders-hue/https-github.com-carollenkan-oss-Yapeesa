@@ -24,6 +24,8 @@ jobs:
         run: pnpm local:test-stack
       - run: pnpm local:provision
       - run: pnpm test:integration
+      - name: Verify disposable backup and restore with security preserved
+        run: node --env-file=.env scripts/verify-local-restore.mjs
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:live
       - name: Local Auth diagnostics on failure
