@@ -8,6 +8,62 @@ import {
 } from '@yapesa/api-client';
 import { t } from '@yapesa/i18n';
 import { exportRows } from './workspace';
+function ProposalForm({
+  disabled,
+  save,
+}: {
+  disabled: boolean;
+  save: (outcome: 'confirmed' | 'correction_required', reason: string) => void;
+}) {
+  const [outcome, setOutcome] = useState<
+      '' | 'confirmed' | 'correction_required'
+    >(''),
+    [reason, setReason] = useState('');
+  return (
+    <details>
+      <summary>{t('reviewsPropose')}</summary>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (outcome) save(outcome, reason.trim());
+        }}
+      >
+        <label>
+          {t('reviewsOutcome')}
+          <select
+            aria-label={t('reviewsOutcome')}
+            required
+            value={outcome}
+            disabled={disabled}
+            onChange={(e) => setOutcome(e.target.value as typeof outcome)}
+          >
+            <option value="">{t('reviewsChooseOutcome')}</option>
+            <option value="confirmed">{t('reviewsConfirmed')}</option>
+            <option value="correction_required">
+              {t('reviewsCorrection')}
+            </option>
+          </select>
+        </label>
+        <label>
+          {t('reviewsProposedReason')}
+          <textarea
+            required
+            maxLength={500}
+            value={reason}
+            disabled={disabled}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </label>
+        <button
+          className="button"
+          disabled={disabled || !outcome || !reason.trim()}
+        >
+          {t('reviewsProposeSave')}
+        </button>
+      </form>
+    </details>
+  );
+}
 export default function Reviews({
   group,
   device,
@@ -22,8 +78,6 @@ export default function Reviews({
   const [source, setSource] = useState(''),
     [reason, setReason] = useState(''),
     [selected, setSelected] = useState(''),
-    [outcome, setOutcome] = useState(''),
-    [proposalReason, setProposalReason] = useState(''),
     [confirmed, setConfirmed] = useState(false);
   const pending = useRef<Command | null>(null);
   async function load() {
@@ -351,77 +405,13 @@ export default function Reviews({
                     </div>
                   )}
                   {can && (
-                    <details
-                      onToggle={(e) => {
-                        if (e.currentTarget.open) {
-                          setSelected(r.id);
-                          setOutcome('');
-                          setProposalReason('');
-                          setConfirmed(false);
-                        }
-                      }}
-                    >
-                      <summary>{t('reviewsPropose')}</summary>
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          command('propose', {
-                            review_id: r.id,
-                            outcome: outcome as Command['outcome'],
-                            reason: proposalReason.trim(),
-                          });
-                        }}
-                      >
-                        <label>
-                          {t('reviewsOutcome')}
-                          <select
-                            aria-label={t('reviewsOutcome')}
-                            required
-                            value={selected === r.id ? outcome : ''}
-                            disabled={frozen}
-                            onChange={(e) => {
-                              setSelected(r.id);
-                              setOutcome(e.target.value);
-                              setConfirmed(false);
-                            }}
-                          >
-                            <option value="">
-                              {t('reviewsChooseOutcome')}
-                            </option>
-                            <option value="confirmed">
-                              {t('reviewsConfirmed')}
-                            </option>
-                            <option value="correction_required">
-                              {t('reviewsCorrection')}
-                            </option>
-                          </select>
-                        </label>
-                        <label>
-                          {t('reviewsProposedReason')}
-                          <textarea
-                            required
-                            maxLength={500}
-                            value={selected === r.id ? proposalReason : ''}
-                            disabled={frozen}
-                            onChange={(e) => {
-                              setSelected(r.id);
-                              setProposalReason(e.target.value);
-                            }}
-                          />
-                        </label>
-                        <button
-                          className="button"
-                          disabled={
-                            frozen ||
-                            selected !== r.id ||
-                            !outcome ||
-                            !proposalReason.trim()
-                          }
-                        >
-                          {t('reviewsProposeSave')}
-                        </button>
-                      </form>
-                    </details>
+                    <ProposalForm
+                      key={r.id}
+                      disabled={frozen}
+                      save={(outcome, reason) =>
+                        command('propose', { review_id: r.id, outcome, reason })
+                      }
+                    />
                   )}
                 </>
               )}

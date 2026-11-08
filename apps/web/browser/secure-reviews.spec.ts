@@ -102,6 +102,10 @@ test('two group officers resolve calculation and closed-meeting reviews while mo
         p.getByRole('button', { name: 'Refresh reviews', exact: true }),
       ).toBeEnabled();
     }
+    await page
+      .getByRole('button', { name: 'Refresh records', exact: true })
+      .click();
+    await expect(page.locator('.live-stats')).toContainText('UGX 5,000');
     await nav(page);
     const panel = page.locator('.reviews-workspace');
     await expect(panel).toContainText('Local MEETING_SECRETARY');

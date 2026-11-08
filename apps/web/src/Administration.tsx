@@ -410,7 +410,7 @@ export default function Administration({ onBack }: { onBack: () => void }) {
                     {group.country_code} · {group.currency} · {group.time_zone}
                   </p>
                   <NewCycle
-                    key={`${group.id}-${group.cycle?.starts_on ?? 'closed'}`}
+                    key={`new-cycle-${group.id}-${group.cycle?.starts_on ?? 'closed'}`}
                     group={group}
                     busy={busy}
                     pending={pending}
@@ -422,7 +422,7 @@ export default function Administration({ onBack }: { onBack: () => void }) {
                   />
                   <h3>{t('adminSettings')}</h3>
                   <ConfigurationForm
-                    key={`${group.id}-${group.cycle?.starts_on ?? 'closed'}`}
+                    key={`settings-${group.id}-${group.cycle?.starts_on ?? 'closed'}`}
                     initial={group}
                     currencies={data.currencies}
                     busy={busy}
