@@ -215,7 +215,7 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     },
   );
   assert.equal(social.statusCode, 200, social.body);
-  const purchase = await call(
+  let purchase = await call(
     'MEETING_SECRETARY',
     'POST',
     `/api/groups/${org}/shares`,
@@ -281,6 +281,51 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     ).statusCode,
     403,
   );
+  const collateralCorrection = await call(
+    'MEETING_SECRETARY',
+    'POST',
+    `/api/groups/${org}/reversals`,
+    {
+      client_id: v7(),
+      device_id: device,
+      transaction_id: purchase.json().transaction_id,
+      reason: 'Correcting the share record before loan approval',
+    },
+  );
+  assert.equal(collateralCorrection.statusCode, 200, collateralCorrection.body);
+  assert.equal(
+    (
+      await call(
+        'MEETING_TREASURER',
+        'POST',
+        path,
+        fine('approve', {
+          meeting_id: meetingId,
+          target_id: request,
+          device_id: v7(),
+          reason: '',
+        }),
+      )
+    ).statusCode,
+    422,
+    'Approval rechecks the corrected share-backed limit',
+  );
+  purchase = await call(
+    'MEETING_SECRETARY',
+    'POST',
+    `/api/groups/${org}/shares`,
+    {
+      client_id: v7(),
+      device_id: device,
+      member_id: member,
+      meeting_date: date,
+      shares: '5',
+      note: 'Corrected loan security shares',
+      client_amount: '25000',
+      client_calc_version: 'groups-shares-v1',
+    },
+  );
+  assert.equal(purchase.statusCode, 200, purchase.body);
   await db.query(
     "insert into public.membership(person_id,organisation_id,role) values($1,$2,'treasurer')",
     [secretary, org],

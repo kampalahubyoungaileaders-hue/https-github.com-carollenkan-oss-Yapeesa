@@ -184,6 +184,7 @@ declare actor uuid;prior public.sync_receipt;payload jsonb;result_data jsonb;mee
    if (select cycle_id from public.meeting where id=req.meeting_id)<>meet.cycle_id then raise exception 'Loan request belongs to another cycle' using errcode='22023';end if;
    if p_action='approve' then
     if not private.loan_eligible(req.id,actor) then raise exception 'Configured independent group officer required' using errcode='42501';end if;
+    if not exists(select 1 from public.membership where organisation_id=p_org and person_id=req.member_id and role='member' and starts_at<=now() and (ends_at is null or ends_at>now())) or req.principal>private.loan_borrowable(p_org,req.member_id,policy.terms) then raise exception 'Borrower loan limit exceeded before approval' using errcode='22023';end if;
     insert into public.loan_approval(id,organisation_id,request_id,meeting_id,officer_id,device_id) values(record_uuid,p_org,req.id,meet.id,actor,p_device);
    elsif p_action='cancel' then insert into public.loan_cancellation(id,organisation_id,request_id,meeting_id,member_id,reason,entered_by,device_id) values(record_uuid,p_org,req.id,meet.id,req.member_id,p_reason,actor,p_device);
    else

@@ -38,7 +38,7 @@ signed in as secretary with MFA, explicitly records the cash handed over.
 
 Borrowing capacity is the active cycle's recorded member share value times the
 saved multiple, less that member's total outstanding principal. It is checked on
-request and again at disbursement. Multiple loans cannot circumvent the limit.
+request, approval and disbursement. Multiple loans cannot circumvent the limit.
 New borrowing requires current membership. The cash check protects both the
 recorded ledger cash and the meeting's counted-cash history, keeping the social
 reserve unavailable for lending. Share corrections and fine refunds also cannot
