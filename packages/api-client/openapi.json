@@ -3489,6 +3489,842 @@
         }
       }
     },
+    "/api/groups/{id}/shareout": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "can_approve": {
+                      "type": "boolean"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "can_record": {
+                      "type": "boolean"
+                    },
+                    "actor_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "readiness": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "blockers": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "snapshot": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "preview": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "cycle_id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "fund": {
+                                  "type": "string",
+                                  "pattern": "^[0-9]+$"
+                                },
+                                "total_shares": {
+                                  "type": "string",
+                                  "pattern": "^[0-9]+$"
+                                },
+                                "calc_version": {
+                                  "type": "string"
+                                },
+                                "loans_outstanding": {
+                                  "type": "string",
+                                  "pattern": "^[0-9]+$"
+                                },
+                                "scope": {
+                                  "type": "string",
+                                  "enum": [
+                                    "recorded-shares-only",
+                                    "recorded-shares-and-paid-fines",
+                                    "recorded-shares-fines-and-loan-interest"
+                                  ]
+                                },
+                                "members": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "shares": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]+$"
+                                      },
+                                      "amount": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]+$"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "shares",
+                                      "amount"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "cycle_id",
+                                "currency",
+                                "fund",
+                                "total_shares",
+                                "calc_version",
+                                "loans_outstanding",
+                                "scope",
+                                "members"
+                              ]
+                            },
+                            "cash": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "social": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "capital": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "fines": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "interest": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "meeting_id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "nullable": true
+                            },
+                            "closing_id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "nullable": true
+                            },
+                            "counted": {
+                              "type": "string",
+                              "pattern": "^[0-9]+$",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "preview",
+                            "cash",
+                            "social",
+                            "capital",
+                            "fines",
+                            "interest",
+                            "meeting_id",
+                            "closing_id",
+                            "counted"
+                          ],
+                          "nullable": true
+                        }
+                      },
+                      "required": ["blockers", "snapshot"]
+                    },
+                    "plan": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "cycle_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "snapshot": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "preview": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "cycle_id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "fund": {
+                                  "type": "string",
+                                  "pattern": "^[0-9]+$"
+                                },
+                                "total_shares": {
+                                  "type": "string",
+                                  "pattern": "^[0-9]+$"
+                                },
+                                "calc_version": {
+                                  "type": "string"
+                                },
+                                "loans_outstanding": {
+                                  "type": "string",
+                                  "pattern": "^[0-9]+$"
+                                },
+                                "scope": {
+                                  "type": "string",
+                                  "enum": [
+                                    "recorded-shares-only",
+                                    "recorded-shares-and-paid-fines",
+                                    "recorded-shares-fines-and-loan-interest"
+                                  ]
+                                },
+                                "members": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "shares": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]+$"
+                                      },
+                                      "amount": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]+$"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "shares",
+                                      "amount"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "cycle_id",
+                                "currency",
+                                "fund",
+                                "total_shares",
+                                "calc_version",
+                                "loans_outstanding",
+                                "scope",
+                                "members"
+                              ]
+                            },
+                            "cash": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "social": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "capital": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "fines": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "interest": {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            "meeting_id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "nullable": true
+                            },
+                            "closing_id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "nullable": true
+                            },
+                            "counted": {
+                              "type": "string",
+                              "pattern": "^[0-9]+$",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "preview",
+                            "cash",
+                            "social",
+                            "capital",
+                            "fines",
+                            "interest",
+                            "meeting_id",
+                            "closing_id",
+                            "counted"
+                          ]
+                        },
+                        "snapshot_hash": {
+                          "type": "string"
+                        },
+                        "calc_version": {
+                          "type": "string"
+                        },
+                        "entered_by": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "recorded_at": {
+                          "type": "string"
+                        },
+                        "current": {
+                          "type": "boolean"
+                        },
+                        "committed": {
+                          "type": "boolean"
+                        },
+                        "finalized": {
+                          "type": "boolean"
+                        },
+                        "approvals": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "officer_id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "eligible": {
+                                "type": "boolean"
+                              },
+                              "recorded_at": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "officer_id",
+                              "eligible",
+                              "recorded_at"
+                            ]
+                          }
+                        },
+                        "commit_journal": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "account": {
+                                "type": "string"
+                              },
+                              "side": {
+                                "type": "string",
+                                "enum": ["debit", "credit"]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "pattern": "^[0-9]+$"
+                              }
+                            },
+                            "required": ["account", "side", "amount"]
+                          }
+                        },
+                        "allocations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "member_id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "shares": {
+                                "type": "string",
+                                "pattern": "^[0-9]+$"
+                              },
+                              "amount": {
+                                "type": "string",
+                                "pattern": "^[0-9]+$"
+                              },
+                              "receipt": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "pattern": "^[0-9]+$"
+                                  },
+                                  "reason": {
+                                    "type": "string"
+                                  },
+                                  "recorded_at": {
+                                    "type": "string"
+                                  },
+                                  "entered_by": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "journal_id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "journal": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "account": {
+                                          "type": "string"
+                                        },
+                                        "side": {
+                                          "type": "string",
+                                          "enum": ["debit", "credit"]
+                                        },
+                                        "amount": {
+                                          "type": "string",
+                                          "pattern": "^[0-9]+$"
+                                        }
+                                      },
+                                      "required": ["account", "side", "amount"]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "amount",
+                                  "reason",
+                                  "recorded_at",
+                                  "entered_by",
+                                  "journal_id",
+                                  "journal"
+                                ],
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "member_id",
+                              "name",
+                              "shares",
+                              "amount",
+                              "receipt"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "cycle_id",
+                        "snapshot",
+                        "snapshot_hash",
+                        "calc_version",
+                        "entered_by",
+                        "recorded_at",
+                        "current",
+                        "committed",
+                        "finalized",
+                        "approvals",
+                        "commit_journal",
+                        "allocations"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "can_approve",
+                    "currency",
+                    "can_record",
+                    "actor_id",
+                    "readiness",
+                    "plan"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "request_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": ["prepare", "approve", "pay", "finish"]
+                  },
+                  "plan_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "allocation_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 240
+                  },
+                  "confirmed": {
+                    "type": "boolean",
+                    "enum": [true]
+                  }
+                },
+                "required": [
+                  "request_id",
+                  "device_id",
+                  "action",
+                  "plan_id",
+                  "allocation_id",
+                  "reason",
+                  "confirmed"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": ["id"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/groups/{id}/shareout-preview": {
       "get": {
         "parameters": [

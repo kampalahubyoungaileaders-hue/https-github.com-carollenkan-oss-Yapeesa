@@ -9,6 +9,7 @@ import { Backend, ApiError, object, textField, tokensFrom } from './backend.js';
 import { acceptInvitation, pendingInvitation } from './invitation.js';
 import { renderStatement, statementData } from './statement.js';
 import { registerRecovery } from './recovery.js';
+import { checkedFinalShareout } from './final-shareout.js';
 import { checkedShareOut } from './shareout.js';
 import { checkedMeetings } from './meeting.js';
 import { checkedLoans, checkedLoanQuote } from './loans.js';
@@ -27,6 +28,8 @@ import {
   purchaseBody,
   reversalBody,
   shareoutSchema,
+  finalShareoutSchema,
+  finalShareoutBody,
   meetingCommandBody,
   meetingWorkspaceSchema,
   loanPolicyBody,
@@ -572,18 +575,19 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
           ),
         );
         const metadata = object(group['group']);
-        const cycle = object(group['cycle']);
+        const cycle = group['cycle'] === null ? null : object(group['cycle']);
         const input = request.body;
         // Use the shared calculator in the API, then independently recheck/post in SQL.
         try {
-          shareJournal(
-            input.client_id,
-            money(
-              BigInt(textField(cycle, 'share_price')),
-              textField(metadata, 'currency'),
-            ),
-            BigInt(input.shares),
-          );
+          if (cycle)
+            shareJournal(
+              input.client_id,
+              money(
+                BigInt(textField(cycle, 'share_price')),
+                textField(metadata, 'currency'),
+              ),
+              BigInt(input.shares),
+            );
         } catch {
           throw new ApiError(422, 'INVALID_SHARE_PURCHASE');
         }
@@ -636,6 +640,72 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             p_client: input.client_id,
             p_device: input.device_id,
             p_reason: input.reason,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.get<{ Params: { id: string } }>(
+      '/api/groups/:id/shareout',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          response: { 200: finalShareoutSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        return checkedFinalShareout(
+          await configured().backend.rpc(
+            'shareout_workspace',
+            { p_org: request.params.id },
+            user.tokens.access_token,
+          ),
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        device_id: string;
+        action: string;
+        plan_id: string | null;
+        allocation_id: string | null;
+        reason: string;
+        confirmed: boolean;
+      };
+    }>(
+      '/api/groups/:id/shareout',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: finalShareoutBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply),
+          b = request.body;
+        return configured().backend.rpc(
+          'shareout_command',
+          {
+            p_org: request.params.id,
+            p_action: b.action,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_plan: b.plan_id,
+            p_allocation: b.allocation_id,
+            p_reason: b.reason,
+            p_confirm: b.confirmed,
           },
           user.tokens.access_token,
         );

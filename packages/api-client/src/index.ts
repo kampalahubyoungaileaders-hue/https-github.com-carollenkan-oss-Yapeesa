@@ -14,6 +14,10 @@ export type Receipt =
   paths['/api/groups/{id}/shares']['post']['responses'][200]['content']['application/json'];
 export type ShareReversal =
   paths['/api/groups/{id}/reversals']['post']['requestBody']['content']['application/json'];
+export type FinalShareout =
+  paths['/api/groups/{id}/shareout']['get']['responses'][200]['content']['application/json'];
+export type FinalShareoutCommand =
+  paths['/api/groups/{id}/shareout']['post']['requestBody']['content']['application/json'];
 export type ShareOutPreview =
   paths['/api/groups/{id}/shareout-preview']['get']['responses'][200]['content']['application/json'];
 export type Factor =
@@ -226,6 +230,13 @@ export const api = {
   groups: () => request<GroupList>('/api/groups'),
   workspace: (id: string) =>
     request<SavedWorkspace>(`/api/groups/${encodeURIComponent(id)}`),
+  finalShareout: (id: string) =>
+    request<FinalShareout>(`/api/groups/${encodeURIComponent(id)}/shareout`),
+  shareoutCommand: (id: string, input: FinalShareoutCommand) =>
+    request<{ id: string }>(
+      `/api/groups/${encodeURIComponent(id)}/shareout`,
+      input,
+    ),
   shareOutPreview: (id: string) =>
     request<ShareOutPreview>(
       `/api/groups/${encodeURIComponent(id)}/shareout-preview`,

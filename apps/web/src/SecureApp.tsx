@@ -18,6 +18,7 @@ import InvitationForm from './InvitationForm';
 import Administration from './Administration';
 import RecoveryForm from './RecoveryForm';
 import ShareCorrection from './ShareCorrection';
+import FinalShareout from './FinalShareout';
 import ShareOutPreview from './ShareOutPreview';
 import Meetings from './Meetings';
 import SocialFund from './SocialFund';
@@ -934,7 +935,9 @@ export default function SecureApp() {
                     )}
                   </section>
                   <section className="cycle-panel">
-                    <span className="cycle-status">{t('activeCycle')}</span>
+                    <span className="cycle-status">
+                      {t(workspace.cycle ? 'activeCycle' : 'noActiveCycle')}
+                    </span>
                     <h2>{workspace.group.name}</h2>
                     {workspace.cycle && (
                       <p>
@@ -964,11 +967,24 @@ export default function SecureApp() {
                   </section>
                 </div>
               )}
+              {tab === 'overview' &&
+                workspace.cycle &&
+                workspace.group.can_preview_shareout && (
+                  <ShareOutPreview
+                    key={`${selected}-${savedRows.length}`}
+                    group={selected}
+                    format={(minor) => amount(minor, workspace)}
+                  />
+                )}
               {tab === 'overview' && workspace.group.can_preview_shareout && (
-                <ShareOutPreview
-                  key={`${selected}-${savedRows.length}`}
+                <FinalShareout
+                  key={selected}
                   group={selected}
+                  device={deviceId(selected)}
                   format={(minor) => amount(minor, workspace)}
+                  onChanged={async () => {
+                    setWorkspace(await api.workspace(selected));
+                  }}
                 />
               )}
               {tab === 'loans' && (

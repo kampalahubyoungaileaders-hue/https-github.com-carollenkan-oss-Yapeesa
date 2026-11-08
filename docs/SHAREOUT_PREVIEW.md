@@ -9,9 +9,9 @@ The preview covers saved share purchases, collected fine income, collected loan
 interest and their corrections in the active cycle. Unpaid or waived fines,
 uncollected interest and social money are excluded. Outstanding principal remains
 in the estimated fund as a receivable and is reported separately; it is not cash
-available for payouts. It is not a final full-cycle distribution. No payout or cycle closure
-is recorded. Repaid-loan and two-officer approval checks belong to the eventual
-final share-out command.
+available for payouts. It is not a final full-cycle distribution. The separate
+[final share-out panel](FINAL_SHAREOUT.md) enforces repaid loans, resolved fines,
+reconciled cash, two-officer approval and individual payout receipts.
 
 The fund is independently read from cash journal lines and checked against the
 signed share-transaction total for the active cycle. Net fine receipts from the
