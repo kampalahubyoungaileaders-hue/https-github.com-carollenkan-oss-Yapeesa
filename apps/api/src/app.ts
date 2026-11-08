@@ -11,6 +11,7 @@ import { renderStatement, statementData } from './statement.js';
 import { registerRecovery } from './recovery.js';
 import { checkedShareOut } from './shareout.js';
 import { checkedMeetings } from './meeting.js';
+import { checkedLoans, checkedLoanQuote } from './loans.js';
 import { checkedFines } from './fines.js';
 import { checkedSocial } from './social.js';
 import {
@@ -28,6 +29,11 @@ import {
   shareoutSchema,
   meetingCommandBody,
   meetingWorkspaceSchema,
+  loanPolicyBody,
+  loanQuoteBody,
+  loanQuoteSchema,
+  loanCommandBody,
+  loanWorkspaceSchema,
   finePolicyBody,
   fineCommandBody,
   fineWorkspaceSchema,
@@ -945,6 +951,148 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             p_request: b.request_id,
             p_device: b.device_id,
             p_rules: b.rules,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.get<{ Params: { id: string } }>(
+      '/api/groups/:id/loans',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          response: { 200: loanWorkspaceSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        return checkedLoans(
+          await configured().backend.rpc(
+            'loan_workspace',
+            { p_org: request.params.id },
+            user.tokens.access_token,
+          ),
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        member_id: string;
+        meeting_id: string;
+        principal: string;
+        months: string;
+      };
+    }>(
+      '/api/groups/:id/loans/quote',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: loanQuoteBody,
+          response: { 200: loanQuoteSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        const b = request.body;
+        return checkedLoanQuote(
+          await configured().backend.rpc(
+            'loan_quote',
+            {
+              p_org: request.params.id,
+              p_member: b.member_id,
+              p_meeting: b.meeting_id,
+              p_principal: b.principal,
+              p_months: b.months,
+            },
+            user.tokens.access_token,
+          ),
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        device_id: string;
+        action: string;
+        meeting_id: string;
+        member_id: string | null;
+        target_id: string | null;
+        policy_id: string | null;
+        amount: string | null;
+        months: string | null;
+        reason: string;
+      };
+    }>(
+      '/api/groups/:id/loans',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: loanCommandBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        const b = request.body;
+        return configured().backend.rpc(
+          'loan_command',
+          {
+            p_org: request.params.id,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_action: b.action,
+            p_meeting: b.meeting_id,
+            p_member: b.member_id,
+            p_amount: b.amount,
+            p_months: b.months,
+            p_policy: b.policy_id,
+            p_reason: b.reason,
+            p_target: b.target_id,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: { request_id: string; device_id: string; policy: unknown };
+    }>(
+      '/api/admin/groups/:id/loans',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: loanPolicyBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        const b = request.body;
+        return configured().backend.rpc(
+          'admin_loan_policy',
+          {
+            p_org: request.params.id,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_policy: b.policy,
           },
           user.tokens.access_token,
         );

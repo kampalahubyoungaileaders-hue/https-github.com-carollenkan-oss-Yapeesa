@@ -5,7 +5,13 @@ export const meetingCalcVersion = 'groups-meetings-v1';
 declare const minorUnitBrand: unique symbol;
 export type MinorUnits = bigint & { readonly [minorUnitBrand]: true };
 export type Money = Readonly<{ minor: MinorUnits; currency: string }>;
-export type Account = 'cash' | 'share_capital' | 'social_fund' | 'fines_income';
+export type Account =
+  | 'cash'
+  | 'share_capital'
+  | 'social_fund'
+  | 'fines_income'
+  | 'loans_receivable'
+  | 'interest_income';
 export type JournalLine = Readonly<{
   account: Account;
   side: 'debit' | 'credit';
@@ -237,3 +243,5 @@ export function shareOut(
       .map((id) => Object.freeze({ id, amount: allocations.get(id)! })),
   );
 }
+
+export * from './loans.js';

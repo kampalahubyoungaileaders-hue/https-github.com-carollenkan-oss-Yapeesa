@@ -133,9 +133,14 @@ export const shareoutSchema = object({
   fund: integerString,
   total_shares: integerString,
   calc_version: string,
+  loans_outstanding: integerString,
   scope: {
     type: 'string',
-    enum: ['recorded-shares-only', 'recorded-shares-and-paid-fines'],
+    enum: [
+      'recorded-shares-only',
+      'recorded-shares-and-paid-fines',
+      'recorded-shares-fines-and-loan-interest',
+    ],
   },
   members: {
     type: 'array',
@@ -514,6 +519,162 @@ export const fineWorkspaceSchema = object({
       reverses: nullableUuid,
       reason: string,
       journal_id: nullableUuid,
+      journal: {
+        type: 'array',
+        items: object({
+          account: string,
+          side: { type: 'string', enum: ['debit', 'credit'] },
+          amount: integerString,
+        }),
+      },
+    }),
+  },
+});
+export const loanTermsSchema = object({
+  monthly_rate_bps: integerString,
+  method: { type: 'string', enum: ['flat', 'declining'] },
+  multiple: integerString,
+  max_months: integerString,
+  rounding: { type: 'string', enum: ['half_up', 'down'] },
+  allocation: { type: 'string', enum: ['interest_first', 'principal_first'] },
+  dates: { type: 'string', enum: ['original_day', 'month_end'] },
+  roles: {
+    type: 'array',
+    minItems: 1,
+    maxItems: 3,
+    uniqueItems: true,
+    items: { type: 'string', enum: ['secretary', 'treasurer', 'chair'] },
+  },
+  separate: boolean,
+  approvals: { type: 'string', enum: ['1', '2', '3'] },
+});
+const loanInstalmentSchema = object({
+  period: integerString,
+  due: string,
+  principal: integerString,
+  interest: integerString,
+});
+const loanAllocationSchema = object({
+  period: integerString,
+  principal: integerString,
+  interest: integerString,
+});
+export const loanPolicyBody = object({
+  request_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  policy: { anyOf: [loanTermsSchema, { type: 'null' }] },
+});
+export const loanQuoteBody = object({
+  member_id: uuid,
+  meeting_id: uuid,
+  principal: { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+  months: { type: 'string', pattern: '^[1-9][0-9]{0,2}$' },
+});
+export const loanQuoteSchema = object({
+  policy_id: uuid,
+  terms: loanTermsSchema,
+  currency: string,
+  start: string,
+  principal: integerString,
+  months: integerString,
+  schedule: { type: 'array', items: loanInstalmentSchema },
+  borrowable: integerString,
+  available_cash: integerString,
+});
+export const loanCommandBody = object({
+  request_id: purchaseBody.properties.client_id,
+  device_id: uuid,
+  action: {
+    type: 'string',
+    enum: ['request', 'approve', 'cancel', 'disburse', 'repay', 'reverse'],
+  },
+  meeting_id: uuid,
+  member_id: nullableUuid,
+  target_id: nullableUuid,
+  policy_id: nullableUuid,
+  amount: {
+    anyOf: [
+      { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+      { type: 'null' },
+    ],
+  },
+  months: {
+    anyOf: [{ type: 'string', pattern: '^[1-9][0-9]{0,2}$' }, { type: 'null' }],
+  },
+  reason: { type: 'string', maxLength: 240 },
+});
+export const loanWorkspaceSchema = object({
+  currency: string,
+  can_record: boolean,
+  can_configure: boolean,
+  policy: {
+    anyOf: [object({ id: uuid, terms: loanTermsSchema }), { type: 'null' }],
+  },
+  meetings: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      date: string,
+      status: { type: 'string', enum: ['open', 'closed'] },
+      ready: boolean,
+      available_cash: { anyOf: [integerString, { type: 'null' }] },
+    }),
+  },
+  requests: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      meeting_id: uuid,
+      member_id: uuid,
+      name: string,
+      principal: integerString,
+      months: integerString,
+      policy_id: uuid,
+      terms: loanTermsSchema,
+      reason: string,
+      entered_by: uuid,
+      date: string,
+      cancelled: boolean,
+      loan_id: nullableUuid,
+      can_approve: boolean,
+      approvals: {
+        type: 'array',
+        items: object({ person_id: uuid, eligible: boolean }),
+      },
+    }),
+  },
+  loans: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      request_id: uuid,
+      meeting_id: uuid,
+      member_id: uuid,
+      name: string,
+      date: string,
+      schedule: { type: 'array', items: loanInstalmentSchema },
+      calc_version: string,
+      principal_remaining: integerString,
+      interest_remaining: integerString,
+      cancelled: boolean,
+    }),
+  },
+  events: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      revision: integerString,
+      loan_id: uuid,
+      meeting_id: uuid,
+      date: string,
+      kind: { type: 'string', enum: ['disbursement', 'repayment', 'reversal'] },
+      principal: signedIntegerString,
+      interest: signedIntegerString,
+      cash: signedIntegerString,
+      allocations: { type: 'array', items: loanAllocationSchema },
+      reverses: nullableUuid,
+      journal_id: uuid,
+      reason: string,
       journal: {
         type: 'array',
         items: object({
