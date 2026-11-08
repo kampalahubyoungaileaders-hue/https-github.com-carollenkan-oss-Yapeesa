@@ -118,6 +118,37 @@ async function fingerprint(client) {
       [schemas],
     )
   ).rows;
+  // PostgreSQL can flatten associative CHECK expressions when replaying a dump.
+  // Reparse checks through PostgreSQL itself, rather than dropping parentheses
+  // in application code or weakening the comparison of constraint semantics.
+  let currentTable = '';
+  for (const constraint of constraints) {
+    if (!constraint.definition.startsWith('CHECK ')) continue;
+    const table = `${constraint.nspname}.${constraint.relname}`;
+    if (table !== currentTable) {
+      if (currentTable)
+        await client.query(
+          'drop table pg_temp.restore_constraint_normalisation',
+        );
+      await client.query(
+        `create temporary table restore_constraint_normalisation (like ${ident(constraint.nspname)}.${ident(constraint.relname)})`,
+      );
+      currentTable = table;
+    }
+    await client.query(
+      `alter table pg_temp.restore_constraint_normalisation add constraint canonical_check ${constraint.definition}`,
+    );
+    constraint.definition = (
+      await client.query(
+        "select pg_get_constraintdef(oid) definition from pg_constraint where conrelid='pg_temp.restore_constraint_normalisation'::regclass and conname='canonical_check'",
+      )
+    ).rows[0].definition;
+    await client.query(
+      'alter table pg_temp.restore_constraint_normalisation drop constraint canonical_check',
+    );
+  }
+  if (currentTable)
+    await client.query('drop table pg_temp.restore_constraint_normalisation');
   const defaults = (
     await client.query(
       "select pg_get_userbyid(d.defaclrole) role,coalesce(n.nspname,'') schema,d.defaclobjtype,array(select x::text from unnest(d.defaclacl) x order by x::text) acl from pg_default_acl d left join pg_namespace n on n.oid=d.defaclnamespace where n.nspname=any($1) or d.defaclnamespace=0 order by role,schema,d.defaclobjtype",
@@ -150,7 +181,7 @@ async function fingerprint(client) {
 }
 try {
   await source.connect();
-  await source.query('begin isolation level repeatable read read only');
+  await source.query('begin isolation level repeatable read');
   const snapshot = (await source.query('select pg_export_snapshot() snapshot'))
     .rows[0].snapshot;
   assert(/^[A-Fa-f0-9-]+$/.test(snapshot));

@@ -180,3 +180,23 @@ revoke all on function private.officer_organisations() from public,anon,authenti
 grant execute on function private.officer_organisations() to authenticated;
 alter policy journal_read on public.journal using(case when organisation_id in(select private.officer_organisations()) then true else private.can_read_journal(id) end);
 alter policy line_read on public.journal_line using(case when organisation_id in(select private.officer_organisations()) then true else private.can_read_journal(journal_id) end);
+
+-- The existing can_read_org predicate, expressed as one actor-bound set for RLS
+-- joins. Metadata scope and member ownership rules are unchanged.
+create function private.readable_organisations() returns setof uuid language plpgsql stable security definer set search_path='' as $$begin
+ if private.is_platform_admin() then return query select id from public.organisation;return;end if;
+ if not private.session_active(private.requires_mfa()) then return;end if;
+ return query select distinct m.organisation_id from public.membership m join public.person p on p.id=m.person_id where p.auth_user_id=auth.uid() and m.role in ('member','secretary','treasurer','chair') and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now());
+end $$;
+revoke all on function private.readable_organisations() from public,anon,authenticated;
+grant execute on function private.readable_organisations() to authenticated;
+alter policy organisation_read on public.organisation using(id in(select private.readable_organisations()));
+alter policy settings_read on public.group_settings using(organisation_id in(select private.readable_organisations()));
+alter policy cycle_read on public.cycle using(organisation_id in(select private.readable_organisations()));
+alter policy meeting_read on public.meeting using(organisation_id in(select private.readable_organisations()));
+alter policy account_read on public.ledger_account using(organisation_id in(select private.readable_organisations()));
+alter policy membership_read on public.membership using(person_id=(select private.current_person()) or organisation_id in(select private.officer_organisations()));
+alter policy txn_read on public.group_txn using(organisation_id in(select private.readable_organisations()) and (member_id=(select private.current_person()) or organisation_id in(select private.officer_organisations())));
+alter policy device_read on public.device using(organisation_id in(select private.officer_organisations()));
+alter policy receipt_read on public.sync_receipt using(organisation_id in(select private.officer_organisations()));
+alter policy audit_read on public.audit_log using(organisation_id in(select private.officer_organisations()));

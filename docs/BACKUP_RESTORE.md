@@ -13,6 +13,10 @@ new database in the local test cluster. It never overwrites the source database.
 The temporary archive and destination database are removed after verification.
 No archive containing Auth or gateway data is uploaded as a CI artifact.
 
+PostgreSQL itself reparses CHECK expressions in empty temporary tables to
+normalize its dump/restore expression formatting; no application rows or source
+constraints are changed.
+
 Verification compares every row's content through SHA-256 fingerprints for public,
 private, Auth and migration-history tables. It also compares RLS policies, relation
 owners and grants, private/public function definitions and owners, and immutable
