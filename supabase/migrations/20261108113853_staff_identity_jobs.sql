@@ -112,7 +112,7 @@ declare invitation private.staff_invitation;auth_data jsonb;actor uuid;prepared 
  if exists(select 1 from private.identity_event where invitation_id=invitation.id and phase='cancelled') then raise exception 'Invitation cancelled' using errcode='22023';end if;
  prepared:=p_phase||'_prepared';finished:=p_phase||'_finished';
  auth_data:=private.identity_auth(invitation.phone,invitation.id,invitation.person_id);
- if p_phase='activate' and (auth_data is null or auth_data->>'id' is distinct from auth.uid()::text or auth_data->>'phone_confirmed'<>'true' or not private.identity_admin_eligible(invitation.created_by) or not exists(select 1 from public.organisation where id=invitation.organisation_id and type='group' and status='active')) then raise exception 'Activation prerequisites changed' using errcode='42501';end if;
+ if p_phase='activate' and (auth_data is null or auth_data->>'id' is distinct from (select auth_user_id::text from public.person where id=actor) or auth_data->>'phone_confirmed'<>'true' or not private.identity_admin_eligible(invitation.created_by) or not exists(select 1 from public.organisation where id=invitation.organisation_id and type='group' and status='active')) then raise exception 'Activation prerequisites changed' using errcode='42501';end if;
  if exists(select 1 from private.identity_event where invitation_id=invitation.id and phase=finished) then return jsonb_build_object('id',invitation.id,'done',true,'auth_user_id',auth_data->>'id');end if;
  if not private.identity_gateway() then raise exception 'Server job gateway required' using errcode='42501';end if;
  if not p_finish then
