@@ -6129,6 +6129,9 @@
                               "approvals"
                             ]
                           },
+                          "calculation_mismatch": {
+                            "type": "boolean"
+                          },
                           "reason": {
                             "type": "string"
                           },
@@ -6177,6 +6180,7 @@
                           "months",
                           "policy_id",
                           "terms",
+                          "calculation_mismatch",
                           "reason",
                           "entered_by",
                           "date",
@@ -6347,6 +6351,9 @@
                             "type": "string",
                             "format": "uuid"
                           },
+                          "calculation_mismatch": {
+                            "type": "boolean"
+                          },
                           "reason": {
                             "type": "string"
                           },
@@ -6385,6 +6392,7 @@
                           "allocations",
                           "reverses",
                           "journal_id",
+                          "calculation_mismatch",
                           "reason",
                           "journal"
                         ]
@@ -6586,6 +6594,27 @@
                   "reason": {
                     "type": "string",
                     "maxLength": 240
+                  },
+                  "calculation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "calc_version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "principal": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+$"
+                      },
+                      "interest": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+$"
+                      }
+                    },
+                    "required": ["calc_version", "principal", "interest"],
+                    "nullable": true
                   }
                 },
                 "required": [

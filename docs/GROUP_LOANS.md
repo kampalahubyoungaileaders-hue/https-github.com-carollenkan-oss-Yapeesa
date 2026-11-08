@@ -52,14 +52,18 @@ interest-first rule within each instalment. Payments may advance through future
 instalments of the agreed schedule; the agreed interest is fixed. Overpayments are
 rejected. There is no automatic extra late interest or penalty.
 
-Every command uses a permanent actor-bound UUIDv7 receipt. An uncertain response
+Every command uses a permanent actor-bound UUIDv7 receipt. Submitted preview
+versions and amounts are retained separately from authoritative server amounts.
+A differing preview is accepted and visibly flagged for review; it cannot alter
+the posted calculation or be changed on replay. Review resolution remains the
+separate authority question recorded in `OPEN_QUESTIONS.md`. An uncertain response
 keeps the same frozen request for an explicit retry. A correction in the original
 open meeting copies the original journal and swaps its sides exactly; it also
 reopens the original instalment allocation. Each record can be reversed once.
 Reverse all receipts before reversing their disbursement. Closed meetings remain
 locked. No actual money transfer, automatic SMS or new live account is performed.
 
-All six tables use RLS and append-only records. The schedule view uses invoker
+All seven tables use RLS and append-only records. The schedule view uses invoker
 security and derives paid amounts and paid dates from receipt allocations. Members
 see their own requests and loans; officers review their group. Direct authenticated
 writes are revoked. The private posting role has no login, RLS bypass or Auth write

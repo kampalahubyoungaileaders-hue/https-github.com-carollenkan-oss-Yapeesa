@@ -11,6 +11,7 @@ import {
 import {
   money,
   loanSchedule,
+  loanCalcVersion,
   allocateLoanPayment,
   type LoanTerms,
   type LoanAllocation,
@@ -29,8 +30,7 @@ function rateText(value: string) {
   return `${n / 100n}.${String(n % 100n).padStart(2, '0')}`;
 }
 function rateBps(value: string) {
-  if (!/^(0|[1-9][0-9]*)(\.[0-9]{1,2})?$/.test(value))
-    throw new Error('Invalid rate');
+  if (!/^[0-9]+(\.[0-9]{1,2})?$/.test(value)) throw new Error('Invalid rate');
   const [whole, part = ''] = value.split('.');
   return String(BigInt(whole!) * 100n + BigInt(part.padEnd(2, '0')));
 }
@@ -404,6 +404,38 @@ export default function Loans({
     kind: LoanCommand['action'],
     extra: Partial<LoanCommand> = {},
   ): Pending {
+    let calculation: LoanCommand['calculation'] = null;
+    if (kind === 'request' && quote && extra.amount)
+      calculation = {
+        calc_version: loanCalcVersion,
+        principal: extra.amount,
+        interest: String(
+          quote.schedule.reduce((sum, r) => sum + BigInt(r.interest), 0n),
+        ),
+      };
+    if (kind === 'disburse') {
+      const r = data?.requests.find((r) => r.id === extra.target_id);
+      if (r)
+        calculation = {
+          calc_version: loanCalcVersion,
+          principal: String(-BigInt(r.principal)),
+          interest: '0',
+        };
+    }
+    if (kind === 'repay') {
+      const b = data?.loans.find((b) => b.id === extra.target_id);
+      const split = b ? paymentPreview(b) : null;
+      if (split) calculation = { calc_version: loanCalcVersion, ...split };
+    }
+    if (kind === 'reverse') {
+      const e = data?.events.find((e) => e.id === extra.target_id);
+      if (e)
+        calculation = {
+          calc_version: loanCalcVersion,
+          principal: String(-BigInt(e.principal)),
+          interest: String(-BigInt(e.interest)),
+        };
+    }
     return {
       kind: 'record',
       body: {
@@ -417,6 +449,7 @@ export default function Loans({
         amount: null,
         months: null,
         reason: '',
+        calculation,
         ...extra,
       },
     };
@@ -872,6 +905,9 @@ export default function Loans({
                 {r.months} {t('loanMonthUnit')} · {r.date}
               </p>
               <TermsSummary terms={r.terms} />
+              {r.calculation_mismatch && (
+                <p className="loan-review-flag">{t('loanCalculationReview')}</p>
+              )}
               <p>
                 {t('loanTotalInterest')}:{' '}
                 <strong>
@@ -1093,6 +1129,9 @@ export default function Loans({
                 {e.date} · <strong>{format(e.cash)}</strong>
               </p>
               <p>{e.reason}</p>
+              {e.calculation_mismatch && (
+                <p className="loan-review-flag">{t('loanCalculationReview')}</p>
+              )}
               <details>
                 <summary>{t('socialJournal')}</summary>
                 <table>

@@ -2485,3 +2485,9 @@ dialog::backdrop {
 .loan-action {
   margin: 20px 0;
 }
+.loan-review-flag {
+  padding: 12px;
+  background: #fff7e4;
+  border-left: 3px solid #bc8717;
+  border-radius: 5px;
+}

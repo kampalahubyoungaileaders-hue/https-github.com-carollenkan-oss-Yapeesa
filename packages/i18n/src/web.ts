@@ -361,6 +361,8 @@ export const web = {
   loanInterestPaid: 'Interest paid',
   loanMonthUnit: 'months',
   loanMonthlyRateLabel: 'Monthly rate',
+  loanCalculationReview:
+    'Server calculation used. The submitted preview differs and has been retained for review.',
   loanReference: 'Loan ID',
   loansTitle: 'Loans',
   loansHelp:

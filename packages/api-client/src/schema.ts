@@ -3736,6 +3736,7 @@ export interface paths {
                   /** @enum {string} */
                   approvals: '1' | '2' | '3';
                 };
+                calculation_mismatch: boolean;
                 reason: string;
                 /** Format: uuid */
                 entered_by: string;
@@ -3795,6 +3796,7 @@ export interface paths {
                 reverses: string | null;
                 /** Format: uuid */
                 journal_id: string;
+                calculation_mismatch: boolean;
                 reason: string;
                 journal: {
                   account: string;
@@ -3920,6 +3922,11 @@ export interface paths {
             amount: string | null;
             months: string | null;
             reason: string;
+            calculation?: {
+              calc_version: string;
+              principal: string;
+              interest: string;
+            } | null;
           };
         };
       };

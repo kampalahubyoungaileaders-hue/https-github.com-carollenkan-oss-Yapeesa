@@ -581,7 +581,7 @@ export const loanQuoteSchema = object({
   borrowable: integerString,
   available_cash: integerString,
 });
-export const loanCommandBody = object({
+const loanCommandProperties = {
   request_id: purchaseBody.properties.client_id,
   device_id: uuid,
   action: {
@@ -602,7 +602,21 @@ export const loanCommandBody = object({
     anyOf: [{ type: 'string', pattern: '^[1-9][0-9]{0,2}$' }, { type: 'null' }],
   },
   reason: { type: 'string', maxLength: 240 },
-});
+  calculation: {
+    anyOf: [
+      object({
+        calc_version: { type: 'string', minLength: 1, maxLength: 64 },
+        principal: signedIntegerString,
+        interest: signedIntegerString,
+      }),
+      { type: 'null' },
+    ],
+  },
+};
+export const loanCommandBody = object(
+  loanCommandProperties,
+  Object.keys(loanCommandProperties).filter((key) => key !== 'calculation'),
+);
 export const loanWorkspaceSchema = object({
   currency: string,
   can_record: boolean,
@@ -631,6 +645,7 @@ export const loanWorkspaceSchema = object({
       months: integerString,
       policy_id: uuid,
       terms: loanTermsSchema,
+      calculation_mismatch: boolean,
       reason: string,
       entered_by: uuid,
       date: string,
@@ -674,6 +689,7 @@ export const loanWorkspaceSchema = object({
       allocations: { type: 'array', items: loanAllocationSchema },
       reverses: nullableUuid,
       journal_id: uuid,
+      calculation_mismatch: boolean,
       reason: string,
       journal: {
         type: 'array',

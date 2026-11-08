@@ -334,20 +334,6 @@ revoke all on function private.guard_loan_cash() from public,anon,authenticated;
 create trigger protect_loan_social_cash after insert on public.loan_event for each row execute function private.guard_loan_cash();
 create trigger protect_share_social_cash after insert on public.group_txn for each row execute function private.guard_loan_cash();
 create trigger protect_fine_social_cash after insert on public.fine_event for each row execute function private.guard_loan_cash();
-create function public.loan_workspace(p_org uuid) returns jsonb language plpgsql stable security invoker set search_path='' as $$
-begin
- if not private.can_read_org(p_org) then raise exception 'Not permitted' using errcode='42501';end if;
- if not exists(select 1 from public.organisation where id=p_org and type='group' and status='active') then raise exception 'Inactive group' using errcode='22023';end if;
- return jsonb_build_object('currency',(select currency from public.organisation where id=p_org),'can_record',private.can_record(p_org),'can_configure',private.is_platform_admin(),
- 'policy',(select jsonb_build_object('id',p.id,'terms',p.terms) from public.group_settings g join public.loan_policy p on p.id=g.loan_policy_id where g.organisation_id=p_org),
- 'meetings',coalesce((select jsonb_agg(jsonb_build_object('id',m.id,'date',m.meeting_date,'status',m.status,'ready',exists(select 1 from public.meeting_session where meeting_id=m.id),'available_cash',case when private.is_officer(p_org) and m.status='open' and exists(select 1 from public.meeting_session where meeting_id=m.id) then greatest(0,private.loan_cash(p_org,m.id))::text else null end) order by m.meeting_date desc,m.id) from public.meeting m where m.organisation_id=p_org),'[]'::jsonb),
- 'requests',coalesce((select jsonb_agg(jsonb_build_object('id',r.id,'meeting_id',r.meeting_id,'member_id',r.member_id,'name',u.display_name,'principal',r.principal::text,'months',r.months::text,'policy_id',r.policy_id,'terms',p.terms,'reason',r.reason,'entered_by',r.entered_by,'date',m.meeting_date,'cancelled',exists(select 1 from public.loan_cancellation where request_id=r.id),'loan_id',(select id from public.group_loan where request_id=r.id),'can_approve',private.is_officer(p_org) and private.loan_eligible(r.id,private.current_person()) and not exists(select 1 from public.loan_approval where request_id=r.id and officer_id=private.current_person()),'approvals',coalesce((select jsonb_agg(jsonb_build_object('person_id',a.officer_id,'eligible',private.loan_eligible(r.id,a.officer_id)) order by a.recorded_at,a.id) from public.loan_approval a where a.request_id=r.id),'[]'::jsonb)) order by r.recorded_at desc,r.id) from public.loan_request r join public.loan_policy p on p.id=r.policy_id join public.person u on u.id=r.member_id join public.meeting m on m.id=r.meeting_id where r.organisation_id=p_org),'[]'::jsonb),
- 'loans',coalesce((select jsonb_agg(jsonb_build_object('id',g.id,'request_id',g.request_id,'meeting_id',g.meeting_id,'member_id',g.member_id,'name',p.display_name,'date',m.meeting_date,'schedule',g.schedule,'calc_version',g.calc_version) order by g.recorded_at desc,g.id) from public.group_loan g join public.person p on p.id=g.member_id join public.meeting m on m.id=g.meeting_id where g.organisation_id=p_org),'[]'::jsonb),
- 'events',coalesce((select jsonb_agg(jsonb_build_object('id',e.id,'revision',e.revision::text,'loan_id',e.loan_id,'meeting_id',e.meeting_id,'date',m.meeting_date,'kind',e.kind,'principal',e.principal::text,'interest',e.interest::text,'cash',e.cash::text,'allocations',e.allocations,'reverses',e.reverses,'journal_id',e.journal_id,'reason',e.reason,'journal',coalesce((select jsonb_agg(jsonb_build_object('account',a.code,'side',l.side,'amount',l.amount::text) order by a.code) from public.journal_line l join public.ledger_account a on a.id=l.account_id where l.journal_id=e.journal_id),'[]'::jsonb)) order by e.revision) from public.loan_event e join public.meeting m on m.id=e.meeting_id where e.organisation_id=p_org),'[]'::jsonb));
-end $$;
-revoke all on function public.loan_workspace(uuid) from public,anon,authenticated;
-grant execute on function public.loan_workspace(uuid) to authenticated;
-
 create or replace function public.group_shareout_preview(p_org uuid)
 returns jsonb language plpgsql stable security invoker set search_path='' as $$
 declare org public.organisation; cyc public.cycle; members jsonb; allocations jsonb; fund numeric; recorded numeric; shares numeric; fine_income numeric; loan_income numeric; outstanding numeric;
@@ -390,3 +376,71 @@ from public.group_loan g cross join lateral jsonb_array_elements(g.schedule) s
 left join lateral(select sum((a->>'principal')::numeric*case when e.cash>0 then 1 else -1 end) as principal_paid,sum((a->>'interest')::numeric*case when e.cash>0 then 1 else -1 end) as interest_paid,max(m.meeting_date) filter(where e.cash>0) as last_paid_date from public.loan_event e join public.meeting m on m.id=e.meeting_id cross join lateral jsonb_array_elements(e.allocations) a where e.loan_id=g.id and a->>'period'=s->>'period') p on true;
 revoke all on public.loan_schedule from public,anon,authenticated;
 grant select on public.loan_schedule to authenticated;
+-- Retain client previews separately from authoritative amounts. A stale or older
+-- calculation is accepted, flagged and never silently rewritten in the audit trail.
+create table public.loan_calculation(
+ command_id uuid primary key references public.sync_receipt(client_id),organisation_id uuid not null references public.organisation(id),member_id uuid not null references public.person(id),request_id uuid references public.loan_request(id),event_id uuid references public.loan_event(id),
+ submitted jsonb,authoritative jsonb,calculation_mismatch boolean not null,calc_version text not null check(calc_version='groups-loans-v1'),recorded_at timestamptz not null default now()
+);
+create unique index loan_calculation_request on public.loan_calculation(request_id) where request_id is not null;
+create unique index loan_calculation_event on public.loan_calculation(event_id) where event_id is not null;
+create index loan_calculation_org on public.loan_calculation(organisation_id,member_id);
+alter table public.loan_calculation enable row level security;
+revoke all on public.loan_calculation from public,anon,authenticated;
+grant select on public.loan_calculation to authenticated,yapesa_loans;
+grant insert on public.loan_calculation to yapesa_loans;
+create policy loan_calculation_read on public.loan_calculation for select to authenticated using(private.can_read_org(organisation_id) and (member_id=private.current_person() or private.is_officer(organisation_id)));
+create policy loan_calculation_executor_read on public.loan_calculation for select to yapesa_loans using(private.is_officer(organisation_id));
+create policy loan_calculation_executor_insert on public.loan_calculation for insert to yapesa_loans with check(private.is_officer(organisation_id));
+create trigger immutable_record before update or delete on public.loan_calculation for each row execute function private.immutable_record();
+create function private.loan_record(p_org uuid,p_action text,p_request uuid,p_device uuid,p_meeting uuid,p_member uuid,p_amount text,p_months text,p_policy uuid,p_reason text,p_target uuid,p_client jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+declare result_data jsonb;prior public.loan_calculation;req public.loan_request;event_row public.loan_event;member_uuid uuid;request_uuid uuid;event_uuid uuid;expected jsonb;begin
+ if not private.is_officer(p_org) then raise exception 'Not permitted' using errcode='42501';end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_org::text,0));
+ if p_client is not null then
+  if p_action not in ('request','disburse','repay','reverse') or jsonb_typeof(p_client)<>'object' or not(p_client ?& array['calc_version','principal','interest']) or (select count(*) from jsonb_object_keys(p_client))<>3 or coalesce(jsonb_typeof(p_client->'calc_version'),'null')<>'string' or length(p_client->>'calc_version') not between 1 and 64 or coalesce(jsonb_typeof(p_client->'principal'),'null')<>'string' or p_client->>'principal' !~ '^-?(0|[1-9][0-9]{0,18})$' or coalesce(jsonb_typeof(p_client->'interest'),'null')<>'string' or p_client->>'interest' !~ '^-?(0|[1-9][0-9]{0,18})$' then raise exception 'Invalid client loan calculation' using errcode='22023';end if;
+ end if;
+ result_data:=private.loan_command(p_org,p_action,p_request,p_device,p_meeting,p_member,p_amount,p_months,p_policy,p_reason,p_target);
+ select * into prior from public.loan_calculation where command_id=p_request;
+ if found then if prior.submitted is distinct from p_client then raise exception 'Idempotency conflict' using errcode='23505';end if;return result_data;end if;
+ if p_action in ('request','approve','cancel') then
+  select * into strict req from public.loan_request where id=case when p_action='request' then (result_data->>'id')::uuid else p_target end and organisation_id=p_org;
+  member_uuid:=req.member_id;
+  if p_action='request' then
+   request_uuid:=req.id;
+   expected:=jsonb_build_object('calc_version','groups-loans-v1','principal',req.principal::text,'interest',(select sum((s->>'interest')::numeric)::text from public.loan_policy p join public.meeting m on m.id=req.meeting_id cross join lateral jsonb_array_elements(private.loan_schedule(req.principal::text,m.meeting_date,p.terms,req.months::text)) s where p.id=req.policy_id));
+  end if;
+ else
+  select * into strict event_row from public.loan_event where organisation_id=p_org and (case when p_action='disburse' then loan_id=(result_data->>'id')::uuid and kind='disbursement' else id=(result_data->>'id')::uuid end);
+  member_uuid:=event_row.member_id;event_uuid:=event_row.id;expected:=jsonb_build_object('calc_version','groups-loans-v1','principal',event_row.principal::text,'interest',event_row.interest::text);
+ end if;
+ insert into public.loan_calculation(command_id,organisation_id,member_id,request_id,event_id,submitted,authoritative,calculation_mismatch,calc_version) values(p_request,p_org,member_uuid,request_uuid,event_uuid,p_client,expected,p_client is not null and p_client is distinct from expected,'groups-loans-v1');
+ return result_data;
+end $$;
+grant create on schema private to yapesa_loans;
+alter function private.loan_record(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid,jsonb) owner to yapesa_loans;
+revoke create on schema private from yapesa_loans;
+revoke all on function private.loan_record(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid,jsonb) from public,anon,authenticated;
+grant execute on function private.loan_record(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid,jsonb) to authenticated;
+-- Only the wrapper may be called by clients, so a calculation cannot be appended
+-- or changed after its corresponding permanent receipt has already been accepted.
+revoke all on function public.loan_command(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid) from public,anon,authenticated;
+drop function public.loan_command(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid);
+revoke all on function private.loan_command(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid) from authenticated;
+create function public.loan_command(p_org uuid,p_action text,p_request uuid,p_device uuid,p_meeting uuid,p_member uuid default null,p_amount text default null,p_months text default null,p_policy uuid default null,p_reason text default '',p_target uuid default null,p_client jsonb default null) returns jsonb language sql security invoker set search_path='' as $$ select private.loan_record(p_org,p_action,p_request,p_device,p_meeting,p_member,p_amount,p_months,p_policy,p_reason,p_target,p_client); $$;
+revoke all on function public.loan_command(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid,jsonb) from public,anon,authenticated;
+grant execute on function public.loan_command(uuid,text,uuid,uuid,uuid,uuid,text,text,uuid,text,uuid,jsonb) to authenticated;
+
+create or replace function public.loan_workspace(p_org uuid) returns jsonb language plpgsql stable security invoker set search_path='' as $$
+begin
+ if not private.can_read_org(p_org) then raise exception 'Not permitted' using errcode='42501';end if;
+ if not exists(select 1 from public.organisation where id=p_org and type='group' and status='active') then raise exception 'Inactive group' using errcode='22023';end if;
+ return jsonb_build_object('currency',(select currency from public.organisation where id=p_org),'can_record',private.can_record(p_org),'can_configure',private.is_platform_admin(),
+ 'policy',(select jsonb_build_object('id',p.id,'terms',p.terms) from public.group_settings g join public.loan_policy p on p.id=g.loan_policy_id where g.organisation_id=p_org),
+ 'meetings',coalesce((select jsonb_agg(jsonb_build_object('id',m.id,'date',m.meeting_date,'status',m.status,'ready',exists(select 1 from public.meeting_session where meeting_id=m.id),'available_cash',case when private.is_officer(p_org) and m.status='open' and exists(select 1 from public.meeting_session where meeting_id=m.id) then greatest(0,private.loan_cash(p_org,m.id))::text else null end) order by m.meeting_date desc,m.id) from public.meeting m where m.organisation_id=p_org),'[]'::jsonb),
+ 'requests',coalesce((select jsonb_agg(jsonb_build_object('id',r.id,'meeting_id',r.meeting_id,'member_id',r.member_id,'name',u.display_name,'principal',r.principal::text,'months',r.months::text,'policy_id',r.policy_id,'terms',p.terms,'calculation_mismatch',coalesce((select calculation_mismatch from public.loan_calculation where request_id=r.id),false),'reason',r.reason,'entered_by',r.entered_by,'date',m.meeting_date,'cancelled',exists(select 1 from public.loan_cancellation where request_id=r.id),'loan_id',(select id from public.group_loan where request_id=r.id),'can_approve',private.is_officer(p_org) and private.loan_eligible(r.id,private.current_person()) and not exists(select 1 from public.loan_approval where request_id=r.id and officer_id=private.current_person()),'approvals',coalesce((select jsonb_agg(jsonb_build_object('person_id',a.officer_id,'eligible',private.loan_eligible(r.id,a.officer_id)) order by a.recorded_at,a.id) from public.loan_approval a where a.request_id=r.id),'[]'::jsonb)) order by r.recorded_at desc,r.id) from public.loan_request r join public.loan_policy p on p.id=r.policy_id join public.person u on u.id=r.member_id join public.meeting m on m.id=r.meeting_id where r.organisation_id=p_org),'[]'::jsonb),
+ 'loans',coalesce((select jsonb_agg(jsonb_build_object('id',g.id,'request_id',g.request_id,'meeting_id',g.meeting_id,'member_id',g.member_id,'name',p.display_name,'date',m.meeting_date,'schedule',g.schedule,'calc_version',g.calc_version) order by g.recorded_at desc,g.id) from public.group_loan g join public.person p on p.id=g.member_id join public.meeting m on m.id=g.meeting_id where g.organisation_id=p_org),'[]'::jsonb),
+ 'events',coalesce((select jsonb_agg(jsonb_build_object('id',e.id,'revision',e.revision::text,'loan_id',e.loan_id,'meeting_id',e.meeting_id,'date',m.meeting_date,'kind',e.kind,'principal',e.principal::text,'interest',e.interest::text,'cash',e.cash::text,'allocations',e.allocations,'reverses',e.reverses,'journal_id',e.journal_id,'calculation_mismatch',coalesce((select calculation_mismatch from public.loan_calculation where event_id=e.id),false),'reason',e.reason,'journal',coalesce((select jsonb_agg(jsonb_build_object('account',a.code,'side',l.side,'amount',l.amount::text) order by a.code) from public.journal_line l join public.ledger_account a on a.id=l.account_id where l.journal_id=e.journal_id),'[]'::jsonb)) order by e.revision) from public.loan_event e join public.meeting m on m.id=e.meeting_id where e.organisation_id=p_org),'[]'::jsonb));
+end $$;
+revoke all on function public.loan_workspace(uuid) from public,anon,authenticated;
+grant execute on function public.loan_workspace(uuid) to authenticated;

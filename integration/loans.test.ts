@@ -1,6 +1,6 @@
 import test from 'node:test';
 import fc from 'fast-check';
-import { money, loanSchedule } from '@yapesa/domain';
+import { money, loanSchedule } from '../packages/domain/src/index.ts';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import { v7 } from 'uuid';
@@ -246,10 +246,34 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     amount: '20000',
     months: '3',
     policy_id: quote.json().policy_id,
+    calculation: {
+      calc_version: 'older-loan-preview',
+      principal: '20000',
+      interest: '999',
+    },
   });
   const requested = await call('MEETING_SECRETARY', 'POST', path, create);
   assert.equal(requested.statusCode, 200, requested.body);
   const request = requested.json().id;
+  assert.equal(
+    (await ws()).requests.find((r: { id: string }) => r.id === request)
+      .calculation_mismatch,
+    true,
+  );
+  assert.equal(
+    (
+      await call('MEETING_SECRETARY', 'POST', path, {
+        ...create,
+        calculation: {
+          calc_version: 'older-loan-preview',
+          principal: '20000',
+          interest: '998',
+        },
+      })
+    ).statusCode,
+    409,
+    'A replay cannot replace its submitted calculation',
+  );
   assert.equal(
     (await call('MEETING_SECRETARY', 'POST', path, create)).json().id,
     request,
@@ -406,6 +430,11 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     meeting_id: meetingId,
     target_id: loan,
     amount: '100',
+    calculation: {
+      calc_version: 'groups-loans-v1',
+      principal: '100',
+      interest: '0',
+    },
   });
   const paid = await call('MEETING_SECRETARY', 'POST', path, payment);
   assert.equal(paid.statusCode, 200, paid.body);
@@ -419,6 +448,13 @@ test('scheduled loans require group approvals, protect social cash, allocate par
   );
   assert.equal(posted.principal, '0');
   assert.equal(posted.interest, '100');
+  assert.equal(posted.calculation_mismatch, true);
+  const retained = await db.query(
+    'select submitted,authoritative from public.loan_calculation where event_id=$1',
+    [paid.json().id],
+  );
+  assert.equal(retained.rows[0].submitted.principal, '100');
+  assert.equal(retained.rows[0].authoritative.interest, '100');
   assert.equal(data.loans[0].interest_remaining, '900');
   const disbursement = data.events.find(
     (e: { kind: string }) => e.kind === 'disbursement',
@@ -590,6 +626,7 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     'group_loan',
     'loan_event',
     'loan_schedule',
+    'loan_calculation',
   ]) {
     const r = await fetch(
       `${config!.supabaseUrl}/rest/v1/${table}?organisation_id=eq.${org}`,

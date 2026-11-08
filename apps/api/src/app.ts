@@ -1031,6 +1031,11 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
         amount: string | null;
         months: string | null;
         reason: string;
+        calculation?: {
+          calc_version: string;
+          principal: string;
+          interest: string;
+        } | null;
       };
     }>(
       '/api/groups/:id/loans',
@@ -1062,6 +1067,7 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             p_policy: b.policy_id,
             p_reason: b.reason,
             p_target: b.target_id,
+            p_client: b.calculation ?? null,
           },
           user.tokens.access_token,
         );
