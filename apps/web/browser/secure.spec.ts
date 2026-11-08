@@ -147,14 +147,15 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
       .getByRole('button', { name: 'Open navigation', exact: true })
       .click();
   await page.getByRole('button', { name: 'Overview', exact: true }).click();
-  const previewResponse = page.waitForResponse(
-    (response) =>
-      response.url().endsWith('/shareout-preview') && response.status() === 200,
+  const previewResponse = page.waitForResponse((response) =>
+    response.url().endsWith('/shareout-preview'),
   );
   await page
     .getByRole('button', { name: 'Preview share-out', exact: true })
     .click();
-  const previewData = await (await previewResponse).json();
+  const previewResult = await previewResponse;
+  expect(previewResult.status(), await previewResult.text()).toBe(200);
+  const previewData = await previewResult.json();
   await expect(page.getByRole('status')).toContainText(
     'Allocations match the fund exactly.',
   );
