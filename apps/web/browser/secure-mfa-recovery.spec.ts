@@ -41,8 +41,14 @@ test('two administrators verify identity and the recipient restores access with 
   await expect(
     page.getByText('Recovery request saved. Reference:', { exact: false }),
   ).toBeVisible();
-  const contextA = await browser.newContext({ viewport: page.viewportSize()! }),
-    contextB = await browser.newContext({ viewport: page.viewportSize()! });
+  const contextA = await browser.newContext({
+      baseURL: new URL(page.url()).origin,
+      viewport: page.viewportSize()!,
+    }),
+    contextB = await browser.newContext({
+      baseURL: new URL(page.url()).origin,
+      viewport: page.viewportSize()!,
+    });
   async function admin(p: Page, actor: string) {
     p.on('pageerror', (e) => errors.push(e.message));
     await p.goto('/#live');

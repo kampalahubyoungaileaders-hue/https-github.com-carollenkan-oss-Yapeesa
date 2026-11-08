@@ -82,7 +82,10 @@ test('administrator prepares one account and the officer activates it only after
     path: info.outputPath('staff-prepared.png'),
     fullPage: true,
   });
-  const context = await browser.newContext({ viewport: page.viewportSize()! });
+  const context = await browser.newContext({
+    baseURL: new URL(page.url()).origin,
+    viewport: page.viewportSize()!,
+  });
   const officer = await context.newPage();
   officer.on('pageerror', (e) => errors.push(e.message));
   try {
