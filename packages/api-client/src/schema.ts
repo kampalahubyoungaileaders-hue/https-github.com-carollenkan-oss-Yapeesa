@@ -801,6 +801,7 @@ export interface paths {
                 requires_mfa: boolean;
                 mfa_verified: boolean;
                 can_administer: boolean;
+                activation_pending?: boolean;
                 factors: {
                   /** Format: uuid */
                   id: string;
@@ -1058,6 +1059,7 @@ export interface paths {
                 requires_mfa: boolean;
                 mfa_verified: boolean;
                 can_administer: boolean;
+                activation_pending?: boolean;
                 factors: {
                   /** Format: uuid */
                   id: string;
@@ -1192,6 +1194,7 @@ export interface paths {
                 requires_mfa: boolean;
                 mfa_verified: boolean;
                 can_administer: boolean;
+                activation_pending?: boolean;
                 factors: {
                   /** Format: uuid */
                   id: string;
@@ -1569,12 +1572,531 @@ export interface paths {
                 requires_mfa: boolean;
                 mfa_verified: boolean;
                 can_administer: boolean;
+                activation_pending?: boolean;
                 factors: {
                   /** Format: uuid */
                   id: string;
                   name: string;
                 }[];
               } | null;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/invitation/finish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              configured: boolean;
+              user: {
+                /** Format: uuid */
+                person_id: string;
+                display_name: string;
+                requires_mfa: boolean;
+                mfa_verified: boolean;
+                can_administer: boolean;
+                activation_pending?: boolean;
+                factors: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                }[];
+              } | null;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/staff': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              invitations: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                organisation_id: string;
+                /** Format: uuid */
+                person_id: string;
+                name: string;
+                phone: string;
+                /** Format: email */
+                email: string;
+                /** @enum {string} */
+                role: 'secretary' | 'treasurer' | 'chair';
+                recorded_at: string;
+                reason: string;
+                account_created: boolean;
+                activated: boolean;
+                cancelled: boolean;
+              }[];
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/staff/invitations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            organisation_id: string;
+            /** Format: uuid */
+            person_id: string | null;
+            name: string;
+            phone: string;
+            /** Format: email */
+            email: string;
+            /** @enum {string} */
+            role: 'secretary' | 'treasurer' | 'chair';
+            reason: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/staff/invitations/{id}/retry': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
             };
           };
         };

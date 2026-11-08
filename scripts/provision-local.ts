@@ -252,6 +252,7 @@ try {
     WEB_ORIGIN: 'http://127.0.0.1:5173',
     TEST_DB_URL: status.DB_URL,
     TEST_SERVICE_KEY: status.SERVICE_ROLE_KEY,
+    SUPABASE_AUTH_ADMIN_KEY: status.SERVICE_ROLE_KEY,
     TEST_PIN: pin,
     ...fixtures,
   };
