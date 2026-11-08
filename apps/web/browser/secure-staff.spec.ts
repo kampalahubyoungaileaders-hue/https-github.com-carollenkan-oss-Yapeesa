@@ -126,7 +126,11 @@ test('administrator prepares one account and the officer activates it only after
       .click();
     await expect(officer.locator('.sidebar-workspace strong')).toHaveText(name);
     await expect(
-      officer.getByRole('heading', { name: 'Local group A', exact: true }),
+      officer.getByRole('heading', {
+        name: 'Local group A',
+        exact: true,
+        level: 1,
+      }),
     ).toBeVisible();
     await expect(officer.getByRole('alert')).toHaveCount(0);
     expect(
