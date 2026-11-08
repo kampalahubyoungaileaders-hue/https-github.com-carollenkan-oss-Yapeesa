@@ -369,7 +369,7 @@ end $$;
 -- Read-only schedule rows retain the canonical immutable schedule and derive
 -- paid amounts from exact receipt allocations. Invoker security preserves RLS.
 create view public.loan_schedule with(security_invoker=true) as
-select g.id as loan_id,g.organisation_id,g.member_id,s->>'period' as period,(s->>'due')::date as due_date,(s->>'principal')::bigint as principal,(s->>'interest')::bigint as interest,
+select g.id as loan_id,g.organisation_id,g.member_id,exists(select 1 from public.loan_event e join public.loan_event original on original.id=e.reverses where e.loan_id=g.id and original.kind='disbursement') as cancelled,s->>'period' as period,(s->>'due')::date as due_date,(s->>'principal')::bigint as principal,(s->>'interest')::bigint as interest,
  coalesce(p.principal_paid,0) as principal_paid,coalesce(p.interest_paid,0) as interest_paid,
  case when coalesce(p.principal_paid,0)=(s->>'principal')::numeric and coalesce(p.interest_paid,0)=(s->>'interest')::numeric then p.last_paid_date else null end as paid_date
 from public.group_loan g cross join lateral jsonb_array_elements(g.schedule) s

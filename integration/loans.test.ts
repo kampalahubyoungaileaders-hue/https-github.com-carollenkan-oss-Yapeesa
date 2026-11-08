@@ -589,7 +589,37 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     ).statusCode,
     422,
   );
-  await save('cancel', { meeting_id: meetingId, target_id: extra.id });
+  await save(
+    'approve',
+    { meeting_id: meetingId, target_id: extra.id, device_id: v7(), reason: '' },
+    'MEETING_TREASURER',
+  );
+  const correctedLoan = await save('disburse', {
+    meeting_id: meetingId,
+    target_id: extra.id,
+  });
+  const correctedBook = await ws();
+  const originalCash = correctedBook.events.find(
+    (e: { loan_id: string; kind: string }) =>
+      e.loan_id === correctedLoan.id && e.kind === 'disbursement',
+  );
+  await save('reverse', {
+    meeting_id: meetingId,
+    target_id: originalCash.id,
+    reason: 'Cash returned; loan issued to the wrong record',
+  });
+  const corrected = (await ws()).loans.find(
+    (b: { id: string }) => b.id === correctedLoan.id,
+  );
+  assert.equal(corrected.cancelled, true);
+  assert.equal(corrected.principal_remaining, '0');
+  assert.equal(corrected.interest_remaining, '0');
+  const scheduleState = await db.query(
+    'select bool_and(cancelled) as cancelled from public.loan_schedule where loan_id=$1',
+    [correctedLoan.id],
+  );
+  assert.equal(scheduleState.rows[0].cancelled, true);
+
   await meet('propose', {
     meeting_id: meetingId,
     counted_cash: '27000',
