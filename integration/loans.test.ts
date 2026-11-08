@@ -1,4 +1,6 @@
 import test from 'node:test';
+import fc from 'fast-check';
+import { money, loanSchedule } from '@yapesa/domain';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import { v7 } from 'uuid';
@@ -279,10 +281,54 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     ).statusCode,
     403,
   );
+  await db.query(
+    "insert into public.membership(person_id,organisation_id,role) values($1,$2,'treasurer')",
+    [secretary, org],
+  );
+  assert.equal(
+    (
+      await call(
+        'MEETING_SECRETARY',
+        'POST',
+        path,
+        fine('approve', {
+          meeting_id: meetingId,
+          target_id: request,
+          reason: '',
+        }),
+      )
+    ).statusCode,
+    403,
+    'Separate approval excludes the request recorder even when eligible',
+  );
+  await db.query(
+    "update public.membership set ends_at=now() where person_id=$1 and organisation_id=$2 and role='treasurer'",
+    [secretary, org],
+  );
   await save(
     'approve',
     { meeting_id: meetingId, target_id: request, device_id: v7(), reason: '' },
     'MEETING_TREASURER',
+  );
+  await db.query(
+    "update public.membership set ends_at=now() where person_id=$1 and organisation_id=$2 and role='treasurer'",
+    [env['TEST_MEETING_TREASURER_PERSON'], org],
+  );
+  assert.equal(
+    (
+      await call(
+        'MEETING_SECRETARY',
+        'POST',
+        path,
+        fine('disburse', { meeting_id: meetingId, target_id: request }),
+      )
+    ).statusCode,
+    422,
+    'Expired approval roles do not count',
+  );
+  await db.query(
+    "update public.membership set ends_at=null where person_id=$1 and organisation_id=$2 and role='treasurer'",
+    [env['TEST_MEETING_TREASURER_PERSON'], org],
   );
   await policy({
     ...terms,
@@ -498,6 +544,7 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     'loan_cancellation',
     'group_loan',
     'loan_event',
+    'loan_schedule',
   ]) {
     const r = await fetch(
       `${config!.supabaseUrl}/rest/v1/${table}?organisation_id=eq.${org}`,
@@ -511,6 +558,24 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     assert.equal(r.status, 200);
     assert.deepEqual(await r.json(), []);
   }
+  const writerToken = openTokens(
+    cookies.get('MEETING_SECRETARY')!.slice('yapesa_session='.length),
+    config!.cookieKey,
+  ).access_token;
+  const direct = await fetch(`${config!.supabaseUrl}/rest/v1/loan_event`, {
+    method: 'POST',
+    headers: {
+      apikey: config!.publishableKey,
+      Authorization: `Bearer ${writerToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ organisation_id: org }),
+  });
+  assert.equal(
+    direct.status,
+    403,
+    'Authenticated users cannot insert loan cash rows directly',
+  );
   await assert.rejects(
     db.query(
       "update public.loan_event set reason='tampered' where loan_id=$1",
@@ -518,6 +583,46 @@ test('scheduled loans require group approvals, protect social cash, allocate par
     ),
   );
   assert.equal(secretary !== member, true);
+});
+test('SQL and shared scheduled-loan calculations agree on generated exact amounts and dates', async () => {
+  for (const [principal, n, rate, flat, up, end] of fc.sample(
+    fc.tuple(
+      fc.bigInt({ min: 120n, max: 1000000000000n }),
+      fc.bigInt({ min: 1n, max: 120n }),
+      fc.bigInt({ min: 0n, max: 10000n }),
+      fc.boolean(),
+      fc.boolean(),
+      fc.boolean(),
+    ),
+    100,
+  )) {
+    const policy = {
+      ...terms,
+      monthly_rate_bps: String(rate),
+      max_months: '120',
+      method: flat ? 'flat' : 'declining',
+      rounding: up ? 'half_up' : 'down',
+      dates: end ? 'month_end' : 'original_day',
+    };
+    const actual = await db.query(
+      'select private.loan_schedule($1,$2,$3::jsonb,$4) as schedule',
+      [String(principal), '2028-01-31', JSON.stringify(policy), String(n)],
+    );
+    const expected = loanSchedule(money(principal, 'UGX'), '2028-01-31', {
+      months: n,
+      monthlyRateBps: rate,
+      method: flat ? 'flat' : 'declining',
+      rounding: up ? 'half_up' : 'down',
+      dates: end ? 'month_end' : 'original_day',
+      allocation: 'interest_first',
+    }).map((r) => ({
+      period: r.period,
+      due: r.due,
+      principal: String(r.principal.minor),
+      interest: String(r.interest.minor),
+    }));
+    assert.deepEqual(actual.rows[0].schedule, expected);
+  }
 });
 test.after(async () => {
   await app.close();

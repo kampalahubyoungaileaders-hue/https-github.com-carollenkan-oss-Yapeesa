@@ -36,6 +36,16 @@ export class ClientError extends Error {
     super(code);
   }
 }
+export type LoanWorkspace =
+  paths['/api/groups/{id}/loans']['get']['responses'][200]['content']['application/json'];
+export type LoanCommand =
+  paths['/api/groups/{id}/loans']['post']['requestBody']['content']['application/json'];
+export type LoanPolicyInput =
+  paths['/api/admin/groups/{id}/loans']['post']['requestBody']['content']['application/json'];
+export type LoanQuoteInput =
+  paths['/api/groups/{id}/loans/quote']['post']['requestBody']['content']['application/json'];
+export type LoanQuote =
+  paths['/api/groups/{id}/loans/quote']['post']['responses'][200]['content']['application/json'];
 export type FineWorkspace =
   paths['/api/groups/{id}/fines']['get']['responses'][200]['content']['application/json'];
 export type FineCommand =
@@ -87,6 +97,23 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   return value as T;
 }
 export const api = {
+  loans: (id: string) =>
+    request<LoanWorkspace>(`/api/groups/${encodeURIComponent(id)}/loans`),
+  loanCommand: (id: string, input: LoanCommand) =>
+    request<{ id: string }>(
+      `/api/groups/${encodeURIComponent(id)}/loans`,
+      input,
+    ),
+  loanPolicy: (id: string, input: LoanPolicyInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/loans`,
+      input,
+    ),
+  loanQuote: (id: string, input: LoanQuoteInput) =>
+    request<LoanQuote>(
+      `/api/groups/${encodeURIComponent(id)}/loans/quote`,
+      input,
+    ),
   fines: (id: string) =>
     request<FineWorkspace>(`/api/groups/${encodeURIComponent(id)}/fines`),
   fineCommand: (id: string, input: FineCommand) =>

@@ -18,8 +18,7 @@ These do not block Phase 0 code scaffolding.
    `local-stack`, `secure-web` and `web-browser` jobs, including for administrators.
    Keep these requirements when changing CI.
 
-No payment features or new accounting rules are introduced by the current web
-release. Free development hosting is configured; production readiness is separate.
+No payment-transfer integration is introduced by the current web release. Free development hosting is configured; production readiness is separate.
 
 7. The first administrator is verified and active, and public development hosting
    is configured. Group administration, ledger-member registration and existing verified staff
@@ -30,7 +29,8 @@ release. Free development hosting is configured; production readiness is separat
 8. Define the approved adjustment process for a closed meeting or a cycle already
    shared out. The current saved reversal workflow handles open meetings only and
    keeps closed records locked.
-9. Before saved Group loans, confirm the configured interest rounding modes,
-   partial-repayment allocation, and monthly due-date/month-end conventions. The
-   brief specifies both interest methods, schedule residuals in the last payment,
-   and group-configured limits; those requirements remain unchanged.
+9. Resolved on 8 November 2026: groups explicitly select interest rounding,
+   partial-payment allocation and monthly due-date/month-end conventions. The
+   user selected agreed scheduled interest, with no automatic extra interest
+   from late or partial payments. Both interest methods and final-instalment
+   residuals remain. See `GROUP_LOANS.md` for the precise reviewed behavior.

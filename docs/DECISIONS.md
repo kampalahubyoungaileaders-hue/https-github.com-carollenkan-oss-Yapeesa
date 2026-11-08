@@ -149,3 +149,13 @@ cash or distributable income. Net collected fines enter the share-out preview;
 social money remains separate. Later collections preserve historic close hashes.
 See `FINES.md` for correction, attendance and permission behavior. Offline work
 remains deferred, and the open loan-policy questions are unchanged.
+
+## Scheduled Group loans
+
+On 8 November 2026 the user chose per-group rounding, repayment allocation and
+monthly due dates, then selected agreed schedules rather than recalculating
+monthly interest from actual unpaid balances. `GROUP_LOANS.md` defines the exact
+integer schedule and chronological allocation. Loans require configured group
+officer consent and a separate recorded cash handover. Social reserve checks also
+cover share corrections and fine refunds after lending. No hosted sample loans
+or lender/SACCO ledger changes are introduced. Offline workflows remain deferred.

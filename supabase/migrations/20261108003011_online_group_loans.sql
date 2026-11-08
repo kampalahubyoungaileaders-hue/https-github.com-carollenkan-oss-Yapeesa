@@ -98,7 +98,7 @@ create function public.admin_loan_policy(p_request uuid,p_device uuid,p_org uuid
 revoke all on function public.admin_loan_policy(uuid,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.admin_loan_policy(uuid,uuid,uuid,jsonb) to authenticated;
 create function private.loan_eligible(p_request uuid,p_person uuid) returns boolean language sql stable security definer set search_path='' as $$
- select exists(select 1 from public.loan_request r join public.loan_policy p on p.id=r.policy_id join public.membership m on m.organisation_id=r.organisation_id and m.person_id=p_person where r.id=p_request and private.can_read_org(r.organisation_id) and (r.member_id=private.current_person() or private.is_officer(r.organisation_id)) and (p_person=private.current_person() or exists(select 1 from public.loan_approval a where a.request_id=r.id and a.officer_id=p_person)) and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now()) and m.role in(select jsonb_array_elements_text(p.terms->'roles')) and (not(p.terms->>'separate')::boolean or p_person<>r.entered_by));
+ select exists(select 1 from public.loan_request r join public.loan_policy p on p.id=r.policy_id join public.membership m on m.organisation_id=r.organisation_id and m.person_id=p_person where r.id=p_request and private.can_read_org(r.organisation_id) and (r.member_id=private.current_person() or private.is_officer(r.organisation_id)) and (p_person=private.current_person() or exists(select 1 from public.loan_approval a where a.request_id=r.id and a.officer_id=p_person)) and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now()) and m.role in(select jsonb_array_elements_text(p.terms->'roles')) and (not(p.terms->>'separate')::boolean or (p_person<>r.entered_by and p_person<>r.member_id)));
 $$;
 create function private.loan_borrowable(p_org uuid,p_member uuid,p_terms jsonb) returns numeric language sql stable security invoker set search_path='' as $$
  select greatest(0,least(9223372036854775807::numeric,
@@ -321,8 +321,9 @@ end $$;
 -- A loan, share correction or fine refund must not consume the social reserve.
 create function private.guard_loan_cash() returns trigger language plpgsql security definer set search_path='' as $$
 declare movement bigint;available numeric;begin
- if not private.can_record(new.organisation_id) then raise exception 'Not permitted' using errcode='42501';end if;
  if tg_table_name='group_txn' then movement:=new.amount;else movement:=new.cash;end if;
+ if movement>=0 and tg_table_name<>'loan_event' then return new;end if;
+ if not private.can_record(new.organisation_id) then raise exception 'Not permitted' using errcode='42501';end if;
  if movement<0 or tg_table_name='loan_event' then available:=private.loan_cash(new.organisation_id,new.meeting_id);if available<0 then raise exception 'Cash is reserved for the social fund' using errcode='22023';end if;end if;return new;
 end $$;
 grant create on schema private to yapesa_loans;
@@ -378,3 +379,13 @@ begin
  'members',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'name',p.display_name,'shares',w->>'shares','amount',a->>'amount') order by p.display_name,p.id) from jsonb_array_elements(members) w join public.person p on p.id=(w->>'id')::uuid join jsonb_array_elements(allocations) a on a->>'id'=w->>'id'),'[]'::jsonb));
 end $$;
 
+-- Read-only schedule rows retain the canonical immutable schedule and derive
+-- paid amounts from exact receipt allocations. Invoker security preserves RLS.
+create view public.loan_schedule with(security_invoker=true) as
+select g.id as loan_id,g.organisation_id,g.member_id,s->>'period' as period,(s->>'due')::date as due_date,(s->>'principal')::bigint as principal,(s->>'interest')::bigint as interest,
+ coalesce(p.principal_paid,0) as principal_paid,coalesce(p.interest_paid,0) as interest_paid,
+ case when coalesce(p.principal_paid,0)=(s->>'principal')::numeric and coalesce(p.interest_paid,0)=(s->>'interest')::numeric then p.last_paid_date else null end as paid_date
+from public.group_loan g cross join lateral jsonb_array_elements(g.schedule) s
+left join lateral(select sum((a->>'principal')::numeric*case when e.cash>0 then 1 else -1 end) as principal_paid,sum((a->>'interest')::numeric*case when e.cash>0 then 1 else -1 end) as interest_paid,max(m.meeting_date) filter(where e.cash>0) as last_paid_date from public.loan_event e join public.meeting m on m.id=e.meeting_id cross join lateral jsonb_array_elements(e.allocations) a where e.loan_id=g.id and a->>'period'=s->>'period') p on true;
+revoke all on public.loan_schedule from public,anon,authenticated;
+grant select on public.loan_schedule to authenticated;
