@@ -22,6 +22,7 @@ import ShareOutPreview from './ShareOutPreview';
 import Meetings from './Meetings';
 import SocialFund from './SocialFund';
 import Fines from './Fines';
+import Loans from './Loans';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
   const messages: Record<string, Parameters<typeof t>[0]> = {
@@ -47,6 +48,7 @@ const titleKeys = {
   ledger: 'ledger',
   social: 'socialFund',
   fines: 'finesTitle',
+  loans: 'loansTitle',
 } as const;
 type Tab = keyof typeof titleKeys;
 function amount(value: string | bigint, workspace: SavedWorkspace): string {
@@ -625,6 +627,7 @@ export default function SecureApp() {
                       ledger: 'ledger',
                       social: 'people',
                       fines: 'ledger',
+                      loans: 'ledger',
                     } as const
                   )[key]
                 }
@@ -686,7 +689,7 @@ export default function SecureApp() {
               <p className="page-subtitle">{t('savedDescription')}</p>
             </div>
             <div className="heading-actions">
-              {tab !== 'social' && tab !== 'fines' && (
+              {tab !== 'social' && tab !== 'fines' && tab !== 'loans' && (
                 <>
                   <button
                     className="button"
@@ -966,6 +969,18 @@ export default function SecureApp() {
                   key={`${selected}-${savedRows.length}`}
                   group={selected}
                   format={(minor) => amount(minor, workspace)}
+                />
+              )}
+              {tab === 'loans' && (
+                <Loans
+                  key={selected}
+                  group={selected}
+                  device={deviceId(selected)}
+                  members={workspace.members}
+                  format={(minor) => amount(minor, workspace)}
+                  onChanged={async () => {
+                    setWorkspace(await api.workspace(selected));
+                  }}
                 />
               )}
               {tab === 'fines' && (

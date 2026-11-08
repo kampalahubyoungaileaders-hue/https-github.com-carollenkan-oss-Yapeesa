@@ -87,6 +87,15 @@ export class Backend {
         ['22023', '23514', 'P0001', 'P0002', '22003', '23503'].includes(code)
       )
         throw new ApiError(422, 'INVALID_FINE_REQUEST');
+      if (
+        [
+          '/rest/v1/rpc/loan_command',
+          '/rest/v1/rpc/loan_workspace',
+          '/rest/v1/rpc/loan_quote',
+        ].includes(path) &&
+        ['22023', '23514', 'P0001', 'P0002', '22003', '23503'].includes(code)
+      )
+        throw new ApiError(422, 'INVALID_LOAN_REQUEST');
       if (code === '23505') throw new ApiError(409, 'DUPLICATE_REFERENCE');
       if (code === '42501') throw new ApiError(403, 'PERMISSION_DENIED');
       if (

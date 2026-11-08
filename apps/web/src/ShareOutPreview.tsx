@@ -40,6 +40,12 @@ export default function ShareOutPreview({
       </div>
       <p>{t('shareoutScope')}</p>
       {error && <p role="alert">{error}</p>}
+      {data && data.loans_outstanding !== '0' && (
+        <p>
+          {t('loanPrincipalRemaining')}: {format(data.loans_outstanding)}.{' '}
+          {t('loanOutstandingPreview')}
+        </p>
+      )}
       {data && (
         <>
           <p>

@@ -2443,3 +2443,51 @@ dialog::backdrop {
     grid-template-columns: 1fr;
   }
 }
+.loans-panel .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.loans-panel fieldset {
+  min-width: 0;
+}
+.loans-panel .loan-settings {
+  margin: 24px 0;
+}
+.loan-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 18px 0;
+}
+.loan-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.loan-table-wrap th,
+.loan-table-wrap td {
+  padding: 10px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.loan-confirm {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 18px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.loan-confirm input {
+  margin-top: 5px;
+}
+.loan-quote,
+.loan-action {
+  margin: 20px 0;
+}
+.loan-review-flag {
+  padding: 12px;
+  background: #fff7e4;
+  border-left: 3px solid #bc8717;
+  border-radius: 5px;
+}

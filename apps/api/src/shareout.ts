@@ -7,9 +7,11 @@ export function checkedShareOut(raw: unknown): unknown {
     const data = object(raw);
     if (
       textField(data, 'calc_version') !== shareOutCalcVersion ||
-      !['recorded-shares-only', 'recorded-shares-and-paid-fines'].includes(
-        String(data['scope']),
-      ) ||
+      ![
+        'recorded-shares-only',
+        'recorded-shares-and-paid-fines',
+        'recorded-shares-fines-and-loan-interest',
+      ].includes(String(data['scope'])) ||
       !Array.isArray(data['members'])
     )
       throw new Error('Invalid preview');
@@ -26,6 +28,13 @@ export function checkedShareOut(raw: unknown): unknown {
     });
     const fund = textField(data, 'fund');
     if (!/^(0|[1-9][0-9]*)$/.test(fund)) throw new Error('Invalid fund');
+    if (
+      money(
+        BigInt(textField(data, 'loans_outstanding')),
+        textField(data, 'currency'),
+      ).minor < 0n
+    )
+      throw new Error('Invalid principal balance');
     const expected = shareOut(
       money(BigInt(fund), textField(data, 'currency')),
       rows,

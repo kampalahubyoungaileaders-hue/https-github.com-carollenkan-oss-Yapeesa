@@ -4,6 +4,7 @@ import { checkedShareOut } from './shareout.js';
 const preview = {
   calc_version: 'groups-shareout-preview-v1',
   scope: 'recorded-shares-only',
+  loans_outstanding: '0',
   fund: '5',
   total_shares: '3',
   currency: 'UGX',

@@ -2397,8 +2397,12 @@ export interface paths {
               fund: string;
               total_shares: string;
               calc_version: string;
+              loans_outstanding: string;
               /** @enum {string} */
-              scope: 'recorded-shares-only' | 'recorded-shares-and-paid-fines';
+              scope:
+                | 'recorded-shares-only'
+                | 'recorded-shares-and-paid-fines'
+                | 'recorded-shares-fines-and-loan-interest';
               members: {
                 /** Format: uuid */
                 id: string;
@@ -3544,6 +3548,684 @@ export interface paths {
               trigger: 'manual' | 'absence';
               partial: boolean;
             }[];
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/{id}/loans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              currency: string;
+              can_record: boolean;
+              can_configure: boolean;
+              policy: {
+                /** Format: uuid */
+                id: string;
+                terms: {
+                  monthly_rate_bps: string;
+                  /** @enum {string} */
+                  method: 'flat' | 'declining';
+                  multiple: string;
+                  max_months: string;
+                  /** @enum {string} */
+                  rounding: 'half_up' | 'down';
+                  /** @enum {string} */
+                  allocation: 'interest_first' | 'principal_first';
+                  /** @enum {string} */
+                  dates: 'original_day' | 'month_end';
+                  roles: ('secretary' | 'treasurer' | 'chair')[];
+                  separate: boolean;
+                  /** @enum {string} */
+                  approvals: '1' | '2' | '3';
+                };
+              } | null;
+              meetings: {
+                /** Format: uuid */
+                id: string;
+                date: string;
+                /** @enum {string} */
+                status: 'open' | 'closed';
+                ready: boolean;
+                available_cash: string | null;
+              }[];
+              requests: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                meeting_id: string;
+                /** Format: uuid */
+                member_id: string;
+                name: string;
+                principal: string;
+                months: string;
+                /** Format: uuid */
+                policy_id: string;
+                terms: {
+                  monthly_rate_bps: string;
+                  /** @enum {string} */
+                  method: 'flat' | 'declining';
+                  multiple: string;
+                  max_months: string;
+                  /** @enum {string} */
+                  rounding: 'half_up' | 'down';
+                  /** @enum {string} */
+                  allocation: 'interest_first' | 'principal_first';
+                  /** @enum {string} */
+                  dates: 'original_day' | 'month_end';
+                  roles: ('secretary' | 'treasurer' | 'chair')[];
+                  separate: boolean;
+                  /** @enum {string} */
+                  approvals: '1' | '2' | '3';
+                };
+                calculation_mismatch: boolean;
+                reason: string;
+                /** Format: uuid */
+                entered_by: string;
+                date: string;
+                cancelled: boolean;
+                /** Format: uuid */
+                loan_id: string | null;
+                can_approve: boolean;
+                approvals: {
+                  /** Format: uuid */
+                  person_id: string;
+                  eligible: boolean;
+                }[];
+              }[];
+              loans: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                request_id: string;
+                /** Format: uuid */
+                meeting_id: string;
+                /** Format: uuid */
+                member_id: string;
+                name: string;
+                date: string;
+                schedule: {
+                  period: string;
+                  due: string;
+                  principal: string;
+                  interest: string;
+                }[];
+                calc_version: string;
+                principal_remaining: string;
+                interest_remaining: string;
+                cancelled: boolean;
+              }[];
+              events: {
+                /** Format: uuid */
+                id: string;
+                revision: string;
+                /** Format: uuid */
+                loan_id: string;
+                /** Format: uuid */
+                meeting_id: string;
+                date: string;
+                /** @enum {string} */
+                kind: 'disbursement' | 'repayment' | 'reversal';
+                principal: string;
+                interest: string;
+                cash: string;
+                allocations: {
+                  period: string;
+                  principal: string;
+                  interest: string;
+                }[];
+                /** Format: uuid */
+                reverses: string | null;
+                /** Format: uuid */
+                journal_id: string;
+                calculation_mismatch: boolean;
+                reason: string;
+                journal: {
+                  account: string;
+                  /** @enum {string} */
+                  side: 'debit' | 'credit';
+                  amount: string;
+                }[];
+              }[];
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            /** @enum {string} */
+            action:
+              | 'request'
+              | 'approve'
+              | 'cancel'
+              | 'disburse'
+              | 'repay'
+              | 'reverse';
+            /** Format: uuid */
+            meeting_id: string;
+            /** Format: uuid */
+            member_id: string | null;
+            /** Format: uuid */
+            target_id: string | null;
+            /** Format: uuid */
+            policy_id: string | null;
+            amount: string | null;
+            months: string | null;
+            reason: string;
+            calculation?: {
+              calc_version: string;
+              principal: string;
+              interest: string;
+            } | null;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/{id}/loans/quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            member_id: string;
+            /** Format: uuid */
+            meeting_id: string;
+            principal: string;
+            months: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              policy_id: string;
+              terms: {
+                monthly_rate_bps: string;
+                /** @enum {string} */
+                method: 'flat' | 'declining';
+                multiple: string;
+                max_months: string;
+                /** @enum {string} */
+                rounding: 'half_up' | 'down';
+                /** @enum {string} */
+                allocation: 'interest_first' | 'principal_first';
+                /** @enum {string} */
+                dates: 'original_day' | 'month_end';
+                roles: ('secretary' | 'treasurer' | 'chair')[];
+                separate: boolean;
+                /** @enum {string} */
+                approvals: '1' | '2' | '3';
+              };
+              currency: string;
+              start: string;
+              principal: string;
+              months: string;
+              schedule: {
+                period: string;
+                due: string;
+                principal: string;
+                interest: string;
+              }[];
+              borrowable: string;
+              available_cash: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/groups/{id}/loans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            policy: {
+              monthly_rate_bps: string;
+              /** @enum {string} */
+              method: 'flat' | 'declining';
+              multiple: string;
+              max_months: string;
+              /** @enum {string} */
+              rounding: 'half_up' | 'down';
+              /** @enum {string} */
+              allocation: 'interest_first' | 'principal_first';
+              /** @enum {string} */
+              dates: 'original_day' | 'month_end';
+              roles: ('secretary' | 'treasurer' | 'chair')[];
+              separate: boolean;
+              /** @enum {string} */
+              approvals: '1' | '2' | '3';
+            } | null;
           };
         };
       };

@@ -116,9 +116,9 @@ delivery and first-administrator verification have been confirmed.
 
 Online groups now include administration, share purchases and reversals, attendance,
 two-officer meeting closing, social contributions and approved grants, unpaid
-fines and separate receipts, share-out previews, share PDF statements and SMS PIN
-recovery. Loans/repayments, final cycle payouts, programme views and Fineract
-staff/tenant workflows remain. Offline workflows are explicitly deferred.
+fines and separate receipts, scheduled Group loans and repayments, share-out
+previews, share PDF statements and SMS PIN recovery. Final cycle payouts,
+programme views and Fineract staff/tenant workflows remain. Offline workflows are explicitly deferred.
 Android native compilation stays deferred by the founder's instruction.
 
 The `pnpm test:live` command manages its own local API process. Stop any manually
