@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   api,
+  ClientError,
   newTransactionId,
   type RecoveryWorkspace,
 } from '@yapesa/api-client';
@@ -44,7 +45,14 @@ function Review({
       setPending(false);
       setNotice(t('mfaRecoverySaved'));
       await onChanged();
-    } catch {
+    } catch (error) {
+      if (
+        error instanceof ClientError &&
+        [400, 409, 422].includes(error.status)
+      ) {
+        command.current = null;
+        setPending(false);
+      }
       setError(t('mfaRecoveryError'));
     } finally {
       setBusy(false);

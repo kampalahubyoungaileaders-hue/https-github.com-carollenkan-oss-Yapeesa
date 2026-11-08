@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   api,
+  ClientError,
   newTransactionId,
   type AdminWorkspace,
   type StaffInviteInput,
@@ -73,8 +74,15 @@ export default function StaffInvitations({
       setReason('');
       setNotice(t('staffSaved'));
       await refresh();
-    } catch {
-      setError(t('staffPending'));
+    } catch (error) {
+      if (
+        error instanceof ClientError &&
+        (error.status === 400 || error.code === 'INVALID_STAFF_INVITATION')
+      ) {
+        command.current = null;
+        setPending(false);
+        setError(t('staffInvalid'));
+      } else setError(t('staffPending'));
     } finally {
       setBusy(false);
     }

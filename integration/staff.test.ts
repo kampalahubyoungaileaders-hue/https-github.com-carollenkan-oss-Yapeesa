@@ -113,6 +113,12 @@ test('real staff invitation requires live administrator and phone, PIN and TOTP 
     role: 'treasurer',
     reason: 'Local staff onboarding acceptance test',
   };
+  const invalid = await call('ADMIN', 'POST', '/api/admin/staff/invitations', {
+    ...input,
+    name: '',
+  });
+  assert.equal(invalid.statusCode, 422);
+  assert.equal(invalid.json().error, 'INVALID_STAFF_INVITATION');
   const invitation = await ok('ADMIN', '/api/admin/staff/invitations', input);
   assert.equal(
     (await ok('ADMIN', '/api/admin/staff/invitations', input)).id,

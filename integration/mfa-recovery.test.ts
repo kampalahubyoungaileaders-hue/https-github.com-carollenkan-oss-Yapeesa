@@ -93,6 +93,15 @@ test('two verified independent administrators reset lost factors; fresh SMS and 
     '/api/auth/recovery/lost-authenticator',
     body,
   );
+  const resumed = await ok(
+    'RECOVERY',
+    '/api/auth/recovery/lost-authenticator',
+    {
+      request_id: v7(),
+      reason: 'Resume the existing recovery from another browser visit',
+    },
+  );
+  assert.equal(resumed.id, saved.id);
   assert.equal(
     (await ok('RECOVERY', '/api/auth/recovery/lost-authenticator', body)).id,
     saved.id,

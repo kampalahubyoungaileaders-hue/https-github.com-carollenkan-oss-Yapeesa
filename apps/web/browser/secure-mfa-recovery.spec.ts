@@ -175,6 +175,13 @@ test('two administrators verify identity and the recipient restores access with 
       .getByRole('button', { name: 'Verify code', exact: true })
       .click();
     await expect(page.locator('.sidebar-workspace strong')).toHaveText(name);
+    await expect(
+      page.getByLabel('Choose a savings group', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Organisation records', exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByRole('alert')).toHaveCount(0);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

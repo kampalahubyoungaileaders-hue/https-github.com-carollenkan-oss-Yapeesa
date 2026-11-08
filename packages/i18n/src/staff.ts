@@ -5,7 +5,7 @@ export const staff = {
   staffName: 'Staff full name',
   staffEmail: 'Staff email address',
   staffEmailHelp:
-    'Use their actual email address. Supabase currently requires an email label for authenticator setup; phone verification remains required. No confirmation email is sent by this action.',
+    'Use the person’s own email address for their authenticator account label. Phone verification is required. Creating the account sends no confirmation email.',
   staffPhone: 'Staff phone number',
   staffPerson: 'Existing person (optional)',
   staffNewPerson: 'Create a new person',
@@ -16,6 +16,8 @@ export const staff = {
   staffRetry: 'Retry saved account setup',
   staffSaved:
     'Staff account prepared. Ask this person to open First-time setup and verify the phone shown below.',
+  staffInvalid:
+    'Check the identity details. Existing accounts use recorded role assignment; an unlinked person needs a valid phone and email. You can correct this form and try again.',
   staffPending:
     'Account setup needs a retry. The saved request will be used again.',
   staffWaiting: 'Waiting for phone, PIN and authenticator setup',

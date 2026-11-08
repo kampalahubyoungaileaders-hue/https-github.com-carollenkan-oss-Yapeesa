@@ -596,20 +596,29 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
         const user = await administrator(request, reply),
           b = request.body;
         const result = object(
-          await configured().backend.rpc(
-            'staff_invite',
-            {
-              p_request: b.request_id,
-              p_org: b.organisation_id,
-              p_person: b.person_id,
-              p_name: b.name,
-              p_phone: b.phone,
-              p_email: b.email,
-              p_role: b.role,
-              p_reason: b.reason,
-            },
-            user.tokens.access_token,
-          ),
+          await configured()
+            .backend.rpc(
+              'staff_invite',
+              {
+                p_request: b.request_id,
+                p_org: b.organisation_id,
+                p_person: b.person_id,
+                p_name: b.name,
+                p_phone: b.phone,
+                p_email: b.email,
+                p_role: b.role,
+                p_reason: b.reason,
+              },
+              user.tokens.access_token,
+            )
+            .catch((error: unknown) => {
+              if (
+                error instanceof ApiError &&
+                [400, 409, 422].includes(error.status)
+              )
+                throw new ApiError(error.status, 'INVALID_STAFF_INVITATION');
+              throw error;
+            }),
         );
         return runStaffJob(
           configured().backend,

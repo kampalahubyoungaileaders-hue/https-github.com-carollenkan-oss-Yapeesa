@@ -1,3 +1,5 @@
+-- Explicit client denial for the server's execution-device configuration.
+create policy identity_service_client_denied on private.identity_service for select to authenticated using(false);
 -- Lost-authenticator recovery changes identity factors, never financial records.
 do $$begin if not exists(select 1 from pg_roles where rolname='yapesa_recovery') then create role yapesa_recovery nologin noinherit nobypassrls;end if;end $$;
 grant yapesa_recovery to postgres;
@@ -77,7 +79,13 @@ declare actor uuid;payload jsonb;prior jsonb;snapshot jsonb;ids uuid[];id uuid:=
  payload:=jsonb_build_object('action','mfa_recovery_request','reason',p_reason);prior:=private.identity_begin(p_request,payload);if prior is not null then return prior;end if;
  perform pg_advisory_xact_lock(hashtextextended(actor::text,21));
  if p_reason is null or length(p_reason) not between 1 and 500 or p_reason !~ '[^[:space:]]' then raise exception 'Reason required' using errcode='22023';end if;
- if exists(select 1 from private.mfa_recovery r where r.person_id=actor and not exists(select 1 from private.mfa_recovery_event where recovery_id=r.id and phase='recovered')) then raise exception 'An open recovery request already exists' using errcode='23505';end if;
+ select r.id into id from private.mfa_recovery r where r.person_id=actor and not exists(select 1 from private.mfa_recovery_event where recovery_id=r.id and phase='recovered') order by r.recorded_at desc limit 1;
+ if found then
+  result:=jsonb_build_object('id',id);
+  insert into private.identity_receipt(request_id,actor_id,payload,result) values(p_request,actor,payload,result);
+  return result;
+ end if;
+ id:=gen_random_uuid();
  snapshot:=private.recovery_snapshot(actor);
  if (snapshot->>'verified_count')::integer<1 then raise exception 'Existing verified authenticator required' using errcode='22023';end if;
  select array_agg(value::uuid order by value::uuid) into ids from jsonb_array_elements_text(snapshot->'factor_ids');
@@ -160,3 +168,15 @@ create function public.mfa_recovery_finish() returns jsonb language sql security
 create function public.mfa_recovery_workspace() returns jsonb language sql security invoker set search_path='' as $$select private.mfa_recovery_workspace();$$;
 revoke all on function public.mfa_recovery_request(uuid,text),public.mfa_recovery_approve(uuid,uuid,text,boolean),public.mfa_reset_context(uuid),public.mfa_reset_job(uuid,boolean),public.mfa_recovery_state(),public.mfa_recovery_finish(),public.mfa_recovery_workspace() from public,anon,authenticated;
 grant execute on function public.mfa_recovery_request(uuid,text),public.mfa_recovery_approve(uuid,uuid,text,boolean),public.mfa_reset_context(uuid),public.mfa_reset_job(uuid,boolean),public.mfa_recovery_state(),public.mfa_recovery_finish(),public.mfa_recovery_workspace() to authenticated;
+
+-- The set depends on the current real session, MFA/recovery state and live roles.
+-- The policy subquery evaluates it once per SQL statement, avoiding repeated
+-- linked-transaction permission lookups for every officer journal line.
+create function private.officer_organisations() returns setof uuid language sql stable security definer set search_path='' as $$
+ select distinct m.organisation_id from public.membership m join public.person p on p.id=m.person_id
+ where private.session_active(true) and p.auth_user_id=auth.uid() and m.role in ('secretary','treasurer','chair') and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now());
+$$;
+revoke all on function private.officer_organisations() from public,anon,authenticated;
+grant execute on function private.officer_organisations() to authenticated;
+alter policy journal_read on public.journal using(case when organisation_id in(select private.officer_organisations()) then true else private.can_read_journal(id) end);
+alter policy line_read on public.journal_line using(case when organisation_id in(select private.officer_organisations()) then true else private.can_read_journal(journal_id) end);

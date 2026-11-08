@@ -32,6 +32,10 @@ export default function RecoveryForm({ onCancel }: { onCancel: () => void }) {
     try {
       await action();
     } catch (error) {
+      if (error instanceof ClientError && [400, 422].includes(error.status)) {
+        savedRequest.current = null;
+        setPendingRequest(false);
+      }
       setError(
         t(
           error instanceof ClientError && error.status === 429
