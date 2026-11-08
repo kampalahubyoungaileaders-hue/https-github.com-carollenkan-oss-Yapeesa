@@ -180,6 +180,25 @@ try {
   // SECURITY DEFINER executors into postgres-owned functions after restoration.
   await docker(['createdb', '-U', 'postgres', '--template=template0', target]);
   created = true;
+  const contents = (await docker(['pg_restore', '--list'], archive)).toString(
+    'utf8',
+  );
+  assert(
+    contents.includes('TABLE public person'),
+    'Archive must contain core records',
+  );
+  if (/\bSCHEMA - public\b/.test(contents))
+    await docker([
+      'psql',
+      '-U',
+      'postgres',
+      '-d',
+      target,
+      '-v',
+      'ON_ERROR_STOP=1',
+      '-c',
+      'DROP SCHEMA IF EXISTS public CASCADE',
+    ]);
   await docker(
     [
       'pg_restore',
@@ -187,8 +206,6 @@ try {
       'postgres',
       '-d',
       target,
-      '--clean',
-      '--if-exists',
       '--exit-on-error',
       '--no-password',
     ],
