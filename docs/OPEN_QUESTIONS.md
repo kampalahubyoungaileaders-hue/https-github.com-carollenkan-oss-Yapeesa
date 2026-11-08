@@ -34,3 +34,9 @@ No payment-transfer integration is introduced by the current web release. Free d
    user selected agreed scheduled interest, with no automatic extra interest
    from late or partial payments. Both interest methods and final-instalment
    residuals remain. See `GROUP_LOANS.md` for the precise reviewed behavior.
+
+10. Resolved on 8 November 2026: final cycle share-out requires all fines to be
+    collected or explicitly waived, blocks unreconciled cash, and records individual
+    cash handovers after two officers approve. Social money stays separate.
+    Next-cycle setup must preserve the remaining Social reserve and start with its
+    actual post-distribution cash, rather than reusing the last pre-payout count.

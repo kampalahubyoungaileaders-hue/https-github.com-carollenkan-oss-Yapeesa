@@ -18,6 +18,7 @@ import InvitationForm from './InvitationForm';
 import Administration from './Administration';
 import RecoveryForm from './RecoveryForm';
 import ShareCorrection from './ShareCorrection';
+import FinalShareout from './FinalShareout';
 import ShareOutPreview from './ShareOutPreview';
 import Meetings from './Meetings';
 import SocialFund from './SocialFund';
@@ -969,6 +970,17 @@ export default function SecureApp() {
                   key={`${selected}-${savedRows.length}`}
                   group={selected}
                   format={(minor) => amount(minor, workspace)}
+                />
+              )}
+              {tab === 'overview' && workspace.group.can_preview_shareout && (
+                <FinalShareout
+                  key={selected}
+                  group={selected}
+                  device={deviceId(selected)}
+                  format={(minor) => amount(minor, workspace)}
+                  onChanged={async () => {
+                    setWorkspace(await api.workspace(selected));
+                  }}
                 />
               )}
               {tab === 'loans' && (

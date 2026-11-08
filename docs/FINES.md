@@ -40,9 +40,8 @@ existing closing proposal for that meeting. An unpaid fine can remain after a
 meeting closes and stays visible for later collection or waiver.
 
 Fine receipts and their reversals enter cash reconciliation and the active cycle's
-share-out preview. Unpaid or waived amounts and social money are excluded. Final
-share-out posting and the treatment of any unresolved obligations at cycle close
-still require the final cycle workflow; this release does not close cycles.
+share-out preview. Unpaid or waived amounts and social money are excluded. The [final cycle workflow](FINAL_SHAREOUT.md) requires every unpaid fine to be
+collected or explicitly waived before distribution.
 Share passbooks/PDFs remain scoped to shares. Fines have separate member-balance
 and event-history CSV exports, and expandable balanced receipt journals.
 

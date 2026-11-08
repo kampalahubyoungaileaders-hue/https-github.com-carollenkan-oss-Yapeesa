@@ -75,7 +75,8 @@ Cash movements and noncash loan decisions enter meeting fingerprints. Later
 collections preserve older closing snapshots. Share-out includes collected loan
 interest; uncollected interest and social money are excluded. Outstanding principal
 is reported separately: preview is an estimate, and final payouts still require
-all loans to be repaid. This release does not post final cycle payouts.
+all principal and agreed interest to be repaid. The separate
+[final cycle workflow](FINAL_SHAREOUT.md) enforces this before payout approval.
 
 Validation covers generated schedules, monthly calendars, exact allocations,
 SQL/domain parity, MFA/role checks, limits, social reserve protection, permanent

@@ -11,7 +11,8 @@ export type Account =
   | 'social_fund'
   | 'fines_income'
   | 'loans_receivable'
-  | 'interest_income';
+  | 'interest_income'
+  | 'shareout_payable';
 export type JournalLine = Readonly<{
   account: Account;
   side: 'debit' | 'credit';
@@ -245,3 +246,50 @@ export function shareOut(
 }
 
 export * from './loans.js';
+
+export const finalShareOutCalcVersion = 'groups-final-shareout-v1';
+export function shareOutCommitJournal(
+  id: string,
+  capital: Money,
+  fines: Money,
+  interest: Money,
+): Journal | null {
+  const values = [capital, fines, interest];
+  for (const value of values)
+    if (value.currency !== capital.currency || value.minor < 0n)
+      throw new Error('Invalid share-out sources');
+  const fund = money(
+    capital.minor + fines.minor + interest.minor,
+    capital.currency,
+  );
+  if (fund.minor === 0n) return null;
+  const lines: JournalLine[] = [];
+  for (const [account, amount] of [
+    ['share_capital', capital],
+    ['fines_income', fines],
+    ['interest_income', interest],
+  ] as const)
+    if (amount.minor > 0n) lines.push({ account, side: 'debit', amount });
+  lines.push({ account: 'shareout_payable', side: 'credit', amount: fund });
+  return Object.freeze({
+    id,
+    calcVersion: finalShareOutCalcVersion,
+    lines: Object.freeze(lines.map((line) => Object.freeze(line))),
+  });
+}
+export function shareOutPayoutJournal(id: string, amount: Money): Journal {
+  if (amount.minor <= 0n) throw new Error('Payout must be positive');
+  money(amount.minor, amount.currency);
+  return Object.freeze({
+    id,
+    calcVersion: finalShareOutCalcVersion,
+    lines: Object.freeze([
+      Object.freeze({
+        account: 'shareout_payable',
+        side: 'debit',
+        amount,
+      } as const),
+      Object.freeze({ account: 'cash', side: 'credit', amount } as const),
+    ]),
+  });
+}

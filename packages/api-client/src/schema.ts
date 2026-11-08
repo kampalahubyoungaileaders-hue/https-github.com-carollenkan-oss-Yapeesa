@@ -2366,6 +2366,365 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/groups/{id}/shareout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              currency: string;
+              can_record: boolean;
+              /** Format: uuid */
+              actor_id: string;
+              readiness: {
+                blockers: string[];
+                snapshot: {
+                  preview: {
+                    /** Format: uuid */
+                    cycle_id: string;
+                    currency: string;
+                    fund: string;
+                    total_shares: string;
+                    calc_version: string;
+                    loans_outstanding: string;
+                    /** @enum {string} */
+                    scope:
+                      | 'recorded-shares-only'
+                      | 'recorded-shares-and-paid-fines'
+                      | 'recorded-shares-fines-and-loan-interest';
+                    members: {
+                      /** Format: uuid */
+                      id: string;
+                      name: string;
+                      shares: string;
+                      amount: string;
+                    }[];
+                  };
+                  cash: string;
+                  social: string;
+                  capital: string;
+                  fines: string;
+                  interest: string;
+                  /** Format: uuid */
+                  meeting_id: string | null;
+                  /** Format: uuid */
+                  closing_id: string | null;
+                  counted: string | null;
+                } | null;
+              };
+              plan: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                cycle_id: string;
+                snapshot: {
+                  preview: {
+                    /** Format: uuid */
+                    cycle_id: string;
+                    currency: string;
+                    fund: string;
+                    total_shares: string;
+                    calc_version: string;
+                    loans_outstanding: string;
+                    /** @enum {string} */
+                    scope:
+                      | 'recorded-shares-only'
+                      | 'recorded-shares-and-paid-fines'
+                      | 'recorded-shares-fines-and-loan-interest';
+                    members: {
+                      /** Format: uuid */
+                      id: string;
+                      name: string;
+                      shares: string;
+                      amount: string;
+                    }[];
+                  };
+                  cash: string;
+                  social: string;
+                  capital: string;
+                  fines: string;
+                  interest: string;
+                  /** Format: uuid */
+                  meeting_id: string | null;
+                  /** Format: uuid */
+                  closing_id: string | null;
+                  counted: string | null;
+                };
+                snapshot_hash: string;
+                calc_version: string;
+                /** Format: uuid */
+                entered_by: string;
+                recorded_at: string;
+                current: boolean;
+                committed: boolean;
+                finalized: boolean;
+                approvals: {
+                  /** Format: uuid */
+                  officer_id: string;
+                  eligible: boolean;
+                  recorded_at: string;
+                }[];
+                commit_journal: {
+                  account: string;
+                  /** @enum {string} */
+                  side: 'debit' | 'credit';
+                  amount: string;
+                }[];
+                allocations: {
+                  /** Format: uuid */
+                  id: string;
+                  /** Format: uuid */
+                  member_id: string;
+                  name: string;
+                  shares: string;
+                  amount: string;
+                  receipt: {
+                    /** Format: uuid */
+                    id: string;
+                    amount: string;
+                    reason: string;
+                    recorded_at: string;
+                    /** Format: uuid */
+                    entered_by: string;
+                    /** Format: uuid */
+                    journal_id: string;
+                    journal: {
+                      account: string;
+                      /** @enum {string} */
+                      side: 'debit' | 'credit';
+                      amount: string;
+                    }[];
+                  } | null;
+                }[];
+              } | null;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            /** @enum {string} */
+            action: 'prepare' | 'approve' | 'pay' | 'finish';
+            /** Format: uuid */
+            plan_id: string | null;
+            /** Format: uuid */
+            allocation_id: string | null;
+            reason: string;
+            /** @enum {boolean} */
+            confirmed: true;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/groups/{id}/shareout-preview': {
     parameters: {
       query?: never;

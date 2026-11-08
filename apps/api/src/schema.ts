@@ -702,3 +702,91 @@ export const loanWorkspaceSchema = object({
     }),
   },
 });
+
+const shareoutSnapshotSchema = object({
+  preview: shareoutSchema,
+  cash: signedIntegerString,
+  social: signedIntegerString,
+  capital: signedIntegerString,
+  fines: signedIntegerString,
+  interest: signedIntegerString,
+  meeting_id: { anyOf: [uuid, { type: 'null' }] },
+  closing_id: { anyOf: [uuid, { type: 'null' }] },
+  counted: { anyOf: [integerString, { type: 'null' }] },
+});
+const shareoutJournalSchema = {
+  type: 'array',
+  items: object({
+    account: string,
+    side: { type: 'string', enum: ['debit', 'credit'] },
+    amount: integerString,
+  }),
+};
+export const finalShareoutSchema = object({
+  currency: string,
+  can_record: boolean,
+  actor_id: uuid,
+  readiness: object({
+    blockers: { type: 'array', items: string },
+    snapshot: { anyOf: [shareoutSnapshotSchema, { type: 'null' }] },
+  }),
+  plan: {
+    anyOf: [
+      { type: 'null' },
+      object({
+        id: uuid,
+        cycle_id: uuid,
+        snapshot: shareoutSnapshotSchema,
+        snapshot_hash: string,
+        calc_version: string,
+        entered_by: uuid,
+        recorded_at: string,
+        current: boolean,
+        committed: boolean,
+        finalized: boolean,
+        approvals: {
+          type: 'array',
+          items: object({
+            officer_id: uuid,
+            eligible: boolean,
+            recorded_at: string,
+          }),
+        },
+        commit_journal: shareoutJournalSchema,
+        allocations: {
+          type: 'array',
+          items: object({
+            id: uuid,
+            member_id: uuid,
+            name: string,
+            shares: integerString,
+            amount: integerString,
+            receipt: {
+              anyOf: [
+                { type: 'null' },
+                object({
+                  id: uuid,
+                  amount: integerString,
+                  reason: string,
+                  recorded_at: string,
+                  entered_by: uuid,
+                  journal_id: uuid,
+                  journal: shareoutJournalSchema,
+                }),
+              ],
+            },
+          }),
+        },
+      }),
+    ],
+  },
+});
+export const finalShareoutBody = object({
+  request_id: uuid,
+  device_id: uuid,
+  action: { type: 'string', enum: ['prepare', 'approve', 'pay', 'finish'] },
+  plan_id: { anyOf: [uuid, { type: 'null' }] },
+  allocation_id: { anyOf: [uuid, { type: 'null' }] },
+  reason: { type: 'string', maxLength: 240 },
+  confirmed: { type: 'boolean', const: true },
+});

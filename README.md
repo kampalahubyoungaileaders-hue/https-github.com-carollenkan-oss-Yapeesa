@@ -14,6 +14,8 @@ and later phases are in [the build brief](docs/BUILD_BRIEF.md).
 The secure online share-purchase workflow is available at `/#live` when the API
 and accounts are configured. See [setup, controls and verification](docs/SECURE_WEB.md).
 The sample workspace remains separate and needs no credentials.
+Group officers can also use the [final cycle share-out workflow](docs/FINAL_SHAREOUT.md)
+to approve allocations and record individual cash payout receipts.
 
 Verified Fencher administrators can use **Administration** to create Groups,
 register members and assign existing verified staff. See
