@@ -143,6 +143,7 @@ try {
     'insert into public.group_settings(organisation_id) values($1)',
     [recoveryOrg.rows[0]!.id],
   );
+  const lostAdmin = await user('LOST_ADMIN', '+256700000026', true);
   const platform = await db.query<{ id: string }>(
     "insert into public.organisation(name,type,country_code,currency,time_zone) values('Local platform','fencher','UG','UGX','Africa/Kampala') returning id",
   );
@@ -151,6 +152,20 @@ try {
     "insert into public.membership(person_id,organisation_id,role) values($1,$2,'fencher_admin')",
     [admin, fixtures['TEST_PLATFORM_ORG']],
   );
+  await db.query(
+    "insert into public.membership(person_id,organisation_id,role) values($1,$2,'fencher_admin')",
+    [lostAdmin, fixtures['TEST_PLATFORM_ORG']],
+  );
+  for (const [label, phone] of [
+    ['LOST_DESKTOP', '+256700000028'],
+    ['LOST_PHONE', '+256700000029'],
+  ] as const) {
+    const person = await user(label, phone, true);
+    await db.query(
+      "insert into public.membership(person_id,organisation_id,role) values($1,$2,'fencher_admin')",
+      [person, fixtures['TEST_PLATFORM_ORG']],
+    );
+  }
   for (const [label, person, price] of [
     ['A', a, '5000'],
     ['B', b, '10000'],

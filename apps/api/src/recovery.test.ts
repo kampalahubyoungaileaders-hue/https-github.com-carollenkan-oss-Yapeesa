@@ -97,6 +97,8 @@ test('SMS recovery binds phone, enforces actual staff MFA and handles partial cl
                 ? [{ id: factor, factor_type: 'totp', status: 'verified' }]
                 : [],
           });
+        if (path.endsWith('/mfa_recovery_state'))
+          return Response.json({ id: null, can_enroll: false, reset: false });
         if (path.endsWith('/session_context'))
           return Response.json(
             scenario === 'missing-person'

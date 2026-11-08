@@ -11,6 +11,9 @@ import {
   recoveryCodeBody,
   recoveryPinBody,
   recoverySchema,
+  factorSchema,
+  recoveryRequestBody,
+  adminResultSchema,
   recoveryResultSchema,
 } from './schema.js';
 
@@ -22,6 +25,7 @@ export interface RecoveryState {
   phone: string;
   started: number;
   changed: boolean;
+  newFactor?: string;
 }
 export function sealRecovery(state: RecoveryState, key: Buffer): string {
   const iv = randomBytes(12);
@@ -62,6 +66,9 @@ export function openRecovery(
       typeof state['phone'] !== 'string' ||
       !/^\+[1-9][0-9]{6,14}$/.test(state['phone']) ||
       typeof state['changed'] !== 'boolean' ||
+      (state['newFactor'] !== undefined &&
+        (typeof state['newFactor'] !== 'string' ||
+          !/^[a-f0-9-]{36}$/i.test(state['newFactor']))) ||
       typeof state['started'] !== 'number' ||
       !Number.isFinite(state['started']) ||
       state['started'] > now ||
@@ -73,6 +80,9 @@ export function openRecovery(
       phone: state['phone'],
       started: state['started'],
       changed: state['changed'],
+      ...(typeof state['newFactor'] === 'string'
+        ? { newFactor: state['newFactor'] }
+        : {}),
     };
   } catch {
     throw new ApiError(401, 'RECOVERY_EXPIRED');
@@ -165,8 +175,19 @@ export function registerRecovery(
         })
       : [];
     const requires_mfa = context['requires_mfa'] || factors.length > 0;
-    if (requires_mfa && !factors.length)
-      throw new ApiError(403, 'RECOVERY_UNAVAILABLE');
+    if (requires_mfa && !factors.length) {
+      const reset = object(
+        await backend.rpc('mfa_recovery_state', {}, state.access),
+      );
+      if (reset['can_enroll'] !== true)
+        throw new ApiError(403, 'RECOVERY_UNAVAILABLE');
+      return {
+        requires_mfa,
+        mfa_verified: false,
+        factors,
+        enrollment_allowed: true,
+      };
+    }
     return { requires_mfa, mfa_verified: context['mfa_verified'], factors };
   }
   async function finish(state: RecoveryState, reply: FastifyReply) {
@@ -262,7 +283,10 @@ export function registerRecovery(
       const state = read(request);
       if (state.changed) throw new ApiError(403, 'RECOVERY_UNAVAILABLE');
       const user = await identity(state);
-      if (!user.factors.some((factor) => factor.id === request.body.factor_id))
+      if (
+        !user.factors.some((factor) => factor.id === request.body.factor_id) &&
+        !(user.enrollment_allowed && state.newFactor === request.body.factor_id)
+      )
         throw new ApiError(403, 'MFA_REQUIRED');
       const { backend } = configured();
       const path = `factors/${encodeURIComponent(request.body.factor_id)}`;
@@ -277,10 +301,64 @@ export function registerRecovery(
         ),
       );
       const next = { ...state, access: tokens.access_token };
+      if (state.newFactor)
+        await backend.rpc('mfa_recovery_finish', {}, next.access, true);
       const result = await identity(next);
       if (!result.mfa_verified) throw new ApiError(403, 'MFA_REQUIRED');
       save(reply, next);
       return result;
+    },
+  );
+  app.post<{ Body: { request_id: string; reason: string } }>(
+    `${PATH}/lost-authenticator`,
+    {
+      schema: {
+        body: recoveryRequestBody,
+        response: { 200: adminResultSchema, ...errors },
+      },
+    },
+    async (request) => {
+      const state = read(request);
+      if (state.changed) throw new ApiError(403, 'RECOVERY_UNAVAILABLE');
+      const user = await identity(state);
+      if (!user.requires_mfa || !user.factors.length)
+        throw new ApiError(403, 'RECOVERY_UNAVAILABLE');
+      return configured().backend.rpc(
+        'mfa_recovery_request',
+        { p_request: request.body.request_id, p_reason: request.body.reason },
+        state.access,
+        true,
+      );
+    },
+  );
+  app.post(
+    `${PATH}/enroll`,
+    { schema: { body: empty, response: { 200: factorSchema, ...errors } } },
+    async (request, reply) => {
+      const state = read(request);
+      if (state.changed) throw new ApiError(403, 'RECOVERY_UNAVAILABLE');
+      const user = await identity(state);
+      if (!user.enrollment_allowed)
+        throw new ApiError(403, 'RECOVERY_UNAVAILABLE');
+      const factor = object(
+        await configured().backend.auth(
+          'factors',
+          {
+            factor_type: 'totp',
+            friendly_name: 'Yapesa recovered authenticator',
+            issuer: 'Yapesa',
+          },
+          state.access,
+        ),
+      );
+      const totp = object(factor['totp']);
+      const id = textField(factor, 'id');
+      save(reply, { ...state, newFactor: id });
+      return {
+        id,
+        secret: textField(totp, 'secret'),
+        uri: textField(totp, 'uri'),
+      };
     },
   );
   app.post<{ Body: { pin: string } }>(

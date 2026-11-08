@@ -8,6 +8,7 @@ import type { ApiConfig } from './config.js';
 import { Backend, ApiError, object, textField, tokensFrom } from './backend.js';
 import { acceptInvitation, pendingInvitation } from './invitation.js';
 import { renderStatement, statementData } from './statement.js';
+import { resetAuthenticator } from './mfa-reset.js';
 import { registerRecovery } from './recovery.js';
 import { checkedFinalShareout } from './final-shareout.js';
 import { activateInvitations, runStaffJob } from './staff.js';
@@ -52,6 +53,8 @@ import {
   invitationPhoneBody,
   invitationBody,
   adminWorkspaceSchema,
+  recoveryApprovalBody,
+  recoveryWorkspaceSchema,
   staffInviteBody,
   staffWorkspaceSchema,
   adminNewCycleBody,
@@ -488,6 +491,74 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
           user.tokens.access_token,
         );
         return session(await identity(request, reply));
+      },
+    );
+    app.get(
+      '/api/admin/authenticator-recovery',
+      { schema: { response: { 200: recoveryWorkspaceSchema, ...errors } } },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        return configured().backend.rpc(
+          'mfa_recovery_workspace',
+          {},
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        evidence: string;
+        identity_verified: boolean;
+      };
+    }>(
+      '/api/admin/authenticator-recovery/:id/approve',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: recoveryApprovalBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        return configured().backend.rpc(
+          'mfa_recovery_approve',
+          {
+            p_request: request.body.request_id,
+            p_case: request.params.id,
+            p_evidence: request.body.evidence,
+            p_verified: request.body.identity_verified,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{ Params: { id: string } }>(
+      '/api/admin/authenticator-recovery/:id/reset',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: { type: 'object', additionalProperties: false },
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        return resetAuthenticator(
+          configured().backend,
+          user.tokens.access_token,
+          request.params.id,
+        );
       },
     );
     app.get(
