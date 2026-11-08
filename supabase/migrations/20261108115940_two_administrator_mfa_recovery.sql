@@ -13,6 +13,7 @@ create table private.mfa_recovery_event(
  recovery_id uuid not null references private.mfa_recovery(id),phase text not null check(phase in ('prepared','reset','recovered')),actor_id uuid not null references public.person(id),recorded_at timestamptz not null default now(),primary key(recovery_id,phase)
 );
 create index on private.mfa_recovery(person_id,recorded_at desc);
+create index on private.mfa_recovery(auth_user_id);
 create index on private.mfa_recovery_approval(actor_id);
 create index on private.mfa_recovery_event(actor_id);
 do $$declare tbl text;begin foreach tbl in array array['mfa_recovery','mfa_recovery_approval','mfa_recovery_event'] loop
@@ -45,7 +46,7 @@ create or replace function private.session_active(p_mfa boolean default false) r
 $$;
 
 create or replace function private.requires_mfa() returns boolean language sql stable security definer set search_path='' as $$
- select auth.uid() is not null and (private.recovery_blocked() or exists(select 1 from auth.users u where u.id=auth.uid() and (u.raw_app_meta_data->>'yapesa_activation'='pending' or exists(select 1 from auth.mfa_factors f where f.user_id=u.id and f.status::text='verified'))) or exists(select 1 from public.membership m join public.person p on p.id=m.person_id where p.auth_user_id=auth.uid() and m.role<>'member' and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now())));
+ select auth.uid() is not null and ((select private.recovery_blocked()) or exists(select 1 from public.membership m join public.person p on p.id=m.person_id where p.auth_user_id=auth.uid() and m.role<>'member' and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now())));
 $$;
 
 create function private.recovery_snapshot(p_person uuid) returns jsonb language plpgsql stable security definer set search_path='' as $$
