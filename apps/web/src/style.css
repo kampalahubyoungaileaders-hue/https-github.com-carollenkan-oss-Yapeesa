@@ -2531,3 +2531,12 @@ dialog::backdrop {
   margin: 6px 0 0;
   font-weight: 700;
 }
+
+.final-shareout table {
+  min-width: 560px;
+  overflow-wrap: normal;
+}
+.final-shareout th,
+.final-shareout td {
+  white-space: nowrap;
+}

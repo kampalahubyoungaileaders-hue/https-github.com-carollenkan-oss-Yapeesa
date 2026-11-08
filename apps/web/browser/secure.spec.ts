@@ -154,6 +154,7 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
   await page
     .getByRole('button', { name: 'Preview share-out', exact: true })
     .click();
+  const previewData = await (await previewResponse).json();
   await expect(page.getByRole('status')).toContainText(
     'Allocations match the fund exactly.',
   );
@@ -163,7 +164,6 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
   await expect(page.locator('.shareout-panel')).toContainText(
     'Unpaid fines, uncollected loan interest and the social fund are excluded.',
   );
-  const previewData = await (await previewResponse).json();
   const fund = `UGX ${new Intl.NumberFormat('en-UG', { maximumFractionDigits: 0 }).format(BigInt(previewData.fund))}`;
   await expect(page.locator('.shareout-panel')).toContainText(
     `Recorded fund: ${fund}`,
