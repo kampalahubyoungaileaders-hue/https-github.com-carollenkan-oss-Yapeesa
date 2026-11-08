@@ -143,17 +143,18 @@ async function close(id: string, count: string, explanation = '') {
       member_id: env[`TEST_${label}_PERSON`],
       status: 'present',
     });
-  const p = await meet('propose', {
+  await meet('propose', {
     meeting_id: id,
     counted_cash: count,
     explanation,
   });
-  await meet('approve', { meeting_id: id, proposal_id: p.record_id });
-  await meet(
-    'approve',
-    { meeting_id: id, proposal_id: p.record_id },
-    treasurer,
-  );
+  const response = await call(secretary, 'GET', `${root}/meetings`);
+  assert.equal(response.statusCode, 200, response.body);
+  const proposal = response
+    .json()
+    .meetings.find((m: { id: string }) => m.id === id).proposal.id;
+  await meet('approve', { meeting_id: id, proposal_id: proposal });
+  await meet('approve', { meeting_id: id, proposal_id: proposal }, treasurer);
 }
 const date = (offset = 0) =>
   new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);

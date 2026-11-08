@@ -122,17 +122,20 @@ test('two officers approve a final allocation and separate cash receipts close t
       target_id: null,
       reason: '',
     });
-    const closing = (
-      await post(
-        sc,
-        `${root}/meetings`,
-        meeting('propose', {
-          meeting_id: mid,
-          counted_cash: '16000',
-          explanation: '',
-        }),
-      )
-    ).record_id;
+    await post(
+      sc,
+      `${root}/meetings`,
+      meeting('propose', {
+        meeting_id: mid,
+        counted_cash: '16000',
+        explanation: '',
+      }),
+    );
+    const meetingResponse = await sc.request.get(`${root}/meetings`);
+    expect(meetingResponse.status()).toBe(200);
+    const closing = (await meetingResponse.json()).meetings.find(
+      (m: { id: string }) => m.id === mid,
+    ).proposal.id;
     await post(
       sc,
       `${root}/meetings`,
