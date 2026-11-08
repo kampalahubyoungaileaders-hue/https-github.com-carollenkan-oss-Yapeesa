@@ -20,7 +20,9 @@ triggers. Restored journal lines must still balance and anonymous/client journal
 privileges must remain restricted. An actual restored officer session must retain
 its own journal access and see no journals from an unrelated group. Even the
 restore administrator must be rejected when attempting to edit an immutable
-journal. Owners and grants are deliberately preserved;
+journal. Restoration uses the disposable container’s existing database administrator so
+Supabase-managed object owners can be preserved without granting new privileges
+to application users. Owners and grants are deliberately preserved;
 restoring with --no-owner could change the security boundary of bounded functions.
 
 This proves a disposable database restore within a cluster that already has its

@@ -203,7 +203,7 @@ try {
     [
       'pg_restore',
       '-U',
-      'postgres',
+      'supabase_admin',
       '-d',
       target,
       '--exit-on-error',
