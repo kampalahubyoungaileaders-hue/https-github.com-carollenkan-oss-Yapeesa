@@ -1,6 +1,14 @@
 -- Staff account jobs never grant financial authority before phone + TOTP proof.
 do $$begin if not exists(select 1 from pg_roles where rolname='yapesa_identity') then create role yapesa_identity nologin noinherit nobypassrls;end if;end $$;
 grant yapesa_identity to postgres;
+-- Identity jobs run on the server; this is their service device, not a group's writer device.
+create table private.identity_service(id boolean primary key default true check(id),device_id uuid not null unique default gen_random_uuid());
+insert into private.identity_service(id) values(true);
+alter table private.identity_service enable row level security;
+revoke all on private.identity_service from public,anon,authenticated;
+create function private.identity_service_device() returns uuid language sql stable security definer set search_path='' as $$select device_id from private.identity_service where id=true and private.session_active(false);$$;
+revoke all on function private.identity_service_device() from public,anon,authenticated;
+grant execute on function private.identity_service_device() to yapesa_identity;
 create table private.staff_invitation(
  id uuid primary key default gen_random_uuid(),organisation_id uuid not null references public.organisation(id),person_id uuid not null references public.person(id),
  role text not null check(role in ('secretary','treasurer','chair')),phone text not null check(phone ~ '^\+[1-9][0-9]{6,14}$'),
@@ -90,7 +98,7 @@ declare payload jsonb;prior jsonb;target public.person;country text;invitation u
  insert into private.staff_invitation(id,organisation_id,person_id,role,phone,email,reason,created_by) values(invitation,p_org,target.id,p_role,p_phone,lower(btrim(p_email)),p_reason,private.current_person());
  result:=jsonb_build_object('id',invitation);
  insert into private.identity_receipt(request_id,actor_id,payload,result) values(p_request,private.current_person(),payload,result);
- insert into public.audit_log(organisation_id,actor_id,action,record_id,after_value) values(p_org,private.current_person(),'staff_invitation_created',invitation,jsonb_build_object('person_id',target.id,'role',p_role));
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),private.identity_service_device(),'staff_invitation_created',invitation,jsonb_build_object('person_id',target.id,'role',p_role));
  return result;
 end $$;
 
@@ -109,7 +117,7 @@ declare invitation private.staff_invitation;auth_data jsonb;actor uuid;prepared 
  if not private.identity_gateway() then raise exception 'Server job gateway required' using errcode='42501';end if;
  if not p_finish then
   insert into private.identity_event(invitation_id,phase,actor_id) values(invitation.id,prepared,actor) on conflict do nothing;
-  insert into public.audit_log(organisation_id,actor_id,action,record_id,after_value) values(invitation.organisation_id,actor,'identity_service_job_prepared',invitation.id,jsonb_build_object('phase',p_phase));
+  insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(invitation.organisation_id,actor,private.identity_service_device(),'identity_service_job_prepared',invitation.id,jsonb_build_object('phase',p_phase));
  else
   if not exists(select 1 from private.identity_event where invitation_id=invitation.id and phase=prepared) or auth_data is null or p_auth::text is distinct from auth_data->>'id' then raise exception 'Verified Auth result required' using errcode='22023';end if;
   if p_phase='invite' then
@@ -120,7 +128,7 @@ declare invitation private.staff_invitation;auth_data jsonb;actor uuid;prepared 
    insert into public.membership(person_id,organisation_id,role) values(invitation.person_id,invitation.organisation_id,invitation.role) on conflict do nothing;
   end if;
   insert into private.identity_event(invitation_id,phase,actor_id,auth_user_id) values(invitation.id,finished,actor,p_auth);
-  insert into public.audit_log(organisation_id,actor_id,action,record_id,after_value) values(invitation.organisation_id,actor,'identity_service_job_finished',invitation.id,jsonb_build_object('phase',p_phase,'person_id',invitation.person_id));
+  insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(invitation.organisation_id,actor,private.identity_service_device(),'identity_service_job_finished',invitation.id,jsonb_build_object('phase',p_phase,'person_id',invitation.person_id));
  end if;
  return jsonb_build_object('id',invitation.id,'done',p_finish,'auth_user_id',auth_data->>'id');
 end $$;
