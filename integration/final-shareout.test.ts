@@ -600,6 +600,95 @@ test('final allocation requires settled cash, two officers and exact individual 
   );
   assert.equal(other.statusCode, 200, other.body);
   assert.notEqual(other.json().plan?.id, plan.id);
+  const cycles = `/api/admin/groups/${org}/cycles`;
+  const newCycle = {
+    request_id: v7(),
+    device_id: device,
+    starts_on: date(3),
+    ends_on: date(30),
+    share_price: '7000',
+  };
+  assert.equal(
+    (await call(secretary, 'POST', cycles, newCycle)).statusCode,
+    403,
+    'Only a verified administrator starts the next cycle',
+  );
+  assert.equal(
+    (await call(admin, 'POST', cycles, { ...newCycle, starts_on: date(2) }))
+      .statusCode,
+    422,
+    'New cycle cannot overlap recorded meetings',
+  );
+  const created = await ok(cycles, newCycle, admin);
+  assert.deepEqual(
+    await ok(cycles, newCycle, admin),
+    created,
+    'Permanent setup receipt replays even while the new cycle is active',
+  );
+  assert.equal(
+    (await call(admin, 'POST', cycles, { ...newCycle, request_id: v7() }))
+      .statusCode,
+    422,
+    'A second active cycle is rejected',
+  );
+  assert.equal(
+    (await call(admin, 'POST', cycles, { ...newCycle, share_price: '8000' }))
+      .statusCode,
+    409,
+    'Changed setup cannot reuse a request',
+  );
+  const opening = await db.query(
+    'select * from public.cycle_opening where cycle_id=$1',
+    [created.id],
+  );
+  assert.equal(opening.rows[0].opening_cash, '1000');
+  assert.equal(opening.rows[0].social_reserve, '1000');
+  const firstNewMeeting = (await meet('open', { date: date(3) })).id;
+  const meetings = await call(secretary, 'GET', `${root}/meetings`);
+  assert.equal(meetings.statusCode, 200, meetings.body);
+  assert.equal(
+    meetings
+      .json()
+      .meetings.find((m: { id: string }) => m.id === firstNewMeeting)
+      .opening_cash,
+    '1000',
+    'The old pre-payout count of 16410 is not carried',
+  );
+  await ok(`${root}/shares`, {
+    client_id: v7(),
+    device_id: device,
+    member_id: env['TEST_MEETING_SECRETARY_PERSON'],
+    meeting_date: date(3),
+    shares: '1',
+    client_amount: '7000',
+    client_calc_version: 'groups-shares-v1',
+    note: 'First purchase in the next cycle',
+  });
+  const newPreview = await call(secretary, 'GET', `${root}/shareout-preview`);
+  assert.equal(newPreview.statusCode, 200, newPreview.body);
+  assert.equal(newPreview.json().fund, '7000');
+  assert.equal(newPreview.json().total_shares, '1');
+  const newQuote = await ok(`${root}/loans/quote`, {
+    member_id: env['TEST_MEETING_MEMBER_PERSON'],
+    meeting_id: firstNewMeeting,
+    principal: '1000',
+    months: '1',
+  });
+  assert.equal(
+    newQuote.borrowable,
+    '0',
+    'Prior-cycle shares cannot support a new-cycle loan',
+  );
+  await close(firstNewMeeting, '8000');
+  const now = await ws();
+  assert.deepEqual(now.readiness.blockers, []);
+  assert.equal(now.readiness.snapshot.preview.fund, '7000');
+  assert.equal(now.readiness.snapshot.social, '1000');
+  const oldPlan = await db.query(
+    'select count(*)::text n from public.shareout_receipt r join public.share_out s on s.id=r.allocation_id where s.plan_id=$1',
+    [plan.id],
+  );
+  assert.equal(oldPlan.rows[0].n, '2');
 });
 test.after(async () => {
   await app.close();

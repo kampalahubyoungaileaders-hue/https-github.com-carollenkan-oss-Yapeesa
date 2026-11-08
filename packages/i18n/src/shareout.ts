@@ -1,4 +1,19 @@
 export const finalShareout = {
+  cycleStartTitle: 'Start next cycle',
+  cycleStartIntro:
+    'Create a new cycle after the previous distribution is finalized. Earlier records remain locked. The first meeting carries the remaining Social cash.',
+  cycleCarryCash: 'Opening cash carried forward',
+  cycleSocialReserve: 'Protected Social reserve',
+  cycleMinorUnits: '(minor units)',
+  cycleNewStart: 'New cycle start date',
+  cycleNewEnd: 'New cycle end date',
+  cycleNewPrice: 'New cycle share price (minor units)',
+  cycleConfirm:
+    'I confirm these are the group’s agreed dates and share price, and that the remaining Social cash is held for the next cycle.',
+  cycleStartButton: 'Create next cycle',
+  cycleRetry: 'Retry the same cycle setup',
+  cycleNotReady:
+    'Complete the previous share-out, record every payout and reconcile cash before starting another cycle.',
   finalTitle: 'Final cycle share-out',
   finalRefresh: 'Refresh final share-out',
   finalIntro:

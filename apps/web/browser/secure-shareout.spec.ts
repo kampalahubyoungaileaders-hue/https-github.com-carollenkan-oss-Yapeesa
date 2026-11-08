@@ -286,9 +286,54 @@ test('two officers approve a final allocation and separate cash receipts close t
       ),
     ).toBe(true);
     expect(errors).toEqual([]);
+    await expect(
+      panel.getByRole('button', {
+        name: 'Refresh final share-out',
+        exact: true,
+      }),
+    ).toBeEnabled();
     await panel.scrollIntoViewIfNeeded();
     await sec.screenshot({
       path: info.outputPath('shareout-verified.png'),
+      fullPage: true,
+    });
+    // Start the next cycle through the real administration screen.
+    await page.reload();
+    if ((page.viewportSize()?.width ?? 1440) < 760)
+      await page
+        .getByRole('button', { name: 'Open navigation', exact: true })
+        .click();
+    await page
+      .getByRole('button', { name: 'Administration', exact: true })
+      .click();
+    await page.getByLabel('Choose group', { exact: true }).selectOption(org);
+    const cycle = page.getByRole('region', {
+      name: 'Start next cycle',
+      exact: true,
+    });
+    await expect(cycle).toContainText('1000');
+    const start = new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      end = new Date(Date.now() + 86400000 * 300).toISOString().slice(0, 10);
+    await cycle.getByLabel('New cycle start date', { exact: true }).fill(start);
+    await cycle.getByLabel('New cycle end date', { exact: true }).fill(end);
+    await cycle
+      .getByLabel('New cycle share price (minor units)', { exact: true })
+      .fill('7000');
+    await cycle.getByRole('checkbox').check();
+    await cycle
+      .getByRole('button', { name: 'Create next cycle', exact: true })
+      .click();
+    await expect(cycle).toHaveCount(0);
+    await post(sc, `${root}/meetings`, meeting('open', { date: start }));
+    const carry = await sc.request.get(`${root}/meetings`);
+    expect(carry.status()).toBe(200);
+    expect(
+      (await carry.json()).meetings.find(
+        (m: { date: string }) => m.date === start,
+      ).opening_cash,
+    ).toBe('1000');
+    await page.screenshot({
+      path: info.outputPath('next-cycle-verified.png'),
       fullPage: true,
     });
   } finally {

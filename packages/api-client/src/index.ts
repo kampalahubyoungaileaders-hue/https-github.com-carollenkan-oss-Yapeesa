@@ -24,6 +24,8 @@ export type Factor =
   paths['/api/auth/mfa/enroll']['post']['responses'][200]['content']['application/json'];
 export type AdminWorkspace =
   paths['/api/admin/workspace']['get']['responses'][200]['content']['application/json'];
+export type AdminNewCycleInput =
+  paths['/api/admin/groups/{id}/cycles']['post']['requestBody']['content']['application/json'];
 export type AdminGroupInput =
   paths['/api/admin/groups']['post']['requestBody']['content']['application/json'];
 export type AdminSettingsInput =
@@ -199,6 +201,11 @@ export const api = {
     return response.blob();
   },
   adminWorkspace: () => request<AdminWorkspace>('/api/admin/workspace'),
+  adminStartCycle: (id: string, input: AdminNewCycleInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/cycles`,
+      input,
+    ),
   adminCreateGroup: (input: AdminGroupInput) =>
     request<{ id: string }>('/api/admin/groups', input),
   adminSettings: (id: string, input: AdminSettingsInput) =>

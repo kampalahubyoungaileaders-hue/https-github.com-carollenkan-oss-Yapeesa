@@ -456,3 +456,17 @@ These help the build. None of them blocks starting Phase 0.
 - [ ] A Google Play developer account when ready to publish; Apple later.
 
 Later, before onboarding real customers, not needed to build: regulator report formats and data-protection registration in each country.
+
+### Web completion decisions — 8 November 2026
+
+- A completed share-out precedes explicit new-cycle setup. The new cycle preserves
+  remaining Social money and uses actual post-payout cash for its first opening;
+  it cannot reuse the pre-distribution meeting count. Dates and share price are
+  explicitly entered by the administrator, and earlier history remains locked.
+- Calculation-mismatch review resolution requires two distinct current group
+  officers. Original inputs, server calculations and journals remain unchanged.
+- Closed-meeting and completed-share-out corrections are auditable review requests
+  first. They do not unlock or change money until a worked correction policy is
+  approved.
+- Lost-authenticator reset requires recorded identity verification, two distinct
+  verified administrators and no self-approval. No OTP-only staff MFA bypass.

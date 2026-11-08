@@ -215,6 +215,18 @@ export const adminWorkspaceSchema = object({
       currency: string,
       time_zone: string,
       max_shares: integerString,
+      next_cycle: {
+        anyOf: [
+          { type: 'null' },
+          object({
+            previous_cycle_id: uuid,
+            finalization_id: uuid,
+            earliest_start: { type: 'string', format: 'date' },
+            cash: integerString,
+            social: integerString,
+          }),
+        ],
+      },
       configuration_locked: boolean,
       cycle: { anyOf: [adminCycle, { type: 'null' }] },
       memberships: {
@@ -790,4 +802,11 @@ export const finalShareoutBody = object({
   allocation_id: { anyOf: [uuid, { type: 'null' }] },
   reason: { type: 'string', maxLength: 240 },
   confirmed: { type: 'boolean', const: true },
+});
+
+export const adminNewCycleBody = object({
+  ...command,
+  starts_on: { type: 'string', format: 'date' },
+  ends_on: { type: 'string', format: 'date' },
+  share_price: { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
 });
