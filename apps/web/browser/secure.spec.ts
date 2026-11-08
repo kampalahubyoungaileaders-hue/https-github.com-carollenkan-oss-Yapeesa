@@ -161,7 +161,7 @@ test('sign in with MFA, save shares, reload and inspect the real journal', async
     page.getByRole('table', { name: 'Share-out preview', exact: true }),
   ).toBeVisible();
   await expect(page.locator('.shareout-panel')).toContainText(
-    'Recorded share fund only.',
+    'Unpaid fines, loan earnings and the social fund are excluded.',
   );
   const previewData = await (await previewResponse).json();
   const fund = `UGX ${new Intl.NumberFormat('en-UG', { maximumFractionDigits: 0 }).format(BigInt(previewData.fund))}`;

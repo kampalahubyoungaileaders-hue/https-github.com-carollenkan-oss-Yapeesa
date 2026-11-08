@@ -139,3 +139,13 @@ approval atomically records a grant or exact correction, subject to both the
 social fund and physical cash availability. Unresolved requests block closing;
 new social activity invalidates earlier closing approvals. No loan rounding or
 repayment-allocation rule is inferred by this change.
+
+## Online unpaid fines
+
+The user selected unpaid-fine tracking with separate receipts on 7 November 2026.
+Fine types, absence handling and partial-payment permission are explicit settings,
+snapshotted at meeting opening. Unpaid assessments and waivers never increase
+cash or distributable income. Net collected fines enter the share-out preview;
+social money remains separate. Later collections preserve historic close hashes.
+See `FINES.md` for correction, attendance and permission behavior. Offline work
+remains deferred, and the open loan-policy questions are unchanged.

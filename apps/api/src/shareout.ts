@@ -7,7 +7,9 @@ export function checkedShareOut(raw: unknown): unknown {
     const data = object(raw);
     if (
       textField(data, 'calc_version') !== shareOutCalcVersion ||
-      data['scope'] !== 'recorded-shares-only' ||
+      !['recorded-shares-only', 'recorded-shares-and-paid-fines'].includes(
+        String(data['scope']),
+      ) ||
       !Array.isArray(data['members'])
     )
       throw new Error('Invalid preview');

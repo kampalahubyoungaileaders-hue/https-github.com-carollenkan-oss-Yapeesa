@@ -2407,3 +2407,39 @@ dialog::backdrop {
 .social-entry .text-button {
   margin-top: 16px;
 }
+.fine-rule {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 12px 0;
+  min-width: 0;
+}
+.fines-panel fieldset {
+  min-width: 0;
+}
+.fines-panel label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.fine-balances {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.fine-settings {
+  margin: 24px 0;
+}
+.fines-panel .button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fines-panel .social-record {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .fine-balances {
+    grid-template-columns: 1fr;
+  }
+}
