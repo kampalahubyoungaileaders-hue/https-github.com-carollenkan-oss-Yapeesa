@@ -100,7 +100,7 @@ export function createStaffAdminHandler(
         throw new Error('Invalid identity');
       if (job['phase'] === 'invite' && id === null) {
         // No chosen PIN or auto-confirmed identity. This API does not send an SMS.
-        const bytes = crypto.getRandomValues(new Uint8Array(48));
+        const bytes = crypto.getRandomValues(new Uint8Array(32));
         const password = Array.from(bytes, (b) =>
           b.toString(16).padStart(2, '0'),
         ).join('');

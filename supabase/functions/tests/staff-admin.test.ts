@@ -90,7 +90,7 @@ test('staff account job uses server-approved identity and never auto-confirms or
   assert.equal(created.body['phone_confirm'], false);
   assert.equal(created.body['email_confirm'], false);
   assert.equal(created.body['email'], job.email);
-  assert.match(String(created.body['password']), /^[a-f0-9]{96}$/);
+  assert.match(String(created.body['password']), /^[a-f0-9]{64}$/);
   assert.deepEqual(created.body['app_metadata'], {
     yapesa_activation: 'pending',
     yapesa_invitation_id: invitation,
