@@ -2391,6 +2391,7 @@ export interface paths {
           };
           content: {
             'application/json': {
+              can_approve: boolean;
               currency: string;
               can_record: boolean;
               /** Format: uuid */

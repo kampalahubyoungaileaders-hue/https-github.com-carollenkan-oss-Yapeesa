@@ -723,6 +723,7 @@ const shareoutJournalSchema = {
   }),
 };
 export const finalShareoutSchema = object({
+  can_approve: boolean,
   currency: string,
   can_record: boolean,
   actor_id: uuid,

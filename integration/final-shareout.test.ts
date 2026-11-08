@@ -99,8 +99,12 @@ async function close(id: string, count: string, explanation = '') {
     counted_cash: count,
     explanation,
   });
-  await meet('approve', { meeting_id: id, proposal_id: p.id });
-  await meet('approve', { meeting_id: id, proposal_id: p.id }, treasurer);
+  await meet('approve', { meeting_id: id, proposal_id: p.record_id });
+  await meet(
+    'approve',
+    { meeting_id: id, proposal_id: p.record_id },
+    treasurer,
+  );
 }
 const date = (offset = 0) =>
   new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
@@ -121,11 +125,16 @@ test('final allocation requires settled cash, two officers and exact individual 
         label,
       );
   }
-  for (const label of [member, admin])
+  for (const label of [member])
     assert.equal(
       (await call(label, 'GET', `${root}/shareout`)).statusCode,
       403,
     );
+  assert.equal(
+    (await call(admin, 'GET', `${root}/shareout`)).statusCode,
+    200,
+    'Administrator review is allowed',
+  );
   assert.equal(
     (await call(secretary, 'POST', `${root}/shareout`, cmd('prepare')))
       .statusCode,
@@ -354,6 +363,18 @@ test('final allocation requires settled cash, two officers and exact individual 
     422,
     'Replaced proposal cannot be approved',
   );
+  assert.equal(
+    (
+      await call(
+        admin,
+        'POST',
+        `${root}/shareout`,
+        cmd('approve', { plan_id: plan.id }),
+      )
+    ).statusCode,
+    403,
+    'Review authority does not confer officer approval',
+  );
   const approval = cmd('approve', { plan_id: plan.id });
   await ok(`${root}/shareout`, approval);
   assert.equal((await ws()).plan.committed, false);
@@ -415,6 +436,11 @@ test('final allocation requires settled cash, two officers and exact individual 
     ).statusCode,
     422,
     'Approved distribution freezes legacy meeting command',
+  );
+  assert.equal(
+    (await call(admin, 'GET', `${root}/shareout`)).statusCode,
+    200,
+    'Administrator review is allowed',
   );
   assert.equal(
     (await call(secretary, 'POST', `${root}/shareout`, cmd('prepare')))

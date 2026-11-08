@@ -110,6 +110,7 @@ begin
  perform pg_advisory_xact_lock(hashtextextended(p_org::text,0));
  if not private.is_officer(p_org) or p_action is null or p_action not in ('prepare','approve','pay','finish') or (p_action<>'approve' and not private.can_record(p_org)) then raise exception 'Not permitted' using errcode='42501'; end if;
  actor:=private.current_person();
+ if p_action='approve' and not private.officer_eligible(p_org,actor) then raise exception 'Current group officer role required' using errcode='42501'; end if;
  if p_request is null or p_request::text !~ '^[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$' or p_device is null or p_confirm is distinct from true or p_reason is null or length(p_reason)>240 or
  (p_action='prepare' and (p_plan is not null or p_allocation is not null or p_reason<>'')) or
  (p_action in ('approve','finish') and (p_plan is null or p_allocation is not null or p_reason<>'')) or
@@ -199,7 +200,7 @@ declare state jsonb; plan public.shareout_plan; committed public.shareout_commit
  state:=private.shareout_state(p_org);
  select * into plan from public.shareout_plan where organisation_id=p_org and cycle_id=coalesce((select id from public.cycle where organisation_id=p_org and status='active'),(select cycle_id from public.shareout_plan where organisation_id=p_org order by revision desc limit 1)) order by revision desc limit 1;
  select * into committed from public.shareout_commit where plan_id=plan.id;
- return jsonb_build_object('currency',(select currency from public.organisation where id=p_org),'can_record',private.can_record(p_org),'actor_id',private.current_person(),'readiness',state,
+ return jsonb_build_object('currency',(select currency from public.organisation where id=p_org),'can_record',private.can_record(p_org),'actor_id',private.current_person(),'can_approve',private.officer_eligible(p_org,private.current_person()),'readiness',state,
  'plan',case when plan.id is null then null else jsonb_build_object('id',plan.id,'cycle_id',plan.cycle_id,'snapshot',plan.snapshot,'snapshot_hash',plan.snapshot_hash,'calc_version',plan.calc_version,'entered_by',plan.entered_by,'recorded_at',plan.recorded_at,
  'current',committed.id is not null or (state->'snapshot'=plan.snapshot and jsonb_array_length(state->'blockers')=0),
  'committed',committed.id is not null,'finalized',exists(select 1 from public.shareout_finalization where plan_id=plan.id),

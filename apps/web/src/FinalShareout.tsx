@@ -257,7 +257,8 @@ export default function FinalShareout({
               ) : own ? (
                 <p>{t('finalAlreadyApproved')}</p>
               ) : (
-                plan.current && (
+                plan.current &&
+                data.can_approve && (
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();

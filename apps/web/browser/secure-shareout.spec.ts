@@ -132,7 +132,7 @@ test('two officers approve a final allocation and separate cash receipts close t
           explanation: '',
         }),
       )
-    ).id;
+    ).record_id;
     await post(
       sc,
       `${root}/meetings`,

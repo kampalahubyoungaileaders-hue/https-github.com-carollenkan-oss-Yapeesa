@@ -3511,6 +3511,9 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "can_approve": {
+                      "type": "boolean"
+                    },
                     "currency": {
                       "type": "string"
                     },
@@ -3985,6 +3988,7 @@
                     }
                   },
                   "required": [
+                    "can_approve",
                     "currency",
                     "can_record",
                     "actor_id",
