@@ -810,3 +810,96 @@ export const adminNewCycleBody = object({
   ends_on: { type: 'string', format: 'date' },
   share_price: { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
 });
+
+const reviewOutcome = {
+  type: 'string',
+  enum: ['confirmed', 'correction_required'],
+};
+const reviewSourceType = {
+  type: 'string',
+  enum: [
+    'share_calculation',
+    'loan_calculation',
+    'meeting',
+    'journal',
+    'shareout',
+  ],
+};
+export const reviewWorkspaceSchema = object({
+  actor_id: uuid,
+  can_decide: boolean,
+  mismatches: {
+    type: 'array',
+    items: object({
+      type: reviewSourceType,
+      id: uuid,
+      member_id: uuid,
+      name: string,
+      recorded_at: string,
+      review_id: nullableUuid,
+    }),
+  },
+  closed_sources: {
+    type: 'array',
+    items: object({ type: reviewSourceType, id: uuid, date: string }),
+  },
+  reviews: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      kind: { type: 'string', enum: ['calculation', 'closed_record'] },
+      source_type: reviewSourceType,
+      source_id: uuid,
+      source: { type: 'object', additionalProperties: true },
+      reason: string,
+      entered_by: uuid,
+      recorded_at: string,
+      proposal: {
+        anyOf: [
+          { type: 'null' },
+          object({
+            id: uuid,
+            outcome: reviewOutcome,
+            reason: string,
+            entered_by: uuid,
+            recorded_at: string,
+            approvals: {
+              type: 'array',
+              items: object({
+                officer_id: uuid,
+                eligible: boolean,
+                recorded_at: string,
+              }),
+            },
+          }),
+        ],
+      },
+      resolution: {
+        anyOf: [
+          { type: 'null' },
+          object({
+            outcome: reviewOutcome,
+            recorded_at: string,
+            proposal_id: uuid,
+          }),
+        ],
+      },
+    }),
+  },
+});
+export const reviewCommandBody = object({
+  ...command,
+  action: { type: 'string', enum: ['open', 'propose', 'approve'] },
+  kind: {
+    anyOf: [
+      { type: 'null' },
+      { type: 'string', enum: ['calculation', 'closed_record'] },
+    ],
+  },
+  source_type: { anyOf: [{ type: 'null' }, reviewSourceType] },
+  source_id: nullableUuid,
+  review_id: nullableUuid,
+  proposal_id: nullableUuid,
+  outcome: { anyOf: [{ type: 'null' }, reviewOutcome] },
+  reason: { type: 'string', maxLength: 500 },
+});

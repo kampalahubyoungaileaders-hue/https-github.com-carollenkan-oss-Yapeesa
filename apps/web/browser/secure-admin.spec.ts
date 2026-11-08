@@ -33,6 +33,7 @@ test('administrator creates a group once, adds a member, assigns a secretary and
       .getByRole('button', { name: 'Open navigation', exact: true })
       .click();
   await page
+    .getByRole('navigation', { name: 'Your workspace', exact: true })
     .getByRole('button', { name: 'Administration', exact: true })
     .click();
   await expect(

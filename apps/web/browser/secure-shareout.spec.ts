@@ -304,9 +304,10 @@ test('two officers approve a final allocation and separate cash receipts close t
         .getByRole('button', { name: 'Open navigation', exact: true })
         .click();
     await page
+      .getByRole('navigation', { name: 'Your workspace', exact: true })
       .getByRole('button', { name: 'Administration', exact: true })
       .click();
-    await page.getByLabel('Choose group', { exact: true }).selectOption(org);
+    await page.getByLabel('Choose a group', { exact: true }).selectOption(org);
     const cycle = page.getByRole('region', {
       name: 'Start next cycle',
       exact: true,

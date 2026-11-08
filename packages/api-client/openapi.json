@@ -3683,6 +3683,608 @@
         }
       }
     },
+    "/api/groups/{id}/reviews": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "actor_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "can_decide": {
+                      "type": "boolean"
+                    },
+                    "mismatches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "share_calculation",
+                              "loan_calculation",
+                              "meeting",
+                              "journal",
+                              "shareout"
+                            ]
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "member_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "recorded_at": {
+                            "type": "string"
+                          },
+                          "review_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "id",
+                          "member_id",
+                          "name",
+                          "recorded_at",
+                          "review_id"
+                        ]
+                      }
+                    },
+                    "closed_sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "share_calculation",
+                              "loan_calculation",
+                              "meeting",
+                              "journal",
+                              "shareout"
+                            ]
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "date": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["type", "id", "date"]
+                      }
+                    },
+                    "reviews": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": ["calculation", "closed_record"]
+                          },
+                          "source_type": {
+                            "type": "string",
+                            "enum": [
+                              "share_calculation",
+                              "loan_calculation",
+                              "meeting",
+                              "journal",
+                              "shareout"
+                            ]
+                          },
+                          "source_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": true
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "entered_by": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "recorded_at": {
+                            "type": "string"
+                          },
+                          "proposal": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "outcome": {
+                                "type": "string",
+                                "enum": ["confirmed", "correction_required"]
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "entered_by": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "recorded_at": {
+                                "type": "string"
+                              },
+                              "approvals": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "officer_id": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "eligible": {
+                                      "type": "boolean"
+                                    },
+                                    "recorded_at": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "officer_id",
+                                    "eligible",
+                                    "recorded_at"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "outcome",
+                              "reason",
+                              "entered_by",
+                              "recorded_at",
+                              "approvals"
+                            ],
+                            "nullable": true
+                          },
+                          "resolution": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "outcome": {
+                                "type": "string",
+                                "enum": ["confirmed", "correction_required"]
+                              },
+                              "recorded_at": {
+                                "type": "string"
+                              },
+                              "proposal_id": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "outcome",
+                              "recorded_at",
+                              "proposal_id"
+                            ],
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "source_type",
+                          "source_id",
+                          "source",
+                          "reason",
+                          "entered_by",
+                          "recorded_at",
+                          "proposal",
+                          "resolution"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "actor_id",
+                    "can_decide",
+                    "mismatches",
+                    "closed_sources",
+                    "reviews"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "request_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": ["open", "propose", "approve"]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": ["calculation", "closed_record"],
+                    "nullable": true
+                  },
+                  "source_type": {
+                    "type": "string",
+                    "enum": [
+                      "share_calculation",
+                      "loan_calculation",
+                      "meeting",
+                      "journal",
+                      "shareout"
+                    ],
+                    "nullable": true
+                  },
+                  "source_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "review_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "proposal_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": ["confirmed", "correction_required"],
+                    "nullable": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "request_id",
+                  "device_id",
+                  "action",
+                  "kind",
+                  "source_type",
+                  "source_id",
+                  "review_id",
+                  "proposal_id",
+                  "outcome",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": ["id"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/groups/{id}/shareout": {
       "get": {
         "parameters": [
