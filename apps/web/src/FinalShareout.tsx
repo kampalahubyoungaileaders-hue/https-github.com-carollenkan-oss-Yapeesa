@@ -218,10 +218,10 @@ export default function FinalShareout({
                 <table aria-label="Final share-out allocation">
                   <thead>
                     <tr>
-                      <th>Member</th>
-                      <th>Shares</th>
-                      <th>Allocation</th>
-                      <th>Cash receipt</th>
+                      <th>{t('member')}</th>
+                      <th>{t('sharesLabel')}</th>
+                      <th>{t('shareoutAllocation')}</th>
+                      <th>{t('finalReceipt')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -322,7 +322,7 @@ export default function FinalShareout({
                           setConfirmed(false);
                         }}
                       >
-                        <option value="">Choose a member</option>
+                        <option value="">{t('finalChooseMember')}</option>
                         {remaining.map((a) => (
                           <option key={a.id} value={a.id}>
                             {a.name} — {format(a.amount)}

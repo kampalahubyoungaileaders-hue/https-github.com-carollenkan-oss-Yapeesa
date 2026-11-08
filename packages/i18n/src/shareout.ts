@@ -47,4 +47,6 @@ export const finalShareout = {
   finalSavedRefresh:
     'The record was saved, but refresh failed. Refresh before continuing.',
   finalExport: 'Export payout register',
+  finalReceipt: 'Cash receipt',
+  finalChooseMember: 'Choose a member',
 } as const;

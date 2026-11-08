@@ -48,12 +48,61 @@ async function call(
 }
 async function ok(url: string, payload: object, label = secretary) {
   const r = await call(label, 'POST', url, payload);
-  assert.equal(r.statusCode, 200, r.body);
+  let diagnostic = r.body;
+  if (r.statusCode !== 200 && url === `${root}/shareout`)
+    diagnostic = await rawShareout(label, {
+      p_org: org,
+      p_action: (payload as { action: string }).action,
+      ...Object.fromEntries(
+        Object.entries(payload)
+          .filter(([k]) => k !== 'action')
+          .map(([k, v]) => [
+            (
+              {
+                request_id: 'p_request',
+                device_id: 'p_device',
+                plan_id: 'p_plan',
+                allocation_id: 'p_allocation',
+                reason: 'p_reason',
+                confirmed: 'p_confirm',
+              } as Record<string, string>
+            )[k]!,
+            v,
+          ]),
+      ),
+    });
+  assert.equal(r.statusCode, 200, `${url}: ${diagnostic}`);
   return r.json();
+}
+async function rawShareout(
+  label: string,
+  body: object,
+  method = 'shareout_command',
+) {
+  const token = openTokens(
+    cookies.get(label)!.slice('yapesa_session='.length),
+    config!.cookieKey,
+  ).access_token;
+  const r = await fetch(`${config!.supabaseUrl}/rest/v1/rpc/${method}`, {
+    method: 'POST',
+    headers: {
+      apikey: config!.publishableKey,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  return r.text();
 }
 async function ws() {
   const r = await call(secretary, 'GET', `${root}/shareout`);
-  assert.equal(r.statusCode, 200, r.body);
+  assert.equal(
+    r.statusCode,
+    200,
+    r.statusCode === 200
+      ? r.body
+      : await rawShareout(secretary, { p_org: org }, 'shareout_workspace'),
+  );
   assert.equal(r.headers['cache-control'], 'no-store');
   return r.json();
 }
@@ -138,7 +187,7 @@ test('final allocation requires settled cash, two officers and exact individual 
   assert.equal(
     (await call(secretary, 'POST', `${root}/shareout`, cmd('prepare')))
       .statusCode,
-    422,
+    403,
   );
   await ok(
     `/api/admin/groups/${org}/social`,

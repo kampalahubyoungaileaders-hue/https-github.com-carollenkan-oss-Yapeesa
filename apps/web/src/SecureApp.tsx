@@ -935,7 +935,9 @@ export default function SecureApp() {
                     )}
                   </section>
                   <section className="cycle-panel">
-                    <span className="cycle-status">{t('activeCycle')}</span>
+                    <span className="cycle-status">
+                      {t(workspace.cycle ? 'activeCycle' : 'noActiveCycle')}
+                    </span>
                     <h2>{workspace.group.name}</h2>
                     {workspace.cycle && (
                       <p>
@@ -965,13 +967,15 @@ export default function SecureApp() {
                   </section>
                 </div>
               )}
-              {tab === 'overview' && workspace.group.can_preview_shareout && (
-                <ShareOutPreview
-                  key={`${selected}-${savedRows.length}`}
-                  group={selected}
-                  format={(minor) => amount(minor, workspace)}
-                />
-              )}
+              {tab === 'overview' &&
+                workspace.cycle &&
+                workspace.group.can_preview_shareout && (
+                  <ShareOutPreview
+                    key={`${selected}-${savedRows.length}`}
+                    group={selected}
+                    format={(minor) => amount(minor, workspace)}
+                  />
+                )}
               {tab === 'overview' && workspace.group.can_preview_shareout && (
                 <FinalShareout
                   key={selected}
