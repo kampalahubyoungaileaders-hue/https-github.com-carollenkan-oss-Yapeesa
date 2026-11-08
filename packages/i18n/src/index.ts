@@ -1,10 +1,12 @@
 import { finalShareout } from './shareout';
+import { reviews } from './reviews';
 import { secure } from './secure';
 import { web } from './web';
 const en = {
   ...web,
   ...finalShareout,
   ...secure,
+  ...reviews,
   appName: 'Yapesa',
   tagline: 'Digital records for groups, lenders and SACCOs.',
   phase: 'Foundation · Phase 0',

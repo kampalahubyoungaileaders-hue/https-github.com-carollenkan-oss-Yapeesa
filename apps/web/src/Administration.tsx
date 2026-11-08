@@ -8,6 +8,7 @@ import {
   type AdminSettingsInput,
 } from '@yapesa/api-client';
 import { t } from '@yapesa/i18n';
+import NewCycle from './NewCycle';
 
 type Group = AdminWorkspace['groups'][number];
 type Command = { request_id: string; device_id: string };
@@ -408,9 +409,20 @@ export default function Administration({ onBack }: { onBack: () => void }) {
                   <p>
                     {group.country_code} · {group.currency} · {group.time_zone}
                   </p>
+                  <NewCycle
+                    key={`new-cycle-${group.id}-${group.cycle?.starts_on ?? 'closed'}`}
+                    group={group}
+                    busy={busy}
+                    pending={pending}
+                    submit={async (input) =>
+                      (await mutate('cycle', input, (meta) =>
+                        api.adminStartCycle(group.id, { ...input, ...meta }),
+                      )) !== null
+                    }
+                  />
                   <h3>{t('adminSettings')}</h3>
                   <ConfigurationForm
-                    key={group.id}
+                    key={`settings-${group.id}-${group.cycle?.starts_on ?? 'closed'}`}
                     initial={group}
                     currencies={data.currencies}
                     busy={busy}

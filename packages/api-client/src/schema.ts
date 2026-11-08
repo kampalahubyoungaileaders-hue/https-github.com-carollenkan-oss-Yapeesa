@@ -2366,6 +2366,460 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/admin/groups/{id}/cycles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on: string;
+            share_price: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/{id}/reviews': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              actor_id: string;
+              can_decide: boolean;
+              mismatches: {
+                /** @enum {string} */
+                type:
+                  | 'share_calculation'
+                  | 'loan_calculation'
+                  | 'meeting'
+                  | 'journal'
+                  | 'shareout';
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                member_id: string;
+                name: string;
+                recorded_at: string;
+                /** Format: uuid */
+                review_id: string | null;
+              }[];
+              closed_sources: {
+                /** @enum {string} */
+                type:
+                  | 'share_calculation'
+                  | 'loan_calculation'
+                  | 'meeting'
+                  | 'journal'
+                  | 'shareout';
+                /** Format: uuid */
+                id: string;
+                date: string;
+              }[];
+              reviews: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: 'calculation' | 'closed_record';
+                /** @enum {string} */
+                source_type:
+                  | 'share_calculation'
+                  | 'loan_calculation'
+                  | 'meeting'
+                  | 'journal'
+                  | 'shareout';
+                /** Format: uuid */
+                source_id: string;
+                source: {
+                  [key: string]: unknown;
+                };
+                reason: string;
+                /** Format: uuid */
+                entered_by: string;
+                recorded_at: string;
+                proposal: {
+                  /** Format: uuid */
+                  id: string;
+                  /** @enum {string} */
+                  outcome: 'confirmed' | 'correction_required';
+                  reason: string;
+                  /** Format: uuid */
+                  entered_by: string;
+                  recorded_at: string;
+                  approvals: {
+                    /** Format: uuid */
+                    officer_id: string;
+                    eligible: boolean;
+                    recorded_at: string;
+                  }[];
+                } | null;
+                resolution: {
+                  /** @enum {string} */
+                  outcome: 'confirmed' | 'correction_required';
+                  recorded_at: string;
+                  /** Format: uuid */
+                  proposal_id: string;
+                } | null;
+              }[];
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            /** @enum {string} */
+            action: 'open' | 'propose' | 'approve';
+            /** @enum {string|null} */
+            kind: 'calculation' | 'closed_record' | null;
+            /** @enum {string|null} */
+            source_type:
+              | 'share_calculation'
+              | 'loan_calculation'
+              | 'meeting'
+              | 'journal'
+              | 'shareout'
+              | null;
+            /** Format: uuid */
+            source_id: string | null;
+            /** Format: uuid */
+            review_id: string | null;
+            /** Format: uuid */
+            proposal_id: string | null;
+            /** @enum {string|null} */
+            outcome: 'confirmed' | 'correction_required' | null;
+            reason: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/groups/{id}/shareout': {
     parameters: {
       query?: never;
@@ -4767,6 +5221,16 @@ export interface paths {
                 currency: string;
                 time_zone: string;
                 max_shares: string;
+                next_cycle: {
+                  /** Format: uuid */
+                  previous_cycle_id: string;
+                  /** Format: uuid */
+                  finalization_id: string;
+                  /** Format: date */
+                  earliest_start: string;
+                  cash: string;
+                  social: string;
+                } | null;
                 configuration_locked: boolean;
                 cycle: {
                   /** Format: date */

@@ -51,6 +51,9 @@ import {
   invitationPhoneBody,
   invitationBody,
   adminWorkspaceSchema,
+  adminNewCycleBody,
+  reviewWorkspaceSchema,
+  reviewCommandBody,
   adminResultSchema,
   adminGroupBody,
   adminConfigurationBody,
@@ -640,6 +643,115 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
             p_client: input.client_id,
             p_device: input.device_id,
             p_reason: input.reason,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        device_id: string;
+        starts_on: string;
+        ends_on: string;
+        share_price: string;
+      };
+    }>(
+      '/api/admin/groups/:id/cycles',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: adminNewCycleBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply),
+          b = request.body;
+        return configured().backend.rpc(
+          'admin_start_cycle',
+          {
+            p_org: request.params.id,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_starts: b.starts_on,
+            p_ends: b.ends_on,
+            p_price: b.share_price,
+          },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.get<{ Params: { id: string } }>(
+      '/api/groups/:id/reviews',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          response: { 200: reviewWorkspaceSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        return configured().backend.rpc(
+          'review_workspace',
+          { p_org: request.params.id },
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Params: { id: string };
+      Body: {
+        request_id: string;
+        device_id: string;
+        action: string;
+        kind: string | null;
+        source_type: string | null;
+        source_id: string | null;
+        review_id: string | null;
+        proposal_id: string | null;
+        outcome: string | null;
+        reason: string;
+      };
+    }>(
+      '/api/groups/:id/reviews',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: reviewCommandBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply),
+          b = request.body;
+        return configured().backend.rpc(
+          'review_command',
+          {
+            p_org: request.params.id,
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_action: b.action,
+            p_kind: b.kind,
+            p_source_type: b.source_type,
+            p_source: b.source_id,
+            p_review: b.review_id,
+            p_proposal: b.proposal_id,
+            p_outcome: b.outcome,
+            p_reason: b.reason,
           },
           user.tokens.access_token,
         );

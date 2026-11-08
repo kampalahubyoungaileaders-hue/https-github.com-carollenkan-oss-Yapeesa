@@ -2540,3 +2540,82 @@ dialog::backdrop {
 .final-shareout td {
   white-space: nowrap;
 }
+
+.new-cycle form {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0;
+}
+.new-cycle form label:not(.check-label) {
+  display: grid;
+  gap: 8px;
+}
+.new-cycle input:not([type='checkbox']) {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border, #d7dfda);
+  border-radius: 8px;
+  min-width: 0;
+}
+.new-cycle .check-label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.new-cycle .check-label input {
+  flex-shrink: 0;
+}
+
+.reviews-workspace {
+  min-width: 0;
+}
+.reviews-workspace .panel {
+  padding: 24px;
+  margin: 18px 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.reviews-workspace form {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  max-width: 720px;
+}
+.reviews-workspace label:not(.check-label) {
+  display: grid;
+  gap: 8px;
+}
+.reviews-workspace textarea,
+.reviews-workspace select {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border, #d7dfda);
+  border-radius: 8px;
+}
+.reviews-workspace .check-label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.reviews-workspace pre {
+  overflow: auto;
+  max-height: 420px;
+  background: #f4f7f5;
+  padding: 14px;
+  font-size: 12px;
+}
+.reviews-workspace summary {
+  cursor: pointer;
+  margin: 12px 0;
+}
+.review-proposal {
+  margin: 18px 0;
+  padding: 16px;
+  background: #f4f7f5;
+  border-radius: 10px;
+}
+.review-difference + .review-difference {
+  border-top: 1px solid #d7dfda;
+  padding-top: 16px;
+}

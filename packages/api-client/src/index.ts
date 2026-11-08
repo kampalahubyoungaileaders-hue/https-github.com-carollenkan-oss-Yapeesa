@@ -24,6 +24,12 @@ export type Factor =
   paths['/api/auth/mfa/enroll']['post']['responses'][200]['content']['application/json'];
 export type AdminWorkspace =
   paths['/api/admin/workspace']['get']['responses'][200]['content']['application/json'];
+export type ReviewWorkspace =
+  paths['/api/groups/{id}/reviews']['get']['responses'][200]['content']['application/json'];
+export type ReviewCommand =
+  paths['/api/groups/{id}/reviews']['post']['requestBody']['content']['application/json'];
+export type AdminNewCycleInput =
+  paths['/api/admin/groups/{id}/cycles']['post']['requestBody']['content']['application/json'];
 export type AdminGroupInput =
   paths['/api/admin/groups']['post']['requestBody']['content']['application/json'];
 export type AdminSettingsInput =
@@ -199,6 +205,18 @@ export const api = {
     return response.blob();
   },
   adminWorkspace: () => request<AdminWorkspace>('/api/admin/workspace'),
+  reviews: (id: string) =>
+    request<ReviewWorkspace>(`/api/groups/${encodeURIComponent(id)}/reviews`),
+  reviewCommand: (id: string, input: ReviewCommand) =>
+    request<{ id: string }>(
+      `/api/groups/${encodeURIComponent(id)}/reviews`,
+      input,
+    ),
+  adminStartCycle: (id: string, input: AdminNewCycleInput) =>
+    request<{ id: string }>(
+      `/api/admin/groups/${encodeURIComponent(id)}/cycles`,
+      input,
+    ),
   adminCreateGroup: (input: AdminGroupInput) =>
     request<{ id: string }>('/api/admin/groups', input),
   adminSettings: (id: string, input: AdminSettingsInput) =>

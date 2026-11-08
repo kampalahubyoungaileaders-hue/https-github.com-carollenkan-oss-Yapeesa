@@ -40,3 +40,11 @@ No payment-transfer integration is introduced by the current web release. Free d
     cash handovers after two officers approve. Social money stays separate.
     Next-cycle setup must preserve the remaining Social reserve and start with its
     actual post-distribution cash, rather than reusing the last pre-payout count.
+
+11. Confirmed on 8 November 2026: two distinct current group officers resolve
+    calculation-mismatch reviews, preserving original calculations and journals.
+    Closed-meeting and completed-share-out correction requests enter an auditable
+    review queue; money stays locked pending a worked correction policy.
+12. Confirmed on 8 November 2026: lost-authenticator resets require recorded
+    identity verification and two distinct verified administrators, with no
+    self-approval. The owner-only emergency recovery path remains external.

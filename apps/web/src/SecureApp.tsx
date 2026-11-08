@@ -23,6 +23,7 @@ import ShareOutPreview from './ShareOutPreview';
 import Meetings from './Meetings';
 import SocialFund from './SocialFund';
 import Fines from './Fines';
+import Reviews from './Reviews';
 import Loans from './Loans';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
@@ -50,6 +51,7 @@ const titleKeys = {
   social: 'socialFund',
   fines: 'finesTitle',
   loans: 'loansTitle',
+  reviews: 'reviewsTitle',
 } as const;
 type Tab = keyof typeof titleKeys;
 function amount(value: string | bigint, workspace: SavedWorkspace): string {
@@ -606,36 +608,42 @@ export default function SecureApp() {
           </span>
         </div>
         <nav aria-label={t('workspace')}>
-          {(Object.keys(titleKeys) as Tab[]).map((key) => (
-            <button
-              className={`live-nav ${tab === key ? 'active' : ''}`}
-              key={key}
-              onClick={() => {
-                setTab(key);
-                setMemberFilter('');
-                setMenu(false);
-                setJournal(null);
-                setSearch('');
-              }}
-            >
-              <Icon
-                name={
-                  (
-                    {
-                      overview: 'grid',
-                      meetings: 'calendar',
-                      members: 'people',
-                      ledger: 'ledger',
-                      social: 'people',
-                      fines: 'ledger',
-                      loans: 'ledger',
-                    } as const
-                  )[key]
-                }
-              />
-              {t(titleKeys[key])}
-            </button>
-          ))}
+          {(Object.keys(titleKeys) as Tab[])
+            .filter(
+              (key) =>
+                key !== 'reviews' || workspace?.group.can_preview_shareout,
+            )
+            .map((key) => (
+              <button
+                className={`live-nav ${tab === key ? 'active' : ''}`}
+                key={key}
+                onClick={() => {
+                  setTab(key);
+                  setMemberFilter('');
+                  setMenu(false);
+                  setJournal(null);
+                  setSearch('');
+                }}
+              >
+                <Icon
+                  name={
+                    (
+                      {
+                        overview: 'grid',
+                        meetings: 'calendar',
+                        members: 'people',
+                        ledger: 'ledger',
+                        social: 'people',
+                        fines: 'ledger',
+                        loans: 'ledger',
+                        reviews: 'shield',
+                      } as const
+                    )[key]
+                  }
+                />
+                {t(titleKeys[key])}
+              </button>
+            ))}
           {session.user.can_administer && (
             <button
               className="live-nav"
@@ -690,26 +698,29 @@ export default function SecureApp() {
               <p className="page-subtitle">{t('savedDescription')}</p>
             </div>
             <div className="heading-actions">
-              {tab !== 'social' && tab !== 'fines' && tab !== 'loans' && (
-                <>
-                  <button
-                    className="button"
-                    disabled={busy || !workspace}
-                    onClick={() => void exportPdf()}
-                  >
-                    <Icon name="download" size={17} />
-                    {t('exportPdf')}
-                  </button>
-                  <button
-                    className="button"
-                    disabled={busy || !workspace}
-                    onClick={exportCsv}
-                  >
-                    <Icon name="download" size={17} />
-                    {t('exportCsv')}
-                  </button>
-                </>
-              )}
+              {tab !== 'social' &&
+                tab !== 'fines' &&
+                tab !== 'loans' &&
+                tab !== 'reviews' && (
+                  <>
+                    <button
+                      className="button"
+                      disabled={busy || !workspace}
+                      onClick={() => void exportPdf()}
+                    >
+                      <Icon name="download" size={17} />
+                      {t('exportPdf')}
+                    </button>
+                    <button
+                      className="button"
+                      disabled={busy || !workspace}
+                      onClick={exportCsv}
+                    >
+                      <Icon name="download" size={17} />
+                      {t('exportCsv')}
+                    </button>
+                  </>
+                )}
               <button
                 className="button"
                 disabled={busy || !selected}
@@ -985,6 +996,13 @@ export default function SecureApp() {
                   onChanged={async () => {
                     setWorkspace(await api.workspace(selected));
                   }}
+                />
+              )}
+              {tab === 'reviews' && workspace.group.can_preview_shareout && (
+                <Reviews
+                  key={selected}
+                  group={selected}
+                  device={deviceId(selected)}
                 />
               )}
               {tab === 'loans' && (
