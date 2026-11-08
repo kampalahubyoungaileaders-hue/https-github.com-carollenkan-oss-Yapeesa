@@ -12,14 +12,25 @@ export const sessionSchema = object({
   user: {
     anyOf: [
       { type: 'null' },
-      object({
-        person_id: uuid,
-        display_name: string,
-        requires_mfa: boolean,
-        mfa_verified: boolean,
-        can_administer: boolean,
-        factors: { type: 'array', items: object({ id: uuid, name: string }) },
-      }),
+      object(
+        {
+          person_id: uuid,
+          display_name: string,
+          requires_mfa: boolean,
+          mfa_verified: boolean,
+          can_administer: boolean,
+          activation_pending: boolean,
+          factors: { type: 'array', items: object({ id: uuid, name: string }) },
+        },
+        [
+          'person_id',
+          'display_name',
+          'requires_mfa',
+          'mfa_verified',
+          'can_administer',
+          'factors',
+        ],
+      ),
     ],
   },
 });
@@ -902,4 +913,34 @@ export const reviewCommandBody = object({
   proposal_id: nullableUuid,
   outcome: { anyOf: [{ type: 'null' }, reviewOutcome] },
   reason: { type: 'string', maxLength: 500 },
+});
+
+export const staffInviteBody = object({
+  request_id: uuid,
+  organisation_id: uuid,
+  person_id: nullableUuid,
+  name: { type: 'string', maxLength: 150 },
+  phone: { type: 'string', pattern: '^\\+[1-9][0-9]{6,14}$' },
+  email: { type: 'string', format: 'email', maxLength: 254 },
+  role: { type: 'string', enum: ['secretary', 'treasurer', 'chair'] },
+  reason: { type: 'string', minLength: 1, maxLength: 500 },
+});
+export const staffWorkspaceSchema = object({
+  invitations: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      organisation_id: uuid,
+      person_id: uuid,
+      name: string,
+      phone: string,
+      email: { type: 'string', format: 'email', maxLength: 254 },
+      role: { type: 'string', enum: ['secretary', 'treasurer', 'chair'] },
+      recorded_at: string,
+      reason: string,
+      account_created: boolean,
+      activated: boolean,
+      cancelled: boolean,
+    }),
+  },
 });

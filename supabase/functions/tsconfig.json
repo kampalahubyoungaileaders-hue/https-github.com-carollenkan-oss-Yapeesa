@@ -5,5 +5,5 @@
     "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": ["egosms-auth/*.ts", "tests/*.ts"]
+  "include": ["egosms-auth/*.ts", "staff-admin/*.ts", "tests/*.ts"]
 }

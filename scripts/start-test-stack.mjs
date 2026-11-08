@@ -9,7 +9,7 @@ const original = await readFile(path, 'utf8');
 const testConfig = original
   .replace(
     '# [auth.sms.test_otp]',
-    '[auth.sms.test_otp]\n256700000016 = "654321"\n256700000017 = "654321"',
+    '[auth.sms.test_otp]\n256700000016 = "654321"\n256700000017 = "654321"\n256700000023 = "654321"\n256700000024 = "654321"\n256700000025 = "654321"',
   )
   .replace(
     /\[auth\.sms\.twilio\][\s\S]*?(?=\n\[auth\.mfa\])/,

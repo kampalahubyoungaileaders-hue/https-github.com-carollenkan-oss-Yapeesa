@@ -7,6 +7,7 @@ export interface ApiConfig {
   webOrigin: string;
   secureCookies: boolean;
   trustedProxyHops?: number;
+  authAdminKey?: string;
 }
 export function readConfig(): ApiConfig | undefined {
   const env = process.env;
@@ -56,5 +57,8 @@ export function readConfig(): ApiConfig | undefined {
     webOrigin: origin,
     secureCookies: env['NODE_ENV'] === 'production',
     trustedProxyHops,
+    ...(env['SUPABASE_AUTH_ADMIN_KEY']
+      ? { authAdminKey: env['SUPABASE_AUTH_ADMIN_KEY'] }
+      : {}),
   };
 }

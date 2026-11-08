@@ -116,7 +116,8 @@ export default function SecureApp() {
   useEffect(() => {
     if (
       !session?.user ||
-      (session.user.requires_mfa && !session.user.mfa_verified)
+      (session.user.requires_mfa && !session.user.mfa_verified) ||
+      session.user.activation_pending
     )
       return;
     let cancelled = false;
@@ -541,6 +542,38 @@ export default function SecureApp() {
             className="text-button signout-link"
             onClick={() => void signOut()}
             disabled={busy}
+          >
+            {t('signOut')}
+          </button>
+        </div>
+      </div>
+    );
+  if (session.user.activation_pending)
+    return (
+      <div className="secure-login">
+        <div className="login-card">
+          <h1>{t('staffFinishTitle')}</h1>
+          <p>{t('staffFinishHelp')}</p>
+          <button
+            className="button primary"
+            disabled={busy}
+            onClick={() =>
+              void handle(async () => {
+                setSession(await api.finishStaffActivation());
+              })
+            }
+          >
+            {t('staffFinish')}
+          </button>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button
+            className="text-button signout-link"
+            disabled={busy}
+            onClick={() => void signOut()}
           >
             {t('signOut')}
           </button>

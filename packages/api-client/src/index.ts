@@ -28,6 +28,10 @@ export type ReviewWorkspace =
   paths['/api/groups/{id}/reviews']['get']['responses'][200]['content']['application/json'];
 export type ReviewCommand =
   paths['/api/groups/{id}/reviews']['post']['requestBody']['content']['application/json'];
+export type StaffWorkspace =
+  paths['/api/admin/staff']['get']['responses'][200]['content']['application/json'];
+export type StaffInviteInput =
+  paths['/api/admin/staff/invitations']['post']['requestBody']['content']['application/json'];
 export type AdminNewCycleInput =
   paths['/api/admin/groups/{id}/cycles']['post']['requestBody']['content']['application/json'];
 export type AdminGroupInput =
@@ -212,6 +216,16 @@ export const api = {
       `/api/groups/${encodeURIComponent(id)}/reviews`,
       input,
     ),
+  staffWorkspace: () => request<StaffWorkspace>('/api/admin/staff'),
+  staffInvite: (input: StaffInviteInput) =>
+    request<{ id: string }>('/api/admin/staff/invitations', input),
+  staffInviteRetry: (id: string) =>
+    request<{ id: string }>(
+      `/api/admin/staff/invitations/${encodeURIComponent(id)}/retry`,
+      {},
+    ),
+  finishStaffActivation: () =>
+    request<Session>('/api/auth/invitation/finish', {}),
   adminStartCycle: (id: string, input: AdminNewCycleInput) =>
     request<{ id: string }>(
       `/api/admin/groups/${encodeURIComponent(id)}/cycles`,

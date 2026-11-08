@@ -10,6 +10,7 @@ import { acceptInvitation, pendingInvitation } from './invitation.js';
 import { renderStatement, statementData } from './statement.js';
 import { registerRecovery } from './recovery.js';
 import { checkedFinalShareout } from './final-shareout.js';
+import { activateInvitations, runStaffJob } from './staff.js';
 import { checkedShareOut } from './shareout.js';
 import { checkedMeetings } from './meeting.js';
 import { checkedLoans, checkedLoanQuote } from './loans.js';
@@ -51,6 +52,8 @@ import {
   invitationPhoneBody,
   invitationBody,
   adminWorkspaceSchema,
+  staffInviteBody,
+  staffWorkspaceSchema,
   adminNewCycleBody,
   reviewWorkspaceSchema,
   reviewCommandBody,
@@ -66,6 +69,7 @@ interface Context {
   requires_mfa: boolean;
   mfa_verified: boolean;
   can_administer: boolean;
+  activation_pending?: boolean;
 }
 interface Identity {
   tokens: Tokens;
@@ -194,6 +198,9 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
       requires_mfa: data['requires_mfa'] || pendingInvitation(user),
       mfa_verified: data['mfa_verified'],
       can_administer: data['can_administer'] === true,
+      ...(data['activation_pending'] === true
+        ? { activation_pending: true }
+        : {}),
     };
     const factors = Array.isArray(user['factors'])
       ? user['factors'].flatMap((item: unknown) => {
@@ -364,6 +371,11 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
         setTokens(reply, tokens);
         // Return context via the same verified Auth and database checks as any request.
         request.cookies[COOKIE] = sealTokens(tokens, config.cookieKey);
+        try {
+          await activateInvitations(backend, tokens.access_token);
+        } catch {
+          /* The verified session can explicitly retry activation; no group role was granted. */
+        }
         return session(await identity(request, reply));
       },
     );
@@ -452,7 +464,111 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
         );
         setTokens(reply, tokens);
         request.cookies[COOKIE] = sealTokens(tokens, config.cookieKey);
+        try {
+          await activateInvitations(backend, tokens.access_token);
+        } catch {
+          /* The verified session can explicitly retry activation; no group role was granted. */
+        }
         return session(await identity(request, reply));
+      },
+    );
+    app.post(
+      '/api/auth/invitation/finish',
+      {
+        schema: {
+          body: { type: 'object', additionalProperties: false },
+          response: { 200: sessionSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        if (!user.context.mfa_verified) throw new ApiError(403, 'MFA_REQUIRED');
+        await activateInvitations(
+          configured().backend,
+          user.tokens.access_token,
+        );
+        return session(await identity(request, reply));
+      },
+    );
+    app.get(
+      '/api/admin/staff',
+      { schema: { response: { 200: staffWorkspaceSchema, ...errors } } },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        return configured().backend.rpc(
+          'staff_workspace',
+          {},
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Body: {
+        request_id: string;
+        organisation_id: string;
+        person_id: string | null;
+        name: string;
+        phone: string;
+        email: string;
+        role: string;
+        reason: string;
+      };
+    }>(
+      '/api/admin/staff/invitations',
+      {
+        schema: {
+          body: staffInviteBody,
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply),
+          b = request.body;
+        const result = object(
+          await configured().backend.rpc(
+            'staff_invite',
+            {
+              p_request: b.request_id,
+              p_org: b.organisation_id,
+              p_person: b.person_id,
+              p_name: b.name,
+              p_phone: b.phone,
+              p_email: b.email,
+              p_role: b.role,
+              p_reason: b.reason,
+            },
+            user.tokens.access_token,
+          ),
+        );
+        return runStaffJob(
+          configured().backend,
+          user.tokens.access_token,
+          textField(result, 'id'),
+          'invite',
+        );
+      },
+    );
+    app.post<{ Params: { id: string } }>(
+      '/api/admin/staff/invitations/:id/retry',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          body: { type: 'object', additionalProperties: false },
+          response: { 200: adminResultSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        return runStaffJob(
+          configured().backend,
+          user.tokens.access_token,
+          request.params.id,
+          'invite',
+        );
       },
     );
     app.get(
