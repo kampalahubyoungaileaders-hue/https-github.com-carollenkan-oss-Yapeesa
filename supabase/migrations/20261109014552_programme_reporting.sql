@@ -42,7 +42,7 @@ declare org public.organisation;day date;result jsonb;begin
  paid as (select e.loan_id,a->>'period' period,sum((case when e.kind='repayment' then 1 else -1 end)*(a->>'principal')::numeric) principal,sum((case when e.kind='repayment' then 1 else -1 end)*(a->>'interest')::numeric) interest from events e cross join lateral jsonb_array_elements(e.allocations) a where e.kind in('repayment','reversal') group by e.loan_id,a->>'period'),
  instalments as materialized(select l.organisation_id,l.id loan_id,(s->>'due')::date due,(s->>'principal')::numeric principal,(s->>'interest')::numeric interest,greatest(0,(s->>'principal')::numeric-coalesce(p.principal,0)) principal_left,greatest(0,(s->>'interest')::numeric-coalesce(p.interest,0)) interest_left from live_loans l cross join lateral jsonb_array_elements(l.schedule) s left join paid p on p.loan_id=l.id and p.period=s->>'period'),
  latest_attendance as materialized(select distinct on(a.meeting_id,a.member_id) a.* from public.attendance a join meetings m on m.id=a.meeting_id order by a.meeting_id,a.member_id,a.revision desc),
- months as(select generate_series(date_trunc('month',day::timestamp)-interval '11 months',date_trunc('month',day::timestamp),interval '1 month')::date month),
+ months as(select generate_series(date_trunc('month',day::timestamp)-interval '11 months',date_trunc('month',day::timestamp),interval '1 month')::date as month_start),
  group_rows as(select g.id,g.name,g.status,g.currency,g.minor_digits,g.time_zone,
  (select count(distinct person_id)::text from public.membership where organisation_id=g.id and role='member' and starts_at<=now() and (ends_at is null or ends_at>now())) members,
  (select max(meeting_date) from meetings where organisation_id=g.id) last_meeting,
@@ -51,15 +51,15 @@ declare org public.organisation;day date;result jsonb;begin
  coalesce((select sum(principal_left+interest_left)::text from instalments where organisation_id=g.id and due<day),'0') arrears,
  (select count(distinct loan_id)::text from instalments where organisation_id=g.id and due<day and principal_left+interest_left>0) loans_in_arrears,
  jsonb_build_object('days_1_30',coalesce((select sum(principal_left+interest_left)::text from instalments where organisation_id=g.id and day-due between 1 and 30),'0'),'days_31_60',coalesce((select sum(principal_left+interest_left)::text from instalments where organisation_id=g.id and day-due between 31 and 60),'0'),'days_61_90',coalesce((select sum(principal_left+interest_left)::text from instalments where organisation_id=g.id and day-due between 61 and 90),'0'),'days_over_90',coalesce((select sum(principal_left+interest_left)::text from instalments where organisation_id=g.id and day-due>90),'0')) ageing,
- (select jsonb_agg(jsonb_build_object('month',mo.month,
- 'meetings',(select count(*)::text from meetings m where m.organisation_id=g.id and date_trunc('month',m.meeting_date)=mo.month),
- 'roster',(select count(*)::text from public.meeting_roster r join meetings m on m.id=r.meeting_id where r.organisation_id=g.id and date_trunc('month',m.meeting_date)=mo.month),
- 'present',(select count(*)::text from latest_attendance a join meetings m on m.id=a.meeting_id where a.organisation_id=g.id and a.status='present' and date_trunc('month',m.meeting_date)=mo.month),
- 'absent',(select count(*)::text from latest_attendance a join meetings m on m.id=a.meeting_id where a.organisation_id=g.id and a.status='absent' and date_trunc('month',m.meeting_date)=mo.month),
- 'excused',(select count(*)::text from latest_attendance a join meetings m on m.id=a.meeting_id where a.organisation_id=g.id and a.status='excused' and date_trunc('month',m.meeting_date)=mo.month),
- 'scheduled_due',coalesce((select sum(principal+interest)::text from instalments i where i.organisation_id=g.id and i.due<=day and date_trunc('month',i.due)=mo.month),'0'),
- 'repayments',coalesce((select sum(cash::numeric)::text from events e where e.organisation_id=g.id and (e.kind='repayment' or (e.kind='reversal' and jsonb_array_length(e.allocations)>0)) and date_trunc('month',e.meeting_date)=mo.month),'0'),
- 'shares',coalesce((select sum(t.amount::numeric)::text from public.group_txn t join meetings m on m.id=t.meeting_id where t.organisation_id=g.id and date_trunc('month',m.meeting_date)=mo.month),'0')) order by mo.month) from months mo) trends
+ (select jsonb_agg(jsonb_build_object('month',mo.month_start,
+ 'meetings',(select count(*)::text from meetings m where m.organisation_id=g.id and date_trunc('month',m.meeting_date)=mo.month_start),
+ 'roster',(select count(*)::text from public.meeting_roster r join meetings m on m.id=r.meeting_id where r.organisation_id=g.id and date_trunc('month',m.meeting_date)=mo.month_start),
+ 'present',(select count(*)::text from latest_attendance a join meetings m on m.id=a.meeting_id where a.organisation_id=g.id and a.status='present' and date_trunc('month',m.meeting_date)=mo.month_start),
+ 'absent',(select count(*)::text from latest_attendance a join meetings m on m.id=a.meeting_id where a.organisation_id=g.id and a.status='absent' and date_trunc('month',m.meeting_date)=mo.month_start),
+ 'excused',(select count(*)::text from latest_attendance a join meetings m on m.id=a.meeting_id where a.organisation_id=g.id and a.status='excused' and date_trunc('month',m.meeting_date)=mo.month_start),
+ 'scheduled_due',coalesce((select sum(principal+interest)::text from instalments i where i.organisation_id=g.id and i.due<=day and date_trunc('month',i.due)=mo.month_start),'0'),
+ 'repayments',coalesce((select sum(cash::numeric)::text from events e where e.organisation_id=g.id and (e.kind='repayment' or (e.kind='reversal' and jsonb_array_length(e.allocations)>0)) and date_trunc('month',e.meeting_date)=mo.month_start),'0'),
+ 'shares',coalesce((select sum(t.amount::numeric)::text from public.group_txn t join meetings m on m.id=t.meeting_id where t.organisation_id=g.id and date_trunc('month',m.meeting_date)=mo.month_start),'0')) order by mo.month_start) from months mo) trends
  from linked_groups g)
  select jsonb_build_object('id',org.id,'name',org.name,'as_of',day,'time_zone',org.time_zone,'groups',coalesce(jsonb_agg(to_jsonb(r)||jsonb_build_object('days_since_meeting',case when r.last_meeting is null then null else (day-r.last_meeting)::text end,'meeting_attention',r.status='active' and (r.last_meeting is null or r.last_meeting<=day-21),'repayment_attention',r.status='active' and r.arrears::numeric>0)),'[]'::jsonb)) into result from (select * from group_rows order by name,id) r;
  return result;
