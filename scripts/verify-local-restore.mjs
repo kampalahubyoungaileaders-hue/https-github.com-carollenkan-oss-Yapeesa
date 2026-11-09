@@ -553,16 +553,25 @@ try {
     }),
   );
 } finally {
-  if (restored) await restored.end();
   try {
-    await source.query('rollback');
-  } catch {
-    /* Connection may not have opened. */
+    try {
+      if (restored) await restored.end();
+    } finally {
+      try {
+        await source.query('rollback');
+      } catch {
+        /* Connection may not have opened. */
+      }
+      await source.end();
+    }
+  } finally {
+    try {
+      if (freshCreated)
+        await command(['rm', '--force', '--volumes', freshContainer]);
+      if (created && !freshCluster)
+        await docker(['dropdb', '-U', 'supabase_admin', '--if-exists', target]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   }
-  await source.end();
-  if (freshCreated)
-    await command(['rm', '--force', '--volumes', freshContainer]);
-  if (created && !freshCluster)
-    await docker(['dropdb', '-U', 'postgres', '--if-exists', target]);
-  await rm(directory, { recursive: true, force: true });
 }
