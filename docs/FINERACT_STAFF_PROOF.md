@@ -16,7 +16,9 @@ configuration and is not the bootstrap user's login password. Optional local
 bootstrap credentials stay in the process environment. Generated staff passwords
 and authentication keys stay in memory and never appear in output or artifacts.
 
-The proof creates two distinct staff users, each with a custom role. The writer
+The proof creates two distinct staff users, each with a custom role. Generated
+passwords satisfy the pinned strong policy, including its ban on consecutive
+repeating characters; the policy is never weakened for the proof. The writer
 receives only READ_CLIENT, CREATE_CLIENT and READ_AUDIT; the reader receives only
 READ_CLIENT. The test verifies the actual selected permission set rather than
 assuming role creation applied it. A pending, nonfinancial test client is created
@@ -50,3 +52,5 @@ Pinned upstream references:
 - [Role permissions API](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/useradministration/api/RolesApiResource.java)
 - [Audit API](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/commands/api/AuditsApiResource.java)
 - [Local integration configuration](https://github.com/apache/fineract/blob/1.12.0/integration-tests/src/test/java/org/apache/fineract/integrationtests/ConfigProperties.java)
+
+- [Strong password policy migration](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/resources/db/changelog/tenant/parts/0152_update_password_validation_policy.xml)

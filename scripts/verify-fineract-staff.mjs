@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import https from 'node:https';
 import { Buffer } from 'node:buffer';
 import { randomBytes } from 'node:crypto';
+import { localStaffPassword } from './fineract-test-credentials.mjs';
 
 // Only the disposable, loopback-bound Compose service is supported. No hosted
 // Fineract credentials, Supabase records, financial accounts or messages are used.
@@ -113,7 +114,7 @@ function id(result) {
 function actor(suffix) {
   return {
     username: `${prefix}_${suffix}`,
-    password: `Q7!${randomBytes(18).toString('hex')}a`,
+    password: localStaffPassword(),
   };
 }
 async function role(suffix, permissions) {
