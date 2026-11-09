@@ -22,7 +22,7 @@ globalThis.fetch = async (input, init) => {
   if (
     !response.ok &&
     ['localhost', '127.0.0.1'].includes(url.hostname) &&
-    /\/rest\/v1\/rpc\/(admin_|programme_report|staff_)/.test(url.pathname)
+    /\/rest\/v1\/rpc\/(admin_|programme_report|staff_|loan_)/.test(url.pathname)
   ) {
     const e = (await response.clone().json()) as {
       code?: string;
@@ -145,7 +145,7 @@ function lc(action: string, extra: object = {}) {
     policy_id: null,
     months: null,
     amount: null,
-    reason: 'Disposable programme loan',
+    reason: action === 'approve' ? '' : 'Disposable programme loan',
     ...extra,
   };
 }
