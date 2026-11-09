@@ -206,6 +206,11 @@ const ident = (value) => {
   return `"${value}"`;
 };
 async function fingerprint(client) {
+  // Administrators can have different login defaults. Compare canonical SQL and
+  // timestamp output, not session-dependent qualification or locale ordering.
+  await client.query(
+    "select set_config('search_path','pg_catalog',false),set_config('TimeZone','UTC',false),set_config('DateStyle','ISO,YMD',false)",
+  );
   const tables = (
     await client.query(
       'select schemaname,tablename from pg_tables where schemaname=any($1) order by schemaname,tablename',
@@ -215,7 +220,7 @@ async function fingerprint(client) {
   const data = [];
   for (const { schemaname, tablename } of tables) {
     const result = await client.query(
-      `select count(*)::text count, encode(extensions.digest(coalesce(string_agg(to_jsonb(t)::text,E'\\n' order by to_jsonb(t)::text),''),'sha256'),'hex') digest from ${ident(schemaname)}.${ident(tablename)} t`,
+      `select count(*)::text count, encode(extensions.digest(coalesce(string_agg(to_jsonb(t)::text,E'\\n' order by to_jsonb(t)::text collate "C"),''),'sha256'),'hex') digest from ${ident(schemaname)}.${ident(tablename)} t`,
     );
     data.push({ schema: schemaname, table: tablename, ...result.rows[0] });
   }

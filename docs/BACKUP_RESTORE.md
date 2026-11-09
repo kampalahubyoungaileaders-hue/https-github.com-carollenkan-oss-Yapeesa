@@ -13,6 +13,8 @@ new database in the local test cluster. It never overwrites the source database.
 The temporary archive and destination database are removed after verification.
 No archive containing Auth or gateway data is uploaded as a CI artifact.
 
+Fingerprint sessions use the same catalog-only search path, UTC/ISO timestamp
+format and C ordering, so login defaults cannot change SQL display or row order.
 PostgreSQL itself reparses CHECK expressions in empty temporary tables to
 normalize its dump/restore expression formatting; no application rows or source
 constraints are changed.
