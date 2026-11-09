@@ -48,7 +48,7 @@ jobs:
         env:
           FINERACT_LOCAL_IDENTITY_PROOF: '1'
       - name: Prepare disposable verified identities for SACCO acceptance
-        run: pnpm local:test-stack && pnpm local:provision
+        run: pnpm exec supabase stop && pnpm local:test-stack && pnpm local:provision
       - name: Verify native SACCO cash workflow through Yapesa
         run: node --env-file=.env --import tsx scripts/verify-sacco-engine.mjs
         env:
