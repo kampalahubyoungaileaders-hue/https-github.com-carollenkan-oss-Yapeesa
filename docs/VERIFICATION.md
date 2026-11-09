@@ -46,7 +46,10 @@ immutable; a restored officer retained own-group access and saw no unrelated
 journals. The private archive and temporary database are removed, not uploaded.
 PR [#17](https://github.com/kampalahubyoungaileaders-hue/https-github.com-carollenkan-oss-Yapeesa/pull/17)
 records its final required-check and merge status. This is not a hosted production
-backup or a fresh-cluster recovery exercise.
+backup. A second CI mode now exercises an empty independent cluster, including
+password-free role restoration, before repeating the database/security checks;
+its required-check result must be inspected on the exact PR head. See
+`BACKUP_RESTORE.md` for scope and hosted recovery limitations.
 
 ## Deployment and remaining limits
 

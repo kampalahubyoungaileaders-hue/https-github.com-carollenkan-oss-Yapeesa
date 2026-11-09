@@ -28,7 +28,7 @@ pinned unmodified service. It creates no financial accounts. See
 Remaining work:
 
 - Production backup scheduling, encrypted off-site retention and an isolated
-  hosted/fresh-cluster restore exercise.
+  hosted restore exercise.
 - Hosted Fineract staff mapping/credential storage, tenant templates and
   SACCO/lender workflows. Live
   hosting and the actual worked SACCO month/dividend examples are prerequisites

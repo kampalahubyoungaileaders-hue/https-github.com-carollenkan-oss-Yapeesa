@@ -26,6 +26,8 @@ jobs:
       - run: pnpm test:integration
       - name: Verify disposable backup and restore with security preserved
         run: node --env-file=.env scripts/verify-local-restore.mjs
+      - name: Verify recovery into an empty independent database cluster
+        run: node --env-file=.env scripts/verify-local-restore.mjs --fresh-cluster
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:live
       - name: Local Auth diagnostics on failure
