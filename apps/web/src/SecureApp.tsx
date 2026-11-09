@@ -5,6 +5,7 @@ import {
   newTransactionId,
   type Session,
   type GroupList,
+  type ProgrammeList,
   type SavedWorkspace,
   type Factor,
   type Receipt,
@@ -15,6 +16,7 @@ import { t } from '@yapesa/i18n';
 import { Icon } from './icons';
 import { exportRows } from './workspace';
 import InvitationForm from './InvitationForm';
+import ProgrammeReports from './ProgrammeReports';
 import Administration from './Administration';
 import RecoveryForm from './RecoveryForm';
 import ShareCorrection from './ShareCorrection';
@@ -84,6 +86,8 @@ export default function SecureApp() {
   const [factor, setFactor] = useState<Factor | null>(null);
   const [factorId, setFactorId] = useState('');
   const [groups, setGroups] = useState<GroupList>([]);
+  const [programmes, setProgrammes] = useState<ProgrammeList>([]);
+  const [programmeOpen, setProgrammeOpen] = useState(false);
   const [workspace, setWorkspace] = useState<SavedWorkspace | null>(null);
   const [selected, setSelected] = useState('');
   const [tab, setTab] = useState<Tab>('overview');
@@ -124,9 +128,12 @@ export default function SecureApp() {
       return;
     let cancelled = false;
     setLoading(true);
-    api
-      .groups()
-      .then(async (values) => {
+    Promise.all([api.groups(), api.programmes()])
+      .then(async ([values, programmeValues]) => {
+        if (!cancelled) {
+          setProgrammes(programmeValues);
+          if (!values.length && programmeValues.length) setProgrammeOpen(true);
+        }
         if (cancelled) return;
         setGroups(values);
         const first = values[0];
@@ -309,6 +316,8 @@ export default function SecureApp() {
       setSession({ configured: true, user: null });
       setWorkspace(null);
       setGroups([]);
+      setProgrammes([]);
+      setProgrammeOpen(false);
       setFactor(null);
       setReceipt(null);
     });
@@ -582,6 +591,13 @@ export default function SecureApp() {
         </div>
       </div>
     );
+  if (programmeOpen && programmes.length)
+    return (
+      <ProgrammeReports
+        choices={programmes}
+        onBack={() => setProgrammeOpen(false)}
+      />
+    );
   if (adminOpen && session.user.can_administer)
     return (
       <Administration
@@ -683,6 +699,18 @@ export default function SecureApp() {
                 {t(titleKeys[key])}
               </button>
             ))}
+          {programmes.length > 0 && (
+            <button
+              className="live-nav"
+              onClick={() => {
+                setMenu(false);
+                setProgrammeOpen(true);
+              }}
+            >
+              <Icon name="ledger" />
+              {t('programmeTitle')}
+            </button>
+          )}
           {session.user.can_administer && (
             <button
               className="live-nav"

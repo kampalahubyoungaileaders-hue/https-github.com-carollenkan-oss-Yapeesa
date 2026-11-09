@@ -219,6 +219,11 @@ try {
     'INTEGRATION',
     'DESKTOP',
     'PHONE',
+    'PROGRAMME_INTEGRATION',
+    'PROGRAMME_STALE',
+    'PROGRAMME_FOREIGN',
+    'PROGRAMME_DESKTOP',
+    'PROGRAMME_PHONE',
     'AUDIT_INTEGRATION',
     'AUDIT_DESKTOP',
     'AUDIT_PHONE',
@@ -261,6 +266,8 @@ try {
       [orgId],
     );
   }
+  await user('PROGRAMME', '+256700000070', true);
+  await user('PROGRAMME_OTHER', '+256700000071', true);
   const values = {
     SUPABASE_URL: status.API_URL,
     SUPABASE_PUBLISHABLE_KEY: status.ANON_KEY,

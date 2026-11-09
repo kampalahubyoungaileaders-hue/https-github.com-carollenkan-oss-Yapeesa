@@ -926,7 +926,10 @@ export const staffInviteBody = object({
   name: { type: 'string', maxLength: 150 },
   phone: { type: 'string', pattern: '^\\+[1-9][0-9]{6,14}$' },
   email: { type: 'string', format: 'email', maxLength: 254 },
-  role: { type: 'string', enum: ['secretary', 'treasurer', 'chair'] },
+  role: {
+    type: 'string',
+    enum: ['secretary', 'treasurer', 'chair', 'programme_officer'],
+  },
   reason: { type: 'string', minLength: 1, maxLength: 500 },
 });
 export const staffWorkspaceSchema = object({
@@ -939,7 +942,10 @@ export const staffWorkspaceSchema = object({
       name: string,
       phone: string,
       email: { type: 'string', format: 'email', maxLength: 254 },
-      role: { type: 'string', enum: ['secretary', 'treasurer', 'chair'] },
+      role: {
+        type: 'string',
+        enum: ['secretary', 'treasurer', 'chair', 'programme_officer'],
+      },
       recorded_at: string,
       reason: string,
       account_created: boolean,
@@ -977,4 +983,93 @@ export const recoveryWorkspaceSchema = object({
       },
     }),
   },
+});
+
+export const programmeListSchema = {
+  type: 'array',
+  items: object({ id: uuid, name: string, time_zone: string }),
+};
+const programmeAgeing = object({
+  days_1_30: integerString,
+  days_31_60: integerString,
+  days_61_90: integerString,
+  days_over_90: integerString,
+});
+const programmeTrend = object({
+  month: string,
+  meetings: integerString,
+  roster: integerString,
+  present: integerString,
+  absent: integerString,
+  excused: integerString,
+  scheduled_due: integerString,
+  repayments: signedIntegerString,
+  shares: signedIntegerString,
+});
+export const programmeReportSchema = object({
+  id: uuid,
+  name: string,
+  as_of: string,
+  time_zone: string,
+  groups: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      name: string,
+      status: { type: 'string', enum: ['active', 'inactive'] },
+      currency: string,
+      minor_digits: { type: 'integer', minimum: 0, maximum: 4 },
+      time_zone: string,
+      members: integerString,
+      last_meeting: { anyOf: [string, { type: 'null' }] },
+      days_since_meeting: { anyOf: [integerString, { type: 'null' }] },
+      meeting_attention: boolean,
+      repayment_attention: boolean,
+      share_contributions: signedIntegerString,
+      outstanding_principal: integerString,
+      arrears: integerString,
+      loans_in_arrears: integerString,
+      ageing: programmeAgeing,
+      trends: { type: 'array', items: programmeTrend },
+    }),
+  },
+  currencies: {
+    type: 'array',
+    items: object({
+      currency: string,
+      minor_digits: { type: 'integer', minimum: 0, maximum: 4 },
+      groups: integerString,
+      share_contributions: signedIntegerString,
+      outstanding_principal: integerString,
+      arrears: integerString,
+    }),
+  },
+});
+export const adminProgrammeWorkspaceSchema = object({
+  programmes: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      name: string,
+      country_code: string,
+      currency: string,
+      time_zone: string,
+      groups: { type: 'array', items: uuid },
+      officers: { type: 'array', items: uuid },
+    }),
+  },
+});
+export const adminProgrammeBody = object({
+  request_id: uuid,
+  device_id: uuid,
+  action: { type: 'string', enum: ['create', 'link_group', 'officer'] },
+  programme_id: nullableUuid,
+  group_id: nullableUuid,
+  person_id: nullableUuid,
+  enabled: { anyOf: [boolean, { type: 'null' }] },
+  name: { type: 'string', maxLength: 200 },
+  country_code: { type: 'string', maxLength: 2 },
+  currency: { type: 'string', maxLength: 3 },
+  time_zone: { type: 'string', maxLength: 100 },
+  reason: { type: 'string', minLength: 5, maxLength: 500 },
 });
