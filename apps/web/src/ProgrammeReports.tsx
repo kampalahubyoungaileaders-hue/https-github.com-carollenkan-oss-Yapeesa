@@ -323,7 +323,7 @@ export default function ProgrammeReports({
                 <dt>{t('programmeArrears')}</dt>
                 <dd>
                   {amount(g.arrears, g.currency, g.minor_digits)} ·{' '}
-                  {g.loans_in_arrears}
+                  {t('programmeLoansInArrears')}: {g.loans_in_arrears}
                 </dd>
               </dl>
               <h3>{t('programmeAgeing')}</h3>
