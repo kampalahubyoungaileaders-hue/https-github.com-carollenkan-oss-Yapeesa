@@ -56,6 +56,10 @@ test('verified officer downloads a scoped audit PDF on desktop and phone', async
     client_calc_version: 'groups-shares-v1',
     note: 'Disposable browser audit',
   });
+  await page
+    .getByRole('button', { name: 'Refresh records', exact: true })
+    .click();
+  await expect(page.locator('.live-stats')).toContainText('UGX 5,000');
   if ((page.viewportSize()?.width ?? 1440) < 760)
     await page
       .getByRole('button', { name: 'Open navigation', exact: true })
