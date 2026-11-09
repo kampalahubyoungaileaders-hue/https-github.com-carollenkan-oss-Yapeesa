@@ -1,4 +1,8 @@
-import { saccoFieldLabels } from '@yapesa/i18n';
+import {
+  saccoFieldLabels,
+  saccoOperationLabels,
+  saccoResourceLabels,
+} from '@yapesa/i18n';
 import { ApiError } from './backend.js';
 export type SaccoField = {
   key: string;
@@ -75,7 +79,7 @@ const dayNote = 'note?';
 export const saccoOperations: SaccoOperation[] = [
   op(
     'member.create',
-    'Register a member',
+    saccoOperationLabels['member.create']!,
     'members',
     staff,
     'clients',
@@ -84,7 +88,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'member.activate',
-    'Activate member',
+    saccoOperationLabels['member.activate']!,
     'members',
     managers,
     'clients/{id}?command=activate',
@@ -94,7 +98,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'member.identifier',
-    'Record an identity document',
+    saccoOperationLabels['member.identifier']!,
     'members',
     staff,
     'clients/{id}/identifiers',
@@ -104,7 +108,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.apply',
-    'Apply for a savings account',
+    saccoOperationLabels['savings.apply']!,
     'savings',
     staff,
     'savingsaccounts',
@@ -113,7 +117,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.approve',
-    'Approve savings application',
+    saccoOperationLabels['savings.approve']!,
     'savings',
     managers,
     'savingsaccounts/{id}?command=approve',
@@ -123,7 +127,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.activate',
-    'Activate savings account',
+    saccoOperationLabels['savings.activate']!,
     'savings',
     managers,
     'savingsaccounts/{id}?command=activate',
@@ -133,7 +137,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.deposit',
-    'Record cash deposit',
+    saccoOperationLabels['savings.deposit']!,
     'savings',
     cash,
     'savingsaccounts/{id}/transactions?command=deposit',
@@ -143,7 +147,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.withdraw',
-    'Record cash withdrawal',
+    saccoOperationLabels['savings.withdraw']!,
     'savings',
     cash,
     'savingsaccounts/{id}/transactions?command=withdrawal',
@@ -153,7 +157,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.interest.calculate',
-    'Calculate savings interest',
+    saccoOperationLabels['savings.interest.calculate']!,
     'savings',
     accounts,
     'savingsaccounts/{id}?command=calculateInterest',
@@ -163,7 +167,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.interest.post',
-    'Post savings interest',
+    saccoOperationLabels['savings.interest.post']!,
     'savings',
     accounts,
     'savingsaccounts/{id}?command=postInterest',
@@ -173,7 +177,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.undo',
-    'Reverse a savings transaction',
+    saccoOperationLabels['savings.undo']!,
     'savings',
     managers,
     'savingsaccounts/{id}/transactions/{subId}?command=undo',
@@ -184,7 +188,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'savings.close',
-    'Close savings account',
+    saccoOperationLabels['savings.close']!,
     'savings',
     managers,
     'savingsaccounts/{id}?command=close',
@@ -194,7 +198,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'share.apply',
-    'Apply for a share account',
+    saccoOperationLabels['share.apply']!,
     'shares',
     staff,
     'accounts/share',
@@ -203,7 +207,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'share.approve',
-    'Approve share account',
+    saccoOperationLabels['share.approve']!,
     'shares',
     managers,
     'accounts/share/{id}?command=approve',
@@ -213,7 +217,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'share.activate',
-    'Activate share account',
+    saccoOperationLabels['share.activate']!,
     'shares',
     managers,
     'accounts/share/{id}?command=activate',
@@ -223,7 +227,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'share.purchase',
-    'Request additional shares',
+    saccoOperationLabels['share.purchase']!,
     'shares',
     cash,
     'accounts/share/{id}?command=applyadditionalshares',
@@ -233,7 +237,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'share.redeem',
-    'Request share redemption',
+    saccoOperationLabels['share.redeem']!,
     'shares',
     cash,
     'accounts/share/{id}?command=redeemshares',
@@ -243,7 +247,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'dividend.declare',
-    'Declare share-product dividend',
+    saccoOperationLabels['dividend.declare']!,
     'share-products',
     accounts,
     'shareproduct/{id}/dividend',
@@ -253,7 +257,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'dividend.approve',
-    'Approve declared dividend',
+    saccoOperationLabels['dividend.approve']!,
     'share-products',
     managers,
     'shareproduct/{id}/dividend/{subId}?command=approve',
@@ -264,7 +268,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'loan.apply',
-    'Apply for a member loan',
+    saccoOperationLabels['loan.apply']!,
     'loans',
     lending,
     'loans',
@@ -273,7 +277,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'loan.quote',
-    'Preview repayment schedule',
+    saccoOperationLabels['loan.quote']!,
     'loans',
     lending,
     'loans?command=calculateLoanSchedule',
@@ -284,7 +288,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'loan.approve',
-    'Approve loan application',
+    saccoOperationLabels['loan.approve']!,
     'loans',
     managers,
     'loans/{id}?command=approve',
@@ -294,7 +298,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'loan.disburse',
-    'Record cash loan disbursement',
+    saccoOperationLabels['loan.disburse']!,
     'loans',
     cash,
     'loans/{id}?command=disburse',
@@ -304,7 +308,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'loan.repay',
-    'Record cash loan repayment',
+    saccoOperationLabels['loan.repay']!,
     'loans',
     cash,
     'loans/{id}/transactions?command=repayment',
@@ -314,7 +318,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'loan.guarantor',
-    'Add a member guarantor',
+    saccoOperationLabels['loan.guarantor']!,
     'loans',
     lending,
     'loans/{id}/guarantors',
@@ -324,7 +328,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'loan.writeoff',
-    'Write off an eligible loan',
+    saccoOperationLabels['loan.writeoff']!,
     'loans',
     managers,
     'loans/{id}/transactions?command=writeoff',
@@ -334,7 +338,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'closure.create',
-    'Close accounting period',
+    saccoOperationLabels['closure.create']!,
     'closures',
     accounts,
     'glclosures',
@@ -343,7 +347,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'checker.approve',
-    'Approve pending command',
+    saccoOperationLabels['checker.approve']!,
     'approvals',
     managers,
     'makercheckers/{id}?command=approve',
@@ -354,7 +358,7 @@ export const saccoOperations: SaccoOperation[] = [
   ),
   op(
     'checker.reject',
-    'Reject pending command',
+    saccoOperationLabels['checker.reject']!,
     'approvals',
     managers,
     'makercheckers/{id}?command=reject',
@@ -376,7 +380,7 @@ export const saccoResources: Record<
   }
 > = {
   members: {
-    label: 'Members and KYC',
+    label: saccoResourceLabels['members']!,
     path: 'clients',
     roles: staff,
     detail: 'clients/{id}?associations=all',
@@ -384,7 +388,7 @@ export const saccoResources: Record<
     page: true,
   },
   savings: {
-    label: 'Savings accounts',
+    label: saccoResourceLabels['savings']!,
     path: 'savingsaccounts',
     roles: staff,
     detail: 'savingsaccounts/{id}?associations=all',
@@ -392,7 +396,7 @@ export const saccoResources: Record<
     page: true,
   },
   shares: {
-    label: 'Share accounts',
+    label: saccoResourceLabels['shares']!,
     path: 'accounts/share',
     roles: staff,
     detail: 'accounts/share/{id}',
@@ -400,7 +404,7 @@ export const saccoResources: Record<
     page: true,
   },
   loans: {
-    label: 'Loans',
+    label: saccoResourceLabels['loans']!,
     path: 'loans',
     roles: staff,
     detail: 'loans/{id}?associations=all',
@@ -408,14 +412,14 @@ export const saccoResources: Record<
     page: true,
   },
   'savings-products': {
-    label: 'Savings products',
+    label: saccoResourceLabels['savings-products']!,
     path: 'savingsproducts',
     roles: staff,
     detail: 'savingsproducts/{id}',
     template: 'savingsproducts/template',
   },
   'share-products': {
-    label: 'Share products and dividends',
+    label: saccoResourceLabels['share-products']!,
     path: 'products/share',
     roles: staff,
     detail: 'products/share/{id}',
@@ -423,44 +427,49 @@ export const saccoResources: Record<
     page: true,
   },
   'loan-products': {
-    label: 'Loan products',
+    label: saccoResourceLabels['loan-products']!,
     path: 'loanproducts',
     roles: staff,
     detail: 'loanproducts/{id}',
     template: 'loanproducts/template',
   },
-  branches: { label: 'Branches', path: 'offices', roles: staff },
+  branches: {
+    label: saccoResourceLabels['branches']!,
+    path: 'offices',
+    roles: staff,
+  },
   tellers: {
-    label: 'Teller operations',
+    label: saccoResourceLabels['tellers']!,
     path: 'tellers',
     roles: cash,
     detail: 'tellers/{id}',
   },
   'ledger-accounts': {
-    label: 'Chart of accounts',
+    label: saccoResourceLabels['ledger-accounts']!,
     path: 'glaccounts',
     roles: accounts,
     detail: 'glaccounts/{id}',
   },
   journals: {
-    label: 'General ledger',
+    label: saccoResourceLabels['journals']!,
     path: 'journalentries',
     roles: accounts,
     page: true,
   },
   closures: {
-    label: 'Accounting period closes',
+    label: saccoResourceLabels['closures']!,
     path: 'glclosures',
     roles: accounts,
     detail: 'glclosures/{id}',
   },
   approvals: {
-    label: 'Approval queue',
-    path: 'makercheckers',
+    label: saccoResourceLabels['approvals']!,
+    path: 'makercheckers?includeJson=true',
     roles: managers,
+    detail: 'makercheckers/{id}',
   },
   reports: {
-    label: 'Reports',
+    label: saccoResourceLabels['reports']!,
     path: 'reports?fields=id,reportName,reportType,reportCategory,description,reportParameters',
     roles: accounts,
   },

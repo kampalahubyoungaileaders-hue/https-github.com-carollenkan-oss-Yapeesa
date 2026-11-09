@@ -27,4 +27,9 @@ export function t(key: MessageKey, locale: Locale = 'en'): string {
   const messages = { en };
   return messages[locale][key];
 }
-export { saccoText, saccoFieldLabels } from './sacco';
+export {
+  saccoText,
+  saccoFieldLabels,
+  saccoOperationLabels,
+  saccoResourceLabels,
+} from './sacco';

@@ -1020,6 +1020,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1031,6 +1032,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1042,6 +1044,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1053,6 +1056,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1064,6 +1068,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1075,6 +1080,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1086,6 +1092,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1128,6 +1135,7 @@ export interface paths {
               linked: boolean;
               roles: string[];
               username: string | null;
+              expected_username: string | null;
             };
           };
         };
@@ -1139,6 +1147,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1150,6 +1159,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1161,6 +1171,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1172,6 +1183,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1183,6 +1195,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1194,6 +1207,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1205,6 +1219,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1267,6 +1282,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1278,6 +1294,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1289,6 +1306,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1300,6 +1318,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1311,6 +1330,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1322,6 +1342,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1333,6 +1354,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1391,6 +1413,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1402,6 +1425,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1413,6 +1437,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1424,6 +1449,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1435,6 +1461,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1446,6 +1473,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1457,6 +1485,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1505,6 +1534,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1516,6 +1546,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1527,6 +1558,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1538,6 +1570,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1549,6 +1582,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1560,6 +1594,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1571,6 +1606,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1595,7 +1631,7 @@ export interface paths {
       parameters: {
         query?: {
           record?: string;
-          template?: boolean;
+          template?: 'true';
           offset?: string;
           client?: string;
           product?: string;
@@ -1638,6 +1674,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1649,6 +1686,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1660,6 +1698,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1671,6 +1710,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1682,6 +1722,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1693,6 +1734,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1704,6 +1746,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1743,6 +1786,7 @@ export interface paths {
             operation: string;
             record?: string;
             sub_record?: string;
+            review_hash?: string;
             values: {
               [key: string]: string;
             };
@@ -1769,6 +1813,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1780,6 +1825,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1791,6 +1837,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1802,6 +1849,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1813,6 +1861,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1824,6 +1873,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1835,6 +1885,145 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/saccos/{id}/identities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            device_id: string;
+            /** Format: uuid */
+            person: string;
+            user: string;
+            username: string;
+            reason: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+              fields?: string[];
+            };
+          };
+        };
+        /** @description Default Response */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+              fields?: string[];
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+              fields?: string[];
+            };
+          };
+        };
+        /** @description Default Response */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+              fields?: string[];
+            };
+          };
+        };
+        /** @description Default Response */
+        422: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+              fields?: string[];
+            };
+          };
+        };
+        /** @description Default Response */
+        502: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+              fields?: string[];
+            };
+          };
+        };
+        /** @description Default Response */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              error: string;
+              fields?: string[];
             };
           };
         };
@@ -1881,6 +2070,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1892,6 +2082,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1903,6 +2094,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1914,6 +2106,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1925,6 +2118,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1936,6 +2130,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -1947,6 +2142,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -2012,6 +2208,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -2023,6 +2220,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -2034,6 +2232,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -2045,6 +2244,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -2056,6 +2256,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -2067,6 +2268,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };
@@ -2078,6 +2280,7 @@ export interface paths {
           content: {
             'application/json': {
               error: string;
+              fields?: string[];
             };
           };
         };

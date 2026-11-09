@@ -1,3 +1,10 @@
+import type { SaccoCatalog, SaccoJson } from './sacco';
+export type {
+  SaccoCatalog,
+  SaccoJson,
+  SaccoField,
+  SaccoOperation,
+} from './sacco';
 import { v7 } from 'uuid';
 import type { paths } from './schema';
 export type ProgrammeList =
@@ -56,6 +63,7 @@ export class ClientError extends Error {
   constructor(
     public status: number,
     public code: string,
+    public fields?: string[],
   ) {
     super(code);
   }
@@ -116,7 +124,19 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
       typeof value.error === 'string'
         ? value.error
         : 'REQUEST_FAILED';
-    throw new ClientError(response.status, code);
+    const fields =
+      value &&
+      typeof value === 'object' &&
+      'fields' in value &&
+      Array.isArray(value.fields)
+        ? value.fields
+            .filter(
+              (f: unknown) =>
+                typeof f === 'string' && /^[A-Za-z0-9_]{1,80}$/.test(f),
+            )
+            .slice(0, 20)
+        : undefined;
+    throw new ClientError(response.status, code, fields);
   }
   return value as T;
 }
@@ -151,7 +171,66 @@ async function downloadPdf(path: string): Promise<Blob> {
     throw new ClientError(503, 'BACKEND_UNAVAILABLE');
   return response.blob();
 }
+export type SaccoList =
+  paths['/api/saccos']['get']['responses'][200]['content']['application/json'];
+export type SaccoSummary =
+  paths['/api/saccos/{id}']['get']['responses'][200]['content']['application/json'];
+export type SaccoCommand =
+  paths['/api/saccos/{id}/commands']['post']['requestBody']['content']['application/json'];
+export type SaccoSetup =
+  paths['/api/admin/saccos']['post']['requestBody']['content']['application/json'];
 export const api = {
+  saccos: () => request<SaccoList>('/api/saccos'),
+  saccoSummary: (id: string) => request<SaccoSummary>(`/api/saccos/${id}`),
+  saccoConnect: (
+    id: string,
+    body: { username: string; password: string; device_id: string },
+  ) => request(`/api/saccos/${id}/connect`, body),
+  saccoDisconnect: (id: string, device_id: string) =>
+    request(`/api/saccos/${id}/disconnect`, { device_id }),
+  saccoCatalog: (id: string) =>
+    request<SaccoCatalog>(`/api/saccos/${id}/catalog`),
+  saccoRecords: (
+    id: string,
+    resource: string,
+    query: Record<string, string> = {},
+  ) =>
+    request<SaccoJson>(
+      `/api/saccos/${id}/records/${resource}?${new URLSearchParams(query).toString()}`,
+    ),
+  saccoCommand: (id: string, body: SaccoCommand) =>
+    request<{
+      id?: string;
+      status: string;
+      result?: Record<string, string>;
+      data?: SaccoJson;
+    }>(`/api/saccos/${id}/commands`, body),
+  saccoAdministration: () =>
+    request<{
+      saccos: SaccoList;
+      instances: string[];
+      staff: {
+        organisation_id: string;
+        person_id: string;
+        name: string;
+        role: string;
+        engine_username: string | null;
+        engine_user_id: string | null;
+      }[];
+    }>('/api/admin/saccos'),
+  saccoAssignIdentity: (
+    id: string,
+    body: {
+      request_id: string;
+      device_id: string;
+      person: string;
+      user: string;
+      username: string;
+      reason: string;
+    },
+  ) => request<{ id: string }>(`/api/admin/saccos/${id}/identities`, body),
+  saccoSetup: (body: SaccoSetup) =>
+    request<{ id: string }>('/api/admin/saccos', body),
   loans: (id: string) =>
     request<LoanWorkspace>(`/api/groups/${encodeURIComponent(id)}/loans`),
   loanCommand: (id: string, input: LoanCommand) =>

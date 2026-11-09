@@ -96,6 +96,7 @@ test('SACCO metadata requires verified scoped staff and a server gateway; it nev
   assert.equal((await call('NONE', 'GET', '/api/saccos')).statusCode, 401);
   for (const label of [admin, teller, manager, foreign]) await login(label);
   await login(member, false);
+  assert.deepEqual((await call(member, 'GET', '/api/saccos')).json(), []);
   await login('AAL1', false, teller);
   assert.equal((await call('AAL1', 'GET', '/api/saccos')).statusCode, 403);
   assert.equal(
@@ -188,6 +189,36 @@ test('SACCO metadata requires verified scoped staff and a server gateway; it nev
   const c = await rpc('sacco_context', { p_org: org }, teller);
   assert.equal(c.status, 200);
   const context = c.body as { version: string };
+  await ok(admin, `/api/admin/saccos/${org}/identities`, {
+    request_id: v7(),
+    device_id: device,
+    person: tellerPerson,
+    user: '90001',
+    username: 'local_individual_teller',
+    reason: 'Disposable assigned individual identity',
+  });
+  const duplicate = await call(
+    admin,
+    'POST',
+    `/api/admin/saccos/${org}/identities`,
+    {
+      request_id: v7(),
+      device_id: device,
+      person: managerPerson,
+      user: '90001',
+      username: 'different_person',
+      reason: 'Disposable shared-account denial',
+    },
+  );
+  assert.equal(duplicate.statusCode, 409);
+  await ok(admin, `/api/admin/saccos/${org}/identities`, {
+    request_id: v7(),
+    device_id: device,
+    person: managerPerson,
+    user: '90002',
+    username: 'local_individual_manager',
+    reason: 'Disposable assigned independent identity',
+  });
   const credential = sealFineract(
     {
       username: 'local_individual_teller',
@@ -242,7 +273,7 @@ test('SACCO metadata requires verified scoped staff and a server gateway; it nev
   );
   assert.equal(
     denied.status,
-    409,
+    403,
     'One Fineract app user cannot represent two Yapesa people',
   );
   const request = v7(),

@@ -9,7 +9,8 @@ claim that SACCO acceptance or production onboarding is complete.
 
 `FINERACT_INSTANCES` is a server-only JSON map of approved instance keys to HTTPS
 base URLs ending in `/fineract-provider/api/v1/`. SACCO registration binds exactly
-one unique instance/tenant pair; URLs cannot be supplied by a browser. No default
+one unique instance/tenant pair and its canonical endpoint hash; URLs cannot be
+supplied by a browser or silently remapped by a server-setting change. No default
 tenant is accepted outside explicitly local tests. Hosting remains unprovisioned.
 
 Example shape (replace only in server settings, never with credentials in source):

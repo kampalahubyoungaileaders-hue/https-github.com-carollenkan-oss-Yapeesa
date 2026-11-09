@@ -47,6 +47,12 @@ jobs:
         run: node --env-file=.env scripts/verify-fineract-staff.mjs
         env:
           FINERACT_LOCAL_IDENTITY_PROOF: '1'
+      - name: Prepare disposable verified identities for SACCO acceptance
+        run: pnpm local:test-stack && pnpm local:provision
+      - name: Verify native SACCO cash workflow through Yapesa
+        run: node --env-file=.env --import tsx scripts/verify-sacco-engine.mjs
+        env:
+          FINERACT_LOCAL_SACCO_PROOF: '1'
       - name: Logs on failure
         if: failure()
         run: docker compose --env-file .env -f infra/fineract/docker-compose.yml logs --tail 150

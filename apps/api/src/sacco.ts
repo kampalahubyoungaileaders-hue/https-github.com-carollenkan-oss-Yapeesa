@@ -2,7 +2,11 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createHash } from 'node:crypto';
 import { ApiError, Backend, object, textField } from './backend.js';
 import type { ApiConfig } from './config.js';
-import { Fineract, type FineractCredentials } from './fineract.js';
+import {
+  Fineract,
+  fineractJson,
+  type FineractCredentials,
+} from './fineract.js';
 import { openFineract, sealFineract } from './sacco-credentials.js';
 import {
   saccoOperations,
@@ -23,7 +27,10 @@ const errorSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['error'],
-  properties: { error: { type: 'string' } },
+  properties: {
+    error: { type: 'string' },
+    fields: { type: 'array', items: { type: 'string' } },
+  },
 } as const;
 const nativeSchema = {
   type: ['object', 'array', 'string', 'null', 'boolean'],
@@ -81,6 +88,12 @@ export function registerSacco(
       tenant = textField(c, 'tenant_id'),
       version = textField(c, 'version');
     const endpoint = config?.fineractInstances?.[instance];
+    if (
+      endpoint &&
+      createHash('sha256').update(new URL(endpoint.url).href).digest('hex') !==
+        c['endpoint_hash']
+    )
+      throw new ApiError(409, 'FINERACT_CONNECTION_CHANGED');
     return { raw: c, roles: c['roles'] as string[], tenant, version, endpoint };
   }
   async function staff(user: StaffIdentity, org: string) {
@@ -119,6 +132,42 @@ export function registerSacco(
       permissions: auth['permissions'] as string[],
     };
   }
+  async function approvalQueue(
+    user: StaffIdentity,
+    org: string,
+    c: Awaited<ReturnType<typeof staff>>,
+  ) {
+    const scope = asArray(
+      await rpc('sacco_approval_scope', { p_org: org }, user),
+    );
+    const raw = asArray(
+      await c.client.request('GET', 'makercheckers?includeJson=true'),
+    );
+    return raw.flatMap((item) => {
+      const bound = scope.find((s) => s['command_id'] === item['id']);
+      if (!bound) return [];
+      const body =
+        typeof item['commandAsJson'] === 'string'
+          ? fineractJson(item['commandAsJson'])
+          : null;
+      const hash = createHash('sha256').update(canonical(body)).digest('hex');
+      if (!body || hash !== bound['body_hash']) return [];
+      return [
+        {
+          id: item['id'],
+          name: bound['actor_name'],
+          operation: bound['operation'],
+          status: item['processingResult'],
+          date: item['madeOnDate'],
+          review_hash: hash,
+          values: body,
+          can_check:
+            bound['fineract_user_id'] !== c.userId &&
+            bound['actor_id'] !== user.context.person_id,
+        },
+      ];
+    });
+  }
   app.get(
     '/api/saccos',
     {
@@ -156,6 +205,7 @@ export function registerSacco(
             linked: { type: 'boolean' },
             roles: { type: 'array', items: string },
             username: { type: ['string', 'null'] },
+            expected_username: { type: ['string', 'null'] },
           }),
           ...errors,
         },
@@ -168,6 +218,9 @@ export function registerSacco(
         configured: !!c.endpoint,
         linked: !!c.raw['link'],
         roles: c.roles,
+        expected_username: c.raw['expected_identity']
+          ? textField(object(c.raw['expected_identity']), 'username')
+          : null,
         username: c.raw['link']
           ? textField(object(c.raw['link']), 'username')
           : null,
@@ -197,6 +250,11 @@ export function registerSacco(
         c = await context(user, org);
       if (!config || !c.endpoint)
         throw new ApiError(503, 'FINERACT_NOT_CONFIGURED');
+      const assigned = c.raw['expected_identity']
+        ? object(c.raw['expected_identity'])
+        : null;
+      if (!assigned || request.body.username !== assigned['username'])
+        throw new ApiError(403, 'FINERACT_IDENTITY_NOT_ASSIGNED');
       const credentials: FineractCredentials = {
           username: request.body.username,
           password: request.body.password,
@@ -208,6 +266,7 @@ export function registerSacco(
       if (
         auth['authenticated'] !== true ||
         auth['username'] !== credentials.username ||
+        auth['userId'] !== assigned['user_id'] ||
         !Array.isArray(auth['permissions']) ||
         auth['permissions'].includes('ALL_FUNCTIONS')
       )
@@ -295,7 +354,7 @@ export function registerSacco(
     Params: { id: string; resource: string };
     Querystring: {
       record?: string;
-      template?: boolean;
+      template?: string;
       offset?: string;
       client?: string;
       product?: string;
@@ -312,7 +371,7 @@ export function registerSacco(
         querystring: obj(
           {
             record: string,
-            template: { type: 'boolean' },
+            template: { type: 'string', enum: ['true'] },
             offset: { type: 'string', pattern: '^(0|[1-9][0-9]{0,6})$' },
             client: string,
             product: string,
@@ -333,6 +392,15 @@ export function registerSacco(
         q = request.query;
       if (!r || !r.roles.some((role) => c.roles.includes(role)))
         throw new ApiError(403, 'PERMISSION_DENIED');
+      if (request.params.resource === 'approvals') {
+        const queue = await approvalQueue(user, request.params.id, c);
+        if (q.record) {
+          const found = queue.find((item) => item.id === q.record);
+          if (!found) throw new ApiError(404, 'SACCO_APPROVAL_NOT_AVAILABLE');
+          return found;
+        }
+        return { pageItems: queue, totalFilteredRecords: String(queue.length) };
+      }
       let path = q.template ? r.template : q.record ? r.detail : r.path;
       if (!path) throw new ApiError(400, 'INVALID_SACCO_OPERATION');
       if (q.record) path = path.replace('{id}', id(q.record));
@@ -368,6 +436,7 @@ export function registerSacco(
       operation: string;
       record?: string;
       sub_record?: string;
+      review_hash?: string;
       values: Record<string, string>;
     };
   }>(
@@ -382,6 +451,7 @@ export function registerSacco(
             operation: string,
             record: string,
             sub_record: string,
+            review_hash: { type: 'string', pattern: '^[a-f0-9]{64}$' },
             values: {
               type: 'object',
               maxProperties: 60,
@@ -420,28 +490,15 @@ export function registerSacco(
           status: 'preview',
           data: await c.client.request(op.method, path, body),
         };
-      // Require Fineract's own independent checker for every mutating customer command.
-      // Never quietly fall back to an immediate posting when controls are disabled.
-      const settings = object(await c.client.request('GET', 'configurations'));
-      if (
-        !asArray(settings['globalConfiguration']).some(
-          (s) => s['name'] === 'maker-checker' && s['enabled'] === true,
-        )
-      )
-        throw new ApiError(409, 'FINERACT_APPROVAL_CONTROLS_REQUIRED');
-      if (!op.checker) {
-        const policies = asArray(
-          await c.client.request('GET', 'permissions?makerCheckerable=true'),
-        );
-        if (
-          !policies.some(
-            (p) => p['code'] === op.permission && p['selected'] === true,
-          )
-        )
-          throw new ApiError(409, 'FINERACT_APPROVAL_CONTROLS_REQUIRED');
-      }
       const hash = createHash('sha256')
-        .update(canonical({ operation: op.id, path, body }))
+        .update(
+          canonical({
+            operation: op.id,
+            path,
+            body,
+            review_hash: input.review_hash ?? null,
+          }),
+        )
         .digest('hex');
       const prior = object(
         await rpc(
@@ -462,13 +519,41 @@ export function registerSacco(
           status: prior['status'],
           result: prior['result'],
         };
+      // Require Fineract's own independent checker for every mutating customer command.
+      // Never quietly fall back to an immediate posting when controls are disabled.
+      const settings = object(await c.client.request('GET', 'configurations'));
+      if (
+        !asArray(settings['globalConfiguration']).some(
+          (s) => s['name'] === 'maker-checker' && s['enabled'] === true,
+        )
+      )
+        throw new ApiError(409, 'FINERACT_APPROVAL_CONTROLS_REQUIRED');
+      if (!op.checker) {
+        const policies = asArray(
+          await c.client.request('GET', 'permissions?makerCheckerable=true'),
+        );
+        if (
+          !policies.some(
+            (p) => p['code'] === op.permission && p['selected'] === true,
+          )
+        )
+          throw new ApiError(409, 'FINERACT_APPROVAL_CONTROLS_REQUIRED');
+      }
+      if (op.checker) {
+        const queue = await approvalQueue(user, org, c),
+          item = queue.find((item) => item.id === input.record);
+        if (!item || !item.can_check || item.review_hash !== input.review_hash)
+          throw new ApiError(409, 'SACCO_REVIEW_CHANGED');
+      }
       // The same stable key is reused only on an explicit retry of this exact command.
       // A timeout is never treated as proof that the transaction failed.
       try {
         const response = object(
           await c.client.request(op.method, path, body, input.request_id),
         );
-        const result: Record<string, string> = {};
+        const result: Record<string, string> = {
+          body_hash: createHash('sha256').update(canonical(body)).digest('hex'),
+        };
         for (const [source, key] of [
           ['commandId', 'command_id'],
           ['resourceId', 'resource_id'],
@@ -521,6 +606,52 @@ export function registerSacco(
       }
     },
   );
+  app.post<{
+    Params: { id: string };
+    Body: {
+      request_id: string;
+      device_id: string;
+      person: string;
+      user: string;
+      username: string;
+      reason: string;
+    };
+  }>(
+    '/api/admin/saccos/:id/identities',
+    {
+      schema: {
+        params: obj({ id: uuid }),
+        body: obj({
+          request_id: uuid,
+          device_id: uuid,
+          person: uuid,
+          user: { type: 'string', pattern: '^[1-9][0-9]{0,18}$' },
+          username: { type: 'string', minLength: 1, maxLength: 100 },
+          reason: { type: 'string', minLength: 1, maxLength: 500 },
+        }),
+        response: { 200: obj({ id: uuid }), ...errors },
+      },
+    },
+    async (request, reply) => {
+      const user = await authorise(request, reply);
+      if (!user.context.can_administer)
+        throw new ApiError(403, 'PERMISSION_DENIED');
+      const b = request.body;
+      return rpc(
+        'sacco_assign_identity',
+        {
+          p_request: b.request_id,
+          p_device: b.device_id,
+          p_org: request.params.id,
+          p_person: b.person,
+          p_user: b.user,
+          p_username: b.username,
+          p_reason: b.reason,
+        },
+        user,
+      );
+    },
+  );
   app.get(
     '/api/admin/saccos',
     {
@@ -537,6 +668,7 @@ export function registerSacco(
         throw new ApiError(403, 'PERMISSION_DENIED');
       return {
         saccos: await rpc('sacco_list', {}, user),
+        ...object(await rpc('sacco_administration', {}, user)),
         instances: Object.keys(config?.fineractInstances ?? {}),
       };
     },
@@ -623,6 +755,14 @@ export function registerSacco(
           p_role: b.role ?? null,
           p_enabled: b.enabled ?? null,
           p_reason: b.reason,
+          p_endpoint_hash:
+            b.action === 'create'
+              ? createHash('sha256')
+                  .update(
+                    new URL(config!.fineractInstances![b.instance!]!.url).href,
+                  )
+                  .digest('hex')
+              : null,
         },
         user,
       );

@@ -107,6 +107,7 @@ export class Fineract {
       !url.pathname.startsWith(this.base.pathname)
     )
       throw new ApiError(400, 'INVALID_FINERACT_OPERATION');
+    const mutating = method !== 'GET' && path !== 'authentication';
     const payload =
       body === undefined ? undefined : Buffer.from(JSON.stringify(body));
     if (payload && payload.length > 64 * 1024)
@@ -145,7 +146,7 @@ export class Fineract {
             reject(
               new ApiError(
                 503,
-                method === 'GET'
+                !mutating
                   ? 'FINERACT_UNAVAILABLE'
                   : 'FINERACT_OUTCOME_UNCERTAIN',
               ),
@@ -158,6 +159,39 @@ export class Fineract {
               res.statusCode >= 300
             ) {
               const status = res.statusCode ?? 503;
+              if (
+                mutating &&
+                ![400, 401, 403, 404, 405, 409, 422].includes(status)
+              ) {
+                reject(new ApiError(503, 'FINERACT_OUTCOME_UNCERTAIN'));
+                return;
+              }
+              let fields: string[] = [];
+              try {
+                const result = fineractJson(
+                  Buffer.concat(chunks).toString('utf8'),
+                );
+                if (
+                  result &&
+                  typeof result === 'object' &&
+                  !Array.isArray(result) &&
+                  Array.isArray(result['errors'])
+                )
+                  fields = result['errors']
+                    .flatMap((value) =>
+                      value &&
+                      typeof value === 'object' &&
+                      !Array.isArray(value) &&
+                      typeof value['parameterName'] === 'string' &&
+                      /^[A-Za-z0-9_]{1,80}$/.test(value['parameterName'])
+                        ? [value['parameterName']]
+                        : [],
+                    )
+                    .slice(0, 20);
+              } catch {
+                /* Never expose raw upstream error bodies. */
+              }
+
               reject(
                 new ApiError(
                   status === 401
@@ -178,6 +212,7 @@ export class Fineract {
                         : status >= 500
                           ? 'FINERACT_UNAVAILABLE'
                           : 'FINERACT_REQUEST_REJECTED',
+                  fields,
                 ),
               );
               return;
@@ -196,9 +231,7 @@ export class Fineract {
         reject(
           new ApiError(
             503,
-            method === 'GET'
-              ? 'FINERACT_UNAVAILABLE'
-              : 'FINERACT_OUTCOME_UNCERTAIN',
+            !mutating ? 'FINERACT_UNAVAILABLE' : 'FINERACT_OUTCOME_UNCERTAIN',
           ),
         ),
       );
