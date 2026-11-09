@@ -22,6 +22,28 @@ for (const url of [config.supabaseUrl, env['TEST_DB_URL']!])
     ['127.0.0.1', 'localhost'].includes(new URL(url).hostname),
     'Integration fixtures require a local stack',
   );
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  const response = await originalFetch(input, init);
+  const url = new URL(String(input));
+  if (
+    !response.ok &&
+    ['localhost', '127.0.0.1'].includes(url.hostname) &&
+    url.pathname.startsWith('/rest/v1/rpc/')
+  ) {
+    const failure = (await response.clone().json()) as {
+      code?: string;
+      message?: string;
+    };
+    console.error(
+      'Local ledger RPC diagnostic',
+      url.pathname,
+      failure.code,
+      failure.message,
+    );
+  }
+  return response;
+};
 const app = buildApp(config);
 const db = new pg.Client({ connectionString: env['TEST_DB_URL'] });
 await db.connect();
@@ -619,6 +641,7 @@ test('real Auth, SQL isolation, balanced posting, replay and session revocation'
   );
 });
 test.after(async () => {
+  globalThis.fetch = originalFetch;
   await app.close();
   await db.end();
 });

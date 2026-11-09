@@ -184,11 +184,15 @@ export const recoveryCodeBody = object({
   code: mfaBody.properties.code,
 });
 export const recoveryPinBody = object({ pin: phonePinBody.properties.pin });
-export const recoverySchema = object({
-  requires_mfa: boolean,
-  mfa_verified: boolean,
-  factors: { type: 'array', items: object({ id: uuid, name: string }) },
-});
+export const recoverySchema = object(
+  {
+    requires_mfa: boolean,
+    mfa_verified: boolean,
+    enrollment_allowed: boolean,
+    factors: { type: 'array', items: object({ id: uuid, name: string }) },
+  },
+  ['requires_mfa', 'mfa_verified', 'factors'],
+);
 export const recoveryResultSchema = object({
   ok: boolean,
   cleanup_complete: boolean,
@@ -941,6 +945,36 @@ export const staffWorkspaceSchema = object({
       account_created: boolean,
       activated: boolean,
       cancelled: boolean,
+    }),
+  },
+});
+
+export const recoveryRequestBody = object({
+  request_id: uuid,
+  reason: { type: 'string', minLength: 1, maxLength: 500 },
+});
+export const recoveryApprovalBody = object({
+  request_id: uuid,
+  evidence: { type: 'string', minLength: 1, maxLength: 500 },
+  identity_verified: boolean,
+});
+export const recoveryWorkspaceSchema = object({
+  cases: {
+    type: 'array',
+    items: object({
+      id: uuid,
+      person_id: uuid,
+      name: string,
+      phone: string,
+      reason: string,
+      recorded_at: string,
+      prepared: boolean,
+      reset: boolean,
+      recovered: boolean,
+      approvals: {
+        type: 'array',
+        items: object({ actor_id: uuid, evidence: string, eligible: boolean }),
+      },
     }),
   },
 });

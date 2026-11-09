@@ -10,6 +10,7 @@ import {
 import { t } from '@yapesa/i18n';
 import NewCycle from './NewCycle';
 import StaffInvitations from './StaffInvitations';
+import AuthenticatorRecovery from './AuthenticatorRecovery';
 
 type Group = AdminWorkspace['groups'][number];
 type Command = { request_id: string; device_id: string };
@@ -364,6 +365,7 @@ export default function Administration({ onBack }: { onBack: () => void }) {
       {data && (
         <>
           <StaffInvitations workspace={data} onChanged={load} />
+          <AuthenticatorRecovery />
           <div className="admin-grid">
             <section className="admin-card" aria-label={t('adminCreateGroup')}>
               <h2>{t('adminCreateGroup')}</h2>

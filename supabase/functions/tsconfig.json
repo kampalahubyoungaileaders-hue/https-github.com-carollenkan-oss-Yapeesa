@@ -5,5 +5,10 @@
     "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": ["egosms-auth/*.ts", "staff-admin/*.ts", "tests/*.ts"]
+  "include": [
+    "egosms-auth/*.ts",
+    "staff-admin/*.ts",
+    "mfa-reset/*.ts",
+    "tests/*.ts"
+  ]
 }

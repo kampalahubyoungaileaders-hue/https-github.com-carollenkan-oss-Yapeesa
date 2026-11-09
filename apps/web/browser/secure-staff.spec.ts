@@ -125,6 +125,14 @@ test('administrator prepares one account and the officer activates it only after
       .getByRole('button', { name: 'Verify code', exact: true })
       .click();
     await expect(officer.locator('.sidebar-workspace strong')).toHaveText(name);
+    await expect(
+      officer.getByRole('heading', {
+        name: 'Local group A',
+        exact: true,
+        level: 1,
+      }),
+    ).toBeVisible();
+    await expect(officer.getByRole('alert')).toHaveCount(0);
     expect(
       await officer.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

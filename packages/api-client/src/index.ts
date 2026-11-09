@@ -28,6 +28,8 @@ export type ReviewWorkspace =
   paths['/api/groups/{id}/reviews']['get']['responses'][200]['content']['application/json'];
 export type ReviewCommand =
   paths['/api/groups/{id}/reviews']['post']['requestBody']['content']['application/json'];
+export type RecoveryWorkspace =
+  paths['/api/admin/authenticator-recovery']['get']['responses'][200]['content']['application/json'];
 export type StaffWorkspace =
   paths['/api/admin/staff']['get']['responses'][200]['content']['application/json'];
 export type StaffInviteInput =
@@ -215,6 +217,29 @@ export const api = {
     request<{ id: string }>(
       `/api/groups/${encodeURIComponent(id)}/reviews`,
       input,
+    ),
+  recoveryRequest: (request_id: string, reason: string) =>
+    request<{ id: string }>('/api/auth/recovery/lost-authenticator', {
+      request_id,
+      reason,
+    }),
+  recoveryEnroll: () => request<Factor>('/api/auth/recovery/enroll', {}),
+  recoveryWorkspace: () =>
+    request<RecoveryWorkspace>('/api/admin/authenticator-recovery'),
+  recoveryApprove: (
+    id: string,
+    request_id: string,
+    evidence: string,
+    identity_verified: boolean,
+  ) =>
+    request<{ id: string }>(
+      `/api/admin/authenticator-recovery/${encodeURIComponent(id)}/approve`,
+      { request_id, evidence, identity_verified },
+    ),
+  recoveryReset: (id: string) =>
+    request<{ id: string }>(
+      `/api/admin/authenticator-recovery/${encodeURIComponent(id)}/reset`,
+      {},
     ),
   staffWorkspace: () => request<StaffWorkspace>('/api/admin/staff'),
   staffInvite: (input: StaffInviteInput) =>

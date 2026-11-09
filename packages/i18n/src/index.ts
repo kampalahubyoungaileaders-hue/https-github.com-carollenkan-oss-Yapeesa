@@ -1,4 +1,5 @@
 import { finalShareout } from './shareout';
+import { authenticatorRecovery } from './authenticatorRecovery';
 import { staff } from './staff';
 import { reviews } from './reviews';
 import { secure } from './secure';
@@ -9,6 +10,7 @@ const en = {
   ...secure,
   ...reviews,
   ...staff,
+  ...authenticatorRecovery,
   appName: 'Yapesa',
   tagline: 'Digital records for groups, lenders and SACCOs.',
   phase: 'Foundation · Phase 0',
