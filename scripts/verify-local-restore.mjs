@@ -9,6 +9,11 @@ import pg from 'pg';
 
 // This is deliberately restricted to the disposable test database. It never
 // accepts a hosted connection or overwrites an existing database.
+const freshCluster = process.argv.includes('--fresh-cluster');
+assert(
+  process.argv.slice(2).every((arg) => arg === '--fresh-cluster'),
+  'Unknown restore option',
+);
 const url = new URL(process.env.TEST_DB_URL ?? '');
 assert(
   ['localhost', '127.0.0.1'].includes(url.hostname),
@@ -33,14 +38,17 @@ const target = `restore_check_${randomBytes(8).toString('hex')}`;
 const directory = await mkdtemp(join(tmpdir(), 'yapesa-restore-'));
 const source = new pg.Client({ connectionString: url.href });
 let restored,
-  created = false;
-function docker(args, input) {
+  created = false,
+  freshCreated = false;
+const freshContainer = `yapesa_recovery_${randomBytes(8).toString('hex')}`;
+let bootstrapRole;
+const bootstrapPassword = randomBytes(32).toString('base64url');
+function command(args, input, env = process.env) {
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      'docker',
-      ['exec', ...(input ? ['-i'] : []), container, ...args],
-      { stdio: ['pipe', 'pipe', 'pipe'] },
-    );
+    const child = spawn('docker', args, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env,
+    });
     const chunks = [],
       errors = [];
     let length = 0;
@@ -69,12 +77,140 @@ function docker(args, input) {
     child.stdin.end(input);
   });
 }
+function docker(args, input, destination = container) {
+  return command(
+    ['exec', ...(input ? ['-i'] : []), destination, ...args],
+    input,
+  );
+}
+async function roleFingerprint(client, excluded = '') {
+  const roles = (
+    await client.query(
+      `select rolname,rolsuper,rolinherit,rolcreaterole,rolcreatedb,rolcanlogin,rolreplication,rolconnlimit,rolvaliduntil::text,rolbypassrls,rolconfig from pg_roles where rolname !~ '^pg_' and rolname<>$1 order by rolname`,
+      [excluded],
+    )
+  ).rows;
+  const memberships = (
+    await client.query(
+      `select r.rolname role,m.rolname member,g.rolname grantor,a.admin_option,a.inherit_option,a.set_option from pg_auth_members a join pg_roles r on r.oid=a.roleid join pg_roles m on m.oid=a.member join pg_roles g on g.oid=a.grantor where r.rolname<>$1 and m.rolname<>$1 order by role,member,grantor`,
+      [excluded],
+    )
+  ).rows;
+  return { roles, memberships };
+}
+async function startFreshCluster() {
+  // Reuse binaries/extensions, never the source volume or provider bootstrap SQL.
+  const image = (
+    await command(['inspect', '--format', '{{.Image}}', container])
+  )
+    .toString()
+    .trim();
+  assert(
+    /^sha256:[a-f0-9]{64}$/.test(image),
+    'Expected an immutable local image ID',
+  );
+  const boot = `set -eu
+umask 077
+mkdir /tmp/recovery
+printf '%s\n' "$YAPESA_RESTORE_PASSWORD" > /tmp/recovery/password
+bindir=$(pg_config --bindir)
+"$bindir/initdb" -D /tmp/recovery/data -U "$YAPESA_RESTORE_ROLE" --encoding=UTF8 --locale=C.UTF-8 --auth-local=trust --auth-host=scram-sha-256 --pwfile=/tmp/recovery/password >/dev/null
+rm /tmp/recovery/password
+printf 'host all all 0.0.0.0/0 scram-sha-256\n' >> /tmp/recovery/data/pg_hba.conf
+unset YAPESA_RESTORE_PASSWORD
+exec "$bindir/postgres" -D /tmp/recovery/data -c listen_addresses='*' -c unix_socket_directories=/tmp -c max_connections=30`;
+  // Only this disposable container gets a generated, in-memory bootstrap secret.
+  // Docker inherits it by name: it never appears in command arguments or logs.
+  await command(
+    [
+      'run',
+      '--detach',
+      '--name',
+      freshContainer,
+      '--user',
+      'postgres',
+      '--publish',
+      '127.0.0.1::5432',
+      '--tmpfs',
+      '/tmp:rw,nosuid,size=768m',
+      '--env',
+      'YAPESA_RESTORE_PASSWORD',
+      '--env',
+      'YAPESA_RESTORE_ROLE',
+      '--entrypoint',
+      '/bin/sh',
+      image,
+      '-c',
+      boot,
+    ],
+    undefined,
+    {
+      ...process.env,
+      YAPESA_RESTORE_PASSWORD: bootstrapPassword,
+      YAPESA_RESTORE_ROLE: bootstrapRole,
+    },
+  );
+  freshCreated = true;
+  const binding = JSON.parse(
+    (
+      await command([
+        'inspect',
+        '--format',
+        '{{json .NetworkSettings.Ports}}',
+        freshContainer,
+      ])
+    ).toString(),
+  )['5432/tcp'];
+  assert.equal(binding.length, 1);
+  assert.equal(binding[0].HostIp, '127.0.0.1');
+  assert(/^\d+$/.test(binding[0].HostPort));
+  const connection = {
+    host: '127.0.0.1',
+    port: Number(binding[0].HostPort),
+    user: bootstrapRole,
+    password: bootstrapPassword,
+    database: 'postgres',
+    connectionTimeoutMillis: 2000,
+  };
+  let ready = false;
+  for (let attempt = 0; attempt < 45; attempt++) {
+    const probe = new pg.Client(connection);
+    try {
+      await probe.connect();
+      ready = true;
+    } catch {
+      /* Initdb is still running. */
+    } finally {
+      await probe.end();
+    }
+    if (ready) break;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  assert(ready, 'Fresh recovery cluster did not become ready');
+  const client = new pg.Client(connection);
+  await client.connect();
+  try {
+    assert.deepEqual(
+      (await roleFingerprint(client, bootstrapRole)).roles,
+      [],
+      'Destination must start without application/provider roles',
+    );
+  } finally {
+    await client.end();
+  }
+  return connection;
+}
 const schemas = ['public', 'private', 'auth', 'supabase_migrations'];
 const ident = (value) => {
   assert(/^[a-z_][a-z0-9_]*$/.test(value));
   return `"${value}"`;
 };
 async function fingerprint(client) {
+  // Administrators can have different login defaults. Compare canonical SQL and
+  // timestamp output, not session-dependent qualification or locale ordering.
+  await client.query(
+    "select set_config('search_path','pg_catalog',false),set_config('TimeZone','UTC',false),set_config('DateStyle','ISO,YMD',false)",
+  );
   const tables = (
     await client.query(
       'select schemaname,tablename from pg_tables where schemaname=any($1) order by schemaname,tablename',
@@ -84,7 +220,7 @@ async function fingerprint(client) {
   const data = [];
   for (const { schemaname, tablename } of tables) {
     const result = await client.query(
-      `select count(*)::text count, encode(extensions.digest(coalesce(string_agg(to_jsonb(t)::text,E'\\n' order by to_jsonb(t)::text),''),'sha256'),'hex') digest from ${ident(schemaname)}.${ident(tablename)} t`,
+      `select count(*)::text count, encode(extensions.digest(coalesce(string_agg(to_jsonb(t)::text,E'\\n' order by to_jsonb(t)::text collate "C"),''),'sha256'),'hex') digest from ${ident(schemaname)}.${ident(tablename)} t`,
     );
     data.push({ schema: schemaname, table: tablename, ...result.rows[0] });
   }
@@ -186,6 +322,33 @@ try {
     .rows[0].snapshot;
   assert(/^[A-Fa-f0-9-]+$/.test(snapshot));
   const expected = await fingerprint(source);
+  const expectedRoles = await roleFingerprint(source);
+  bootstrapRole = (
+    await source.query('select rolname from pg_roles where oid=10')
+  ).rows[0]?.rolname;
+  assert(
+    /^[a-z_][a-z0-9_]*$/.test(bootstrapRole),
+    'Expected a conventional local bootstrap role',
+  );
+  const rolesArchive = freshCluster
+    ? await docker([
+        'pg_dumpall',
+        '-U',
+        'supabase_admin',
+        '--roles-only',
+        '--no-role-passwords',
+        '--no-password',
+      ])
+    : null;
+  if (rolesArchive) {
+    assert(
+      !/\bPASSWORD\s+'/.test(rolesArchive.toString()),
+      'Role passwords must be excluded',
+    );
+    await writeFile(join(directory, 'roles.sql'), rolesArchive, {
+      mode: 0o600,
+    });
+  }
   assert(
     expected.data.some(
       (t) =>
@@ -209,8 +372,6 @@ try {
   await source.query('commit');
   // Owners and grants are preserved. --no-owner would silently turn bounded
   // SECURITY DEFINER executors into postgres-owned functions after restoration.
-  await docker(['createdb', '-U', 'postgres', '--template=template0', target]);
-  created = true;
   const contents = (await docker(['pg_restore', '--list'], archive)).toString(
     'utf8',
   );
@@ -218,33 +379,105 @@ try {
     contents.includes('TABLE public person'),
     'Archive must contain core records',
   );
-  if (/\bSCHEMA - public\b/.test(contents))
-    await docker([
-      'psql',
+  let restoreConnection;
+  let destination = container;
+  let restoreRole = 'supabase_admin';
+  if (freshCluster) {
+    restoreConnection = await startFreshCluster();
+    destination = freshContainer;
+    restoreRole = bootstrapRole;
+    await docker(
+      [
+        'psql',
+        '-h',
+        '/tmp',
+        '-U',
+        bootstrapRole,
+        '-d',
+        'postgres',
+        '--quiet',
+        '-v',
+        'ON_ERROR_STOP=1',
+      ],
+      // OID 10 is PostgreSQL's bootstrap grantor. Preserve that identity rather
+      // than weakening role memberships to accommodate a different bootstrap.
+      // initdb created it already; replay its ALTER and all other CREATEs.
+      Buffer.from(
+        rolesArchive
+          .toString()
+          .split('\n')
+          .filter(
+            (line) =>
+              line !== `CREATE ROLE ${bootstrapRole};` &&
+              line !== `CREATE ROLE "${bootstrapRole}";`,
+          )
+          .join('\n'),
+      ),
+      destination,
+    );
+    const roleClient = new pg.Client(restoreConnection);
+    await roleClient.connect();
+    try {
+      assert.deepEqual(
+        await roleFingerprint(roleClient),
+        expectedRoles,
+        'Fresh-cluster role flags, settings and memberships must match',
+      );
+    } finally {
+      await roleClient.end();
+    }
+  }
+  await docker(
+    [
+      'createdb',
+      ...(freshCluster ? ['-h', '/tmp'] : []),
       '-U',
-      'postgres',
-      '-d',
+      restoreRole,
+      '--template=template0',
       target,
-      '-v',
-      'ON_ERROR_STOP=1',
-      '-c',
-      'DROP SCHEMA IF EXISTS public CASCADE',
-    ]);
+    ],
+    undefined,
+    destination,
+  );
+  created = true;
+  if (/\bSCHEMA - public\b/.test(contents))
+    await docker(
+      [
+        'psql',
+        ...(freshCluster ? ['-h', '/tmp'] : []),
+        '-U',
+        restoreRole,
+        '-d',
+        target,
+        '-v',
+        'ON_ERROR_STOP=1',
+        '-c',
+        'DROP SCHEMA IF EXISTS public CASCADE',
+      ],
+      undefined,
+      destination,
+    );
   await docker(
     [
       'pg_restore',
+      ...(freshCluster ? ['-h', '/tmp'] : []),
       '-U',
-      'supabase_admin',
+      restoreRole,
       '-d',
       target,
       '--exit-on-error',
       '--no-password',
     ],
     await readFile(file),
+    destination,
   );
   const restoreUrl = new URL(url.href);
   restoreUrl.pathname = `/${target}`;
-  restored = new pg.Client({ connectionString: restoreUrl.href });
+  restored = new pg.Client(
+    freshCluster
+      ? { ...restoreConnection, database: target }
+      : { connectionString: restoreUrl.href },
+  );
   await restored.connect();
   assert.deepEqual(
     await fingerprint(restored),
@@ -319,7 +552,17 @@ try {
   }
   console.log(
     JSON.stringify({
-      proof: 'local-database-restore',
+      proof: freshCluster
+        ? 'local-fresh-cluster-restore'
+        : 'local-database-restore',
+      freshCluster,
+      ...(freshCluster
+        ? {
+            rolesAndMembershipsMatched: true,
+            rolePasswordsExcluded: true,
+            sourceImageReusedWithoutSourceVolumes: true,
+          }
+        : {}),
       tables: expected.data.length,
       immutableTriggers: expected.triggers.length,
       rowPolicies: expected.policies.length,
@@ -329,19 +572,31 @@ try {
       journalBalanced: true,
       immutableWritesRejected: true,
       restoredOfficerIsolationVerified: true,
-      limitation:
-        'Disposable database in the same cluster; hosted backups and fresh-cluster role restoration remain unverified.',
+      limitation: freshCluster
+        ? 'Disposable empty cluster using the local source image; hosted recovery, off-site retention, external secrets and service configuration remain unverified.'
+        : 'Disposable database in the same cluster; hosted backups and fresh-cluster role restoration remain unverified.',
     }),
   );
 } finally {
-  if (restored) await restored.end();
   try {
-    await source.query('rollback');
-  } catch {
-    /* Connection may not have opened. */
+    try {
+      if (restored) await restored.end();
+    } finally {
+      try {
+        await source.query('rollback');
+      } catch {
+        /* Connection may not have opened. */
+      }
+      await source.end();
+    }
+  } finally {
+    try {
+      if (freshCreated)
+        await command(['rm', '--force', '--volumes', freshContainer]);
+      if (created && !freshCluster)
+        await docker(['dropdb', '-U', 'supabase_admin', '--if-exists', target]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   }
-  await source.end();
-  if (created)
-    await docker(['dropdb', '-U', 'postgres', '--if-exists', target]);
-  await rm(directory, { recursive: true, force: true });
 }

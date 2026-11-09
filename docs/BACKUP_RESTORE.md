@@ -13,6 +13,8 @@ new database in the local test cluster. It never overwrites the source database.
 The temporary archive and destination database are removed after verification.
 No archive containing Auth or gateway data is uploaded as a CI artifact.
 
+Fingerprint sessions use the same catalog-only search path, UTC/ISO timestamp
+format and C ordering, so login defaults cannot change SQL display or row order.
 PostgreSQL itself reparses CHECK expressions in empty temporary tables to
 normalize its dump/restore expression formatting; no application rows or source
 constraints are changed.
@@ -29,12 +31,40 @@ Supabase-managed object owners can be preserved without granting new privileges
 to application users. Owners and grants are deliberately preserved;
 restoring with --no-owner could change the security boundary of bounded functions.
 
-This proves a disposable database restore within a cluster that already has its
-roles and extensions. It does not prove a fresh-cluster disaster recovery or a
-hosted production backup. PostgreSQL roles are cluster-wide and need a separately
-protected role/bootstrap manifest before a fresh-cluster restore. A real deployment
-also requires compatible extension versions, external service configuration and
-application secrets, with credentials kept out of ordinary backups and logs.
+An additional CI step restores into an **empty, independent cluster**:
+
+```sh
+node --env-file=.env scripts/verify-local-restore.mjs --fresh-cluster
+```
+
+This mode reuses the source container's immutable image ID for compatible
+PostgreSQL/extension binaries, but mounts no source volume and bypasses provider
+initialization scripts. `initdb` creates a new cluster with only PostgreSQL's
+built-in roles and the source's bootstrap administrator identity (OID 10). The
+test asserts that no other application/provider roles exist before restoring
+them. PostgreSQL role grants depend on the bootstrap grantor identity: changing
+its name and then replaying GRANTED BY statements can fail. The role manifest
+omits only that administrator's already-completed CREATE ROLE; its exact ALTER
+settings and all other role creation/grants are replayed and compared.
+
+A separate `pg_dumpall --roles-only --no-role-passwords` manifest restores role
+flags, settings and memberships. Their fingerprints must match the source before
+restoring the database. Passwords are excluded: database login credentials must
+be provisioned separately during a real recovery. The generated test bootstrap
+password is passed by environment name, never as a command argument or log; its
+only temporary password file is private and removed immediately after initdb.
+The container binds a random port on 127.0.0.1, requires SCRAM for TCP connections
+and is removed with its volumes after the proof. Database archives and the role
+manifest remain private temporary files and are never CI artifacts.
+
+The same data/security comparisons, balanced journal, immutable-write rejection
+and restored officer isolation checks run in both modes. The independent-cluster
+proof exercises SQL/database recovery only. It does not restore Supabase's hosted
+control plane, Auth service configuration, signing keys, SMS credentials, external
+files, Vault encryption keys or other external secrets. It does not configure
+production scheduling or off-site retention. A real recovery also needs a
+compatible extension inventory, separately protected service/credential bootstrap,
+and application/API verification against the isolated hosted destination.
 
 Before live customer records, the project owner must provide an approved hosted
 backup path, define retention and off-site encrypted storage, and run a restore
