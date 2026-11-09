@@ -147,6 +147,35 @@ test('audit exports preserve original and reversing evidence with verified scope
     before,
     'Export must not write money',
   );
+  const oldMembership = (
+    await db.query(
+      'select role,ends_at from public.membership where organisation_id=$1 and person_id=$2',
+      [org, env['TEST_MEETING_SECRETARY_PERSON']],
+    )
+  ).rows;
+  assert(oldMembership.length > 0);
+  try {
+    await db.query(
+      'update public.membership set ends_at=now() where organisation_id=$1 and person_id=$2',
+      [org, env['TEST_MEETING_SECRETARY_PERSON']],
+    );
+    assert.equal(
+      (await call(sec, 'GET', pdf)).statusCode,
+      403,
+      'Revocation applies to an existing verified session',
+    );
+  } finally {
+    for (const membership of oldMembership)
+      await db.query(
+        'update public.membership set ends_at=$4 where organisation_id=$1 and person_id=$2 and role=$3',
+        [
+          org,
+          env['TEST_MEETING_SECRETARY_PERSON'],
+          membership.role,
+          membership.ends_at,
+        ],
+      );
+  }
   const privileges = (
     await db.query(
       "select has_table_privilege('yapesa_audit','public.journal','INSERT') money_write,has_function_privilege('authenticated','private.audit_sources(uuid)','EXECUTE') source_helper",

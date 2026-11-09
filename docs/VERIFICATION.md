@@ -1,67 +1,75 @@
 # Verification status
 
-Updated 4 November 2026. Current results and deployment details are recorded in
-[the secure web pull request](https://github.com/kampalahubyoungaileaders-hue/https-github.com-carollenkan-oss-Yapeesa/pull/2).
+Updated 9 November 2026. The build brief remains the product source of truth;
+passing a development release does not mean every phase is complete.
 
-## Verified release functionality
+## Verified group functionality
 
-- Local `pnpm check`: lint, formatting, strict TypeScript, unit/property/security
-  tests and builds. Generated OpenAPI/client files reproduce without a diff.
-- All three GitHub workflows passed at `c972532`: CI `41778977533`, secure web
-  `41778977562`, browser checks `41778977531`. New changes must pass again.
-- Disposable actual Supabase Auth/Postgres tests cover phone/PIN, staff TOTP,
-  organisation isolation, denied direct writes, role/factor/session revocation,
-  balanced immutable journals, integer parity, lockout and repeated transactions.
-- Desktop/360px browser checks cover saved purchases, interrupted-response retry,
-  persistence/reload, journal inspection, invitation setup, PIN confirmation,
-  explicit-only SMS requests, required MFA and browser storage boundaries.
-- Docker CI verified pinned Fineract, Java 21 and PostgreSQL 17 service readiness.
-- Android source is checked in and JavaScript/Hermes export passes. Native APK
-  compilation and reference-device measurements remain deferred by the founder.
+The web group engine covers administration, share purchases and reversals,
+Social fund, fines, configured scheduled loans, meeting attendance and
+cash reconciliation, two-officer closing, final share-out and individual
+cash-handover receipts, next-cycle carry-forward, and calculation/closed-record
+review requests. Closed financial adjustments stay locked pending a worked policy.
 
-## Hosted deployment and account
+Staff invitations require phone/PIN activation and a verified authenticator.
+Lost-authenticator recovery requires two distinct verified administrators, recorded
+identity checks, a fresh SMS session and a new verified factor. Self-approval is
+forbidden. Prepared recovery blocks old staff/financial sessions independently
+of Auth factor deletion. Verified platform-admin oversight reads are preserved;
+actual group-officer membership is still required for financial approvals.
 
-The dedicated Yapesa Supabase project has four migrations and RLS enabled.
-The signed EgoSMS hook and phone confirmations are enabled; public signup is off.
-Handset SMS delivery and real phone verification succeeded. The first
-administrator chose its PIN privately and verified a TOTP factor. An actual AAL2
-session was checked before activating its membership in an audited transaction.
-No live savings groups or financial records have been invented.
+Recovery PR [#16](https://github.com/kampalahubyoungaileaders-hue/https-github.com-carollenkan-oss-Yapeesa/pull/16)
+passed all four required jobs on `864d735a376254bdad9fcc44784d112f66e453ab`, merged
+as `14e7484e90dea4965262c1209cb6ffb93ec0ad89`, and was confirmed live on Render.
+Supabase has sixteen canonical migrations through the administrator-scope correction.
+Read-only production checks confirmed healthy web/API responses, no-store session
+responses, rejected signed-out administrator reads, no anonymous scope execution,
+no client journal INSERT privilege and zero invented financial records.
 
-The free Frankfurt Render service hosts web and API on one origin at
-https://yapesa-web.onrender.com/#live . Server configuration was explicitly
-approved by the founder. Verified health 200, session `configured:true`,
-cross-origin invitation rejection 403 and no server secrets in browser assets.
-The service can sleep; a cold-start delay was observed. Browser requests now
-allow 90 seconds and do not automatically retry uncertain mutations.
+## Audit exports and restore proof
 
-The latest security advisor returned no database RLS notices, and one Auth warning:
-[leaked-password protection is disabled](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
-Provider passwords are server-derived opaque credentials, rather than raw PINs.
-This is not a claim of independent security certification or production readiness.
+Audit extracts preserve exact source evidence as text, actor/device references,
+linked originals/reversals and balanced journals. Unit checks and a rendered
+four-page layout preserve accented names and integers beyond JavaScript's safe
+integer range. Actual disposable Auth/RLS tests verify officer/admin access,
+member and foreign-group denial, and exports that do not write money. Desktop
+and phone download acceptance is included. PR
+[#18](https://github.com/kampalahubyoungaileaders-hue/https-github.com-carollenkan-oss-Yapeesa/pull/18)
+records its final required-check and merge status.
 
-## Separate remaining work
+The same-cluster disposable pg_dump/pg_restore proof passed after real integration
+fixtures: data fingerprints, owners/effective grants, RLS, definitions, triggers,
+constraints, indexes and sequences matched; journals remained balanced and
+immutable; a restored officer retained own-group access and saw no unrelated
+journals. The private archive and temporary database are removed, not uploaded.
+PR [#17](https://github.com/kampalahubyoungaileaders-hue/https-github.com-carollenkan-oss-Yapeesa/pull/17)
+records its final required-check and merge status. This is not a hosted production
+backup or a fresh-cluster recovery exercise.
 
-GitHub main-branch protection is configured: pull requests and passing `checks`,
-`local-stack`, `secure-web` and `web-browser` jobs are required, branches must be
-up to date, and administrator bypass is disabled. Force pushes and deletions stay
-disallowed. The check jobs passed at `8b5da29`; the final PR records later runs.
+## Deployment and remaining limits
 
-Groups administration now covers explicit cycle setup, ledger-member registration,
-existing verified staff roles, retry receipts and audited changes. Disposable real-Auth
-integration tests pass for these controls and for preserved historical member names.
-The administration PR records the latest complete browser/CI results.
+Development web/API: https://yapesa-web.onrender.com/#live . The free service can
+sleep; requests allow cold starts and do not automatically retry uncertain writes.
+Supabase Auth, signed EgoSMS delivery and the first administrator's real phone and
+TOTP verification were confirmed earlier. No live financial fixtures or unsolicited
+messages are created by release checks. Server secrets stay off browser clients.
+The security advisor reports the existing leaked-password-protection Auth warning,
+with no database RLS notices at the recovery release.
 
-Server-side PDF share statements are implemented with member filtering, exact
-integer totals, journal references and embedded fonts. The statement PR records
-its current CI and browser download results; sample rendering is checked with Poppler.
+Branch protection requires up-to-date pull requests and successful `checks`,
+`local-stack`, `secure-web` and `web-browser` jobs without administrator bypass.
+Each new head must pass; prior green results do not substitute for that head.
+Local checks cover lint, formatting, strict types, domain/security tests and builds;
+generated OpenAPI/client files must reproduce without a diff.
 
-SMS PIN recovery retains staff authenticator checks, uses a purpose-bound expiring
-cookie, clears the PIN lock and revokes sessions. The recovery pull request records
-the current real-Auth/browser verification and deployment status.
+Programme relationships/dashboards, attendance and repayment trends, arrears and
+programme exports remain. Production backup scheduling, encrypted off-site retention
+and an isolated hosted/fresh-cluster restoration are not yet configured or proven.
+Pinned Fineract/Java 21/PostgreSQL 17 readiness passes Docker CI, but per-staff
+Fineract identity, tenant templates and SACCO/lender workflows remain. Live hosting
+and actual worked SACCO month/dividend examples are prerequisites for financial
+acceptance; group tables must never emulate their accounting.
 
-Additional Auth-account invitations, customer-supplied group data, lost-factor recovery,
-full meeting/loan/share-out engines, offline mobile sync and writer
-transfer, live reversal endpoints, programme views and Fineract staff/tenant flows
-remain later phases. Production backup/restore drills and monitoring are not yet
-accepted. See `OPEN_QUESTIONS.md` and the phase acceptance checks in `BUILD_BRIEF.md`.
+Android source and JavaScript/Hermes export exist. Native APK compilation/device
+measurements and offline workflows remain explicitly deferred by the founder.
+See `WEB_COMPLETION.md`, `OPEN_QUESTIONS.md` and `BUILD_BRIEF.md`.

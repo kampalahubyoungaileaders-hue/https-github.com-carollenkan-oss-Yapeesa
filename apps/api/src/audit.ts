@@ -186,12 +186,10 @@ export async function renderAudit(
     y = doc.y + 5;
     doc.fontSize(10).text(data.groupName, 44, y, { width, lineBreak: true });
     y = doc.y + 5;
-    doc
-      .fontSize(8)
-      .text(`${t('auditGroupRef')}: ${data.groupId}`, 44, y, {
-        width,
-        lineBreak: true,
-      });
+    doc.fontSize(8).text(`${t('auditGroupRef')}: ${data.groupId}`, 44, y, {
+      width,
+      lineBreak: true,
+    });
     y = doc.y + 5;
     doc
       .fontSize(8)
