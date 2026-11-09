@@ -22,9 +22,7 @@ globalThis.fetch = async (input, init) => {
   if (
     !response.ok &&
     ['localhost', '127.0.0.1'].includes(url.hostname) &&
-    /\/rest\/v1\/rpc\/(admin_programme|programme_report|staff_)/.test(
-      url.pathname,
-    )
+    /\/rest\/v1\/rpc\/(admin_|programme_report|staff_)/.test(url.pathname)
   ) {
     const e = (await response.clone().json()) as {
       code?: string;
@@ -182,6 +180,9 @@ test('programme officers see scoped group aggregates, exact arrears and trends w
       time_zone: 'Africa/Kampala',
     })
   ).id;
+  await db.query(
+    "insert into public.currency_reference(code,minor_digits) values('KES',2) on conflict do nothing",
+  );
   const kes = (
     await post(
       '/api/admin/groups',
