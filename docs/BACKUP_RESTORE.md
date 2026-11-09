@@ -19,7 +19,7 @@ constraints are changed.
 
 Verification compares every row's content through SHA-256 fingerprints for public,
 private, Auth and migration-history tables. It also compares RLS policies, relation
-owners and grants, private/public function definitions and owners, and immutable
+owners and effective grants (including implicit owner privileges), private/public function definitions and owners, and immutable
 triggers. Restored journal lines must still balance and anonymous/client journal
 privileges must remain restricted. An actual restored officer session must retain
 its own journal access and see no journals from an unrelated group. Even the

@@ -71,6 +71,43 @@ async function login(label: string) {
     code: totp(env[`TEST_${label}_TOTP`]!),
   });
 }
+async function compareVisibility(label: string) {
+  const cookie = cookies.get(label)!.get('yapesa_session')!;
+  const token = openTokens(cookie, config!.cookieKey).access_token;
+  const claims = JSON.parse(
+    Buffer.from(token.split('.')[1]!, 'base64url').toString('utf8'),
+  ) as Record<string, unknown>;
+  const ids = (
+    await db.query('select id from public.organisation order by id')
+  ).rows.map((row) => row.id);
+  await db.query('begin');
+  try {
+    await db.query("select set_config('request.jwt.claims',$1,true)", [
+      JSON.stringify(claims),
+    ]);
+    await db.query('set local role authenticated');
+    const rows = (
+      await db.query(
+        'select o.id,private.is_officer(o.id) expected_officer,o.id in(select private.officer_organisations()) cached_officer,private.can_read_org(o.id) expected_read,o.id in(select private.readable_organisations()) cached_read from unnest($1::uuid[]) o(id)',
+        [ids],
+      )
+    ).rows;
+    for (const row of rows) {
+      assert.equal(
+        row.cached_officer,
+        row.expected_officer,
+        `${label}: officer scope changed for ${row.id}`,
+      );
+      assert.equal(
+        row.cached_read,
+        row.expected_read,
+        `${label}: readable scope changed for ${row.id}`,
+      );
+    }
+  } finally {
+    await db.query('rollback');
+  }
+}
 test('two verified independent administrators reset lost factors; fresh SMS and a new TOTP unlock recovery without changing journals', async () => {
   const before = (
     await db.query('select count(*)::text count from public.journal')
@@ -122,6 +159,30 @@ test('two verified independent administrators reset lost factors; fresh SMS and 
   assert.equal((await call('RECOVERY', 'GET', '/api/groups')).statusCode, 401); // Recovery cookie cannot become a login cookie.
   for (const actor of ['ADMIN', 'MEETING_ADMIN', 'LOST_ADMIN'])
     await login(actor);
+  await ok('MEMBER', '/api/auth/login', {
+    phone: env['TEST_MEMBER_PHONE'],
+    pin: env['TEST_PIN'],
+  });
+  await login('A');
+  for (const actor of ['ADMIN', 'MEETING_ADMIN', 'LOST_ADMIN', 'A', 'MEMBER'])
+    await compareVisibility(actor);
+  const funded = (
+    await db.query(
+      'select organisation_id,count(*)::text count from public.group_txn group by organisation_id order by organisation_id limit 1',
+    )
+  ).rows[0];
+  assert(funded, 'Existing integration fixtures must contain share records');
+  const oversight = await call(
+    'ADMIN',
+    'GET',
+    `/api/groups/${funded.organisation_id}`,
+  );
+  assert.equal(oversight.statusCode, 200, oversight.body);
+  assert.equal(
+    String(oversight.json().transactions.length),
+    funded.count,
+    'Verified administrators retain complete oversight records',
+  );
   const endpoint = `/api/admin/authenticator-recovery/${saved.id}`;
   const approval = (evidence: string) => ({
     request_id: v7(),
@@ -193,6 +254,7 @@ test('two verified independent administrators reset lost factors; fresh SMS and 
   ).access_token;
   await ok('ADMIN', `${endpoint}/reset`, {});
   await ok('ADMIN', `${endpoint}/reset`, {});
+  await compareVisibility('LOST_ADMIN');
   assert.equal(
     (
       await db.query(
@@ -255,6 +317,7 @@ test('two verified independent administrators reset lost factors; fresh SMS and 
     code: totp(factor.secret),
   });
   assert.equal(verified.user.can_administer, true);
+  await compareVisibility('LOST_ADMIN');
   const events = await db.query(
     'select phase from private.mfa_recovery_event where recovery_id=$1 order by recorded_at,phase',
     [saved.id],

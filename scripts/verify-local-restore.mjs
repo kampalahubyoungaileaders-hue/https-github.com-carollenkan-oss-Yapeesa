@@ -90,13 +90,13 @@ async function fingerprint(client) {
   }
   const relations = (
     await client.query(
-      "select n.nspname,c.relname,c.relrowsecurity,c.relforcerowsecurity,pg_get_userbyid(c.relowner) owner,array(select x::text from unnest(c.relacl) x order by x::text) acl from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind in ('r','p','S') order by n.nspname,c.relname",
+      "select n.nspname,c.relname,c.relrowsecurity,c.relforcerowsecurity,pg_get_userbyid(c.relowner) owner,array(select x::text from unnest(coalesce(c.relacl,acldefault((case when c.relkind='S' then 's' else 'r' end)::\"char\",c.relowner))) x order by x::text) acl from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind in ('r','p','S') order by n.nspname,c.relname",
       [schemas],
     )
   ).rows;
   const functions = (
     await client.query(
-      "select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) args,pg_get_userbyid(p.proowner) owner,p.prosecdef,array(select x::text from unnest(p.proacl) x order by x::text) acl,p.proconfig,encode(extensions.digest(pg_get_functiondef(p.oid),'sha256'),'hex') definition from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname=any($1) and p.prokind='f' order by n.nspname,p.proname,args",
+      "select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) args,pg_get_userbyid(p.proowner) owner,p.prosecdef,array(select x::text from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) x order by x::text) acl,p.proconfig,encode(extensions.digest(pg_get_functiondef(p.oid),'sha256'),'hex') definition from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname=any($1) and p.prokind='f' order by n.nspname,p.proname,args",
       [['public', 'private']],
     )
   ).rows;
