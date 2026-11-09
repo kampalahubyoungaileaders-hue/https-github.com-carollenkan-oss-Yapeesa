@@ -1,3 +1,4 @@
+import { auditData, renderAudit } from './audit.js';
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
@@ -688,6 +689,76 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
         );
         if (!result) throw new ApiError(404, 'GROUP_NOT_FOUND');
         return result;
+      },
+    );
+    app.get<{
+      Params: { id: string };
+      Querystring: { from: string; to: string; reference?: string };
+    }>(
+      '/api/groups/:id/audit.pdf',
+      {
+        config: { rateLimit: { max: 6, timeWindow: '1 minute' } },
+        schema: {
+          params: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          querystring: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['from', 'to'],
+            properties: {
+              from: { type: 'string', format: 'date' },
+              to: { type: 'string', format: 'date' },
+              reference: { type: 'string', format: 'uuid' },
+            },
+          },
+          response: {
+            200: {
+              description: 'Scoped group audit extract',
+              content: {
+                'application/pdf': {
+                  schema: { type: 'string', format: 'binary' },
+                },
+              },
+            },
+            ...errors,
+            404: errorSchema,
+          },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        if (!user.context.mfa_verified) throw new ApiError(403, 'MFA_REQUIRED');
+        const raw = await configured().backend.rpc(
+          'group_audit_extract',
+          {
+            p_org: request.params.id,
+            p_from: request.query.from,
+            p_to: request.query.to,
+            p_record: request.query.reference ?? null,
+          },
+          user.tokens.access_token,
+        );
+        const data = auditData(
+          raw,
+          request.params.id,
+          request.query.from,
+          request.query.to,
+          request.query.reference,
+        );
+        const pdf = await renderAudit(data);
+        return reply
+          .type('application/pdf')
+          .header('Cache-Control', 'no-store')
+          .header('Cross-Origin-Resource-Policy', 'same-origin')
+          .header(
+            'Content-Disposition',
+            `attachment; filename="yapesa-audit-${request.params.id}.pdf"`,
+          )
+          .send(pdf);
       },
     );
     app.get<{ Params: { id: string }; Querystring: { member_id?: string } }>(

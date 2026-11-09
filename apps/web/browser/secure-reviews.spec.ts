@@ -116,7 +116,10 @@ test('two group officers resolve calculation and closed-meeting reviews while mo
     await panel
       .getByRole('button', { name: 'Open calculation review', exact: true })
       .click();
-    let card = panel.locator('.review-case').first();
+    let card = panel.locator('.review-case').filter({
+      hasText:
+        'Compare the saved old client amount with the signed cash record',
+    });
     await expect(card).toBeVisible();
     await card.getByText('Propose review outcome', { exact: true }).click();
     await card
@@ -140,7 +143,10 @@ test('two group officers resolve calculation and closed-meeting reviews while mo
       .click();
     await expect(card).toContainText('Your approval is recorded.');
     await nav(treas);
-    let tcCard = treas.locator('.review-case').first();
+    let tcCard = treas.locator('.review-case').filter({
+      hasText:
+        'Compare the saved old client amount with the signed cash record',
+    });
     await expect(tcCard).toContainText('Current officer approvals: 1 / 2');
     await tcCard.getByRole('checkbox').check();
     await tcCard
@@ -209,7 +215,9 @@ test('two group officers resolve calculation and closed-meeting reviews while mo
     await closed
       .getByRole('button', { name: 'Save review request', exact: true })
       .click();
-    card = panel.locator('.review-case').first();
+    card = panel.locator('.review-case').filter({
+      hasText: 'Check a disputed closed meeting without reopening its ledger',
+    });
     await expect(card).toContainText('Check a disputed closed meeting');
     await card.getByText('Propose review outcome', { exact: true }).click();
     await card
@@ -231,14 +239,16 @@ test('two group officers resolve calculation and closed-meeting reviews while mo
     await treas
       .getByRole('button', { name: 'Refresh reviews', exact: true })
       .click();
-    tcCard = treas.locator('.review-case').first();
+    tcCard = treas.locator('.review-case').filter({
+      hasText: 'Check a disputed closed meeting without reopening its ledger',
+    });
     await expect(tcCard).toContainText('Current officer approvals: 1 / 2');
     await tcCard.getByRole('checkbox').check();
     await tcCard
       .getByRole('button', { name: 'Approve review outcome', exact: true })
       .click();
     await expect(tcCard).toContainText(
-      'Correction required — awaiting an approved adjustment process',
+      'Two-officer decision recorded: Correction required — awaiting an approved adjustment process',
     );
     await panel
       .getByRole('button', { name: 'Refresh reviews', exact: true })

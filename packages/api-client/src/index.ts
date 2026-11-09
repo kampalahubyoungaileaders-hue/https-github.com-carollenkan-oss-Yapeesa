@@ -112,6 +112,37 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   }
   return value as T;
 }
+async function downloadPdf(path: string): Promise<Blob> {
+  let response: Response;
+  try {
+    response = await fetch(path, {
+      credentials: 'same-origin',
+      signal: AbortSignal.timeout(90000),
+    });
+  } catch {
+    throw new ClientError(0, 'NETWORK_ERROR');
+  }
+  if (!response.ok) {
+    let value: unknown;
+    try {
+      value = await response.json();
+    } catch {
+      throw new ClientError(503, 'BACKEND_UNAVAILABLE');
+    }
+    throw new ClientError(
+      response.status,
+      value &&
+        typeof value === 'object' &&
+        'error' in value &&
+        typeof value.error === 'string'
+        ? value.error
+        : 'REQUEST_FAILED',
+    );
+  }
+  if (!response.headers.get('Content-Type')?.startsWith('application/pdf'))
+    throw new ClientError(503, 'BACKEND_UNAVAILABLE');
+  return response.blob();
+}
 export const api = {
   loans: (id: string) =>
     request<LoanWorkspace>(`/api/groups/${encodeURIComponent(id)}/loans`),
@@ -179,37 +210,14 @@ export const api = {
     ),
   recoveryCancel: () =>
     request<{ ok: boolean }>('/api/auth/recovery/cancel', {}),
-  statement: async (id: string, memberId?: string): Promise<Blob> => {
-    let response: Response;
-    try {
-      response = await fetch(
-        `/api/groups/${encodeURIComponent(id)}/statement.pdf${memberId ? `?member_id=${encodeURIComponent(memberId)}` : ''}`,
-        { credentials: 'same-origin', signal: AbortSignal.timeout(90000) },
-      );
-    } catch {
-      throw new ClientError(0, 'NETWORK_ERROR');
-    }
-    if (!response.ok) {
-      let value: unknown;
-      try {
-        value = await response.json();
-      } catch {
-        throw new ClientError(503, 'BACKEND_UNAVAILABLE');
-      }
-      throw new ClientError(
-        response.status,
-        value &&
-          typeof value === 'object' &&
-          'error' in value &&
-          typeof value.error === 'string'
-          ? value.error
-          : 'REQUEST_FAILED',
-      );
-    }
-    if (!response.headers.get('Content-Type')?.startsWith('application/pdf'))
-      throw new ClientError(503, 'BACKEND_UNAVAILABLE');
-    return response.blob();
-  },
+  statement: (id: string, memberId?: string) =>
+    downloadPdf(
+      `/api/groups/${encodeURIComponent(id)}/statement.pdf${memberId ? `?member_id=${encodeURIComponent(memberId)}` : ''}`,
+    ),
+  audit: (id: string, from: string, to: string, reference?: string) =>
+    downloadPdf(
+      `/api/groups/${encodeURIComponent(id)}/audit.pdf?${new URLSearchParams({ from, to, ...(reference ? { reference } : {}) })}`,
+    ),
   adminWorkspace: () => request<AdminWorkspace>('/api/admin/workspace'),
   reviews: (id: string) =>
     request<ReviewWorkspace>(`/api/groups/${encodeURIComponent(id)}/reviews`),
