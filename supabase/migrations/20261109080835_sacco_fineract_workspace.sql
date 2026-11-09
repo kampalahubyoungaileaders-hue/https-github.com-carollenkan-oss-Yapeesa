@@ -110,6 +110,7 @@ create function private.sacco_admin(p_request uuid,p_device uuid,p_action text,p
  else raise exception 'Invalid SACCO setup action' using errcode='22023';end if;
  return private.admin_finish(p_request,'sacco_setup',payload,jsonb_build_object('id',target),target,p_device,coalesce(p_person,target));
 end $$;
+grant create on schema private to yapesa_sacco,yapesa_administrator;
 -- Bounded executors receive no access to Groups journals, Auth secrets or Fineract financial tables.
 alter function private.sacco_list() owner to yapesa_sacco;
 alter function private.sacco_context(uuid) owner to yapesa_sacco;
@@ -118,6 +119,7 @@ alter function private.sacco_unlink(uuid,uuid) owner to yapesa_sacco;
 alter function private.sacco_prepare(uuid,uuid,text,text,text) owner to yapesa_sacco;
 alter function private.sacco_finish(uuid,uuid,text,jsonb) owner to yapesa_sacco;
 alter function private.sacco_admin(uuid,uuid,text,uuid,text,text,text,text,text,text,uuid,text,boolean,text) owner to yapesa_administrator;
+revoke create on schema private from yapesa_sacco,yapesa_administrator;
 create function public.sacco_list() returns jsonb language sql security invoker set search_path='' as $$select private.sacco_list()$$;
 create function public.sacco_context(p_org uuid) returns jsonb language sql security invoker set search_path='' as $$select private.sacco_context(p_org)$$;
 create function public.sacco_link(p_org uuid,p_user text,p_username text,p_credential text,p_version uuid,p_device uuid) returns jsonb language sql security invoker set search_path='' as $$select private.sacco_link(p_org,p_user,p_username,p_credential,p_version,p_device)$$;
