@@ -118,6 +118,13 @@ export class Backend {
         ['22023', '23514', 'P0001', 'P0002', '22003', '23503'].includes(code)
       )
         throw new ApiError(422, 'INVALID_STAFF_REQUEST');
+      if (path === '/rest/v1/rpc/group_audit_extract' && code === '54000')
+        throw new ApiError(422, 'AUDIT_TOO_LARGE');
+      if (
+        path === '/rest/v1/rpc/group_audit_extract' &&
+        ['22023', '23514', 'P0001', 'P0002'].includes(code)
+      )
+        throw new ApiError(422, 'AUDIT_UNAVAILABLE');
       if (code === '23505') throw new ApiError(409, 'DUPLICATE_REFERENCE');
       if (code === '42501') throw new ApiError(403, 'PERMISSION_DENIED');
       if (

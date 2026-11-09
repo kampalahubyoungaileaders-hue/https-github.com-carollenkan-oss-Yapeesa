@@ -24,6 +24,7 @@ import Meetings from './Meetings';
 import SocialFund from './SocialFund';
 import Fines from './Fines';
 import Reviews from './Reviews';
+import AuditExport from './AuditExport';
 import Loans from './Loans';
 function errorMessage(error: unknown): string {
   const code = error instanceof ClientError ? error.code : '';
@@ -52,6 +53,7 @@ const titleKeys = {
   fines: 'finesTitle',
   loans: 'loansTitle',
   reviews: 'reviewsTitle',
+  audit: 'auditTitle',
 } as const;
 type Tab = keyof typeof titleKeys;
 function amount(value: string | bigint, workspace: SavedWorkspace): string {
@@ -644,7 +646,10 @@ export default function SecureApp() {
           {(Object.keys(titleKeys) as Tab[])
             .filter(
               (key) =>
-                key !== 'reviews' || workspace?.group.can_preview_shareout,
+                (key !== 'reviews' || workspace?.group.can_preview_shareout) &&
+                (key !== 'audit' ||
+                  workspace?.group.can_preview_shareout ||
+                  session.user?.can_administer),
             )
             .map((key) => (
               <button
@@ -670,6 +675,7 @@ export default function SecureApp() {
                         fines: 'ledger',
                         loans: 'ledger',
                         reviews: 'shield',
+                        audit: 'ledger',
                       } as const
                     )[key]
                   }
@@ -734,7 +740,8 @@ export default function SecureApp() {
               {tab !== 'social' &&
                 tab !== 'fines' &&
                 tab !== 'loans' &&
-                tab !== 'reviews' && (
+                tab !== 'reviews' &&
+                tab !== 'audit' && (
                   <>
                     <button
                       className="button"
@@ -1031,6 +1038,15 @@ export default function SecureApp() {
                   }}
                 />
               )}
+              {tab === 'audit' &&
+                (workspace.group.can_preview_shareout ||
+                  session.user.can_administer) && (
+                  <AuditExport
+                    key={selected}
+                    group={selected}
+                    timeZone={workspace.group.time_zone}
+                  />
+                )}
               {tab === 'reviews' && workspace.group.can_preview_shareout && (
                 <Reviews
                   key={selected}
