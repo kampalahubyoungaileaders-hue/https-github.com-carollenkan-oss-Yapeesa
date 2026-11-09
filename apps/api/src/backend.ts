@@ -125,6 +125,13 @@ export class Backend {
         ['22023', '23514', 'P0001', 'P0002'].includes(code)
       )
         throw new ApiError(422, 'AUDIT_UNAVAILABLE');
+      if (path === '/rest/v1/rpc/programme_report' && code === '54000')
+        throw new ApiError(422, 'PROGRAMME_TOO_LARGE');
+      if (
+        path === '/rest/v1/rpc/programme_report' &&
+        ['22023', '22007', '22008'].includes(code)
+      )
+        throw new ApiError(422, 'INVALID_PROGRAMME_REPORT');
       if (code === '23505') throw new ApiError(409, 'DUPLICATE_REFERENCE');
       if (code === '42501') throw new ApiError(403, 'PERMISSION_DENIED');
       if (

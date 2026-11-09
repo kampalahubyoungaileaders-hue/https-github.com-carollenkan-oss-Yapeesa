@@ -21,7 +21,9 @@ actual group-officer membership is still required for financial approvals.
 Recovery PR [#16](https://github.com/kampalahubyoungaileaders-hue/https-github.com-carollenkan-oss-Yapeesa/pull/16)
 passed all four required jobs on `864d735a376254bdad9fcc44784d112f66e453ab`, merged
 as `14e7484e90dea4965262c1209cb6ffb93ec0ad89`, and was confirmed live on Render.
-Supabase has sixteen canonical migrations through the administrator-scope correction.
+The recovery release used sixteen canonical migrations through the administrator-scope
+correction. The audit release adds the seventeenth canonical migration; the programme
+release extends the schema separately.
 Read-only production checks confirmed healthy web/API responses, no-store session
 responses, rejected signed-out administrator reads, no anonymous scope execution,
 no client journal INSERT privilege and zero invented financial records.
@@ -62,11 +64,16 @@ Each new head must pass; prior green results do not substitute for that head.
 Local checks cover lint, formatting, strict types, domain/security tests and builds;
 generated OpenAPI/client files must reproduce without a diff.
 
-Programme relationships/dashboards, attendance and repayment trends, arrears and
-programme exports remain. Production backup scheduling, encrypted off-site retention
+Programme reports add audited group links, verified officer assignment/invitation,
+21-day meeting attention, monthly attendance/repayment trends, exact arrears ageing
+and CSV exports without group-member identity or money access. Their pull request
+records the real Auth/RLS and desktop/phone acceptance results. The local Fineract
+identity proof independently passed restricted per-staff roles, individual audit
+attribution, role revocation and unknown-tenant denial without creating financial
+accounts or sending messages. Production backup scheduling, encrypted off-site retention
 and an isolated hosted/fresh-cluster restoration are not yet configured or proven.
-Pinned Fineract/Java 21/PostgreSQL 17 readiness passes Docker CI, but per-staff
-Fineract identity, tenant templates and SACCO/lender workflows remain. Live hosting
+Pinned Fineract/Java 21/PostgreSQL 17 readiness passes Docker CI, but hosted staff
+credential/link synchronization, tenant templates and SACCO/lender workflows remain. Live hosting
 and actual worked SACCO month/dividend examples are prerequisites for financial
 acceptance; group tables must never emulate their accounting.
 

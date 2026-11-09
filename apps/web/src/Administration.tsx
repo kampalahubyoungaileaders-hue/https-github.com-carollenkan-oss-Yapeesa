@@ -9,6 +9,7 @@ import {
 } from '@yapesa/api-client';
 import { t } from '@yapesa/i18n';
 import NewCycle from './NewCycle';
+import ProgrammeAdministration from './ProgrammeAdministration';
 import StaffInvitations from './StaffInvitations';
 import AuthenticatorRecovery from './AuthenticatorRecovery';
 
@@ -364,6 +365,7 @@ export default function Administration({ onBack }: { onBack: () => void }) {
       )}
       {data && (
         <>
+          <ProgrammeAdministration workspace={data} />
           <StaffInvitations workspace={data} onChanged={load} />
           <AuthenticatorRecovery />
           <div className="admin-grid">

@@ -6,6 +6,7 @@ import {
   type AdminWorkspace,
   type StaffInviteInput,
   type StaffWorkspace,
+  type AdminProgrammeWorkspace,
 } from '@yapesa/api-client';
 import { t } from '@yapesa/i18n';
 
@@ -18,6 +19,9 @@ export default function StaffInvitations({
 }) {
   const [data, setData] = useState<StaffWorkspace | null>(null);
   const [org, setOrg] = useState('');
+  const [programmes, setProgrammes] = useState<
+    AdminProgrammeWorkspace['programmes']
+  >([]);
   const [person, setPerson] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -32,6 +36,14 @@ export default function StaffInvitations({
   useEffect(() => {
     let alive = true;
     void api
+      .adminProgrammes()
+      .then((v) => {
+        if (alive) setProgrammes(v.programmes);
+      })
+      .catch(() => {
+        if (alive) setError(t('staffError'));
+      });
+    void api
       .staffWorkspace()
       .then((value) => {
         if (alive) setData(value);
@@ -42,9 +54,10 @@ export default function StaffInvitations({
     return () => {
       alive = false;
     };
-  }, []);
+  }, [workspace]);
   async function refresh() {
     setData(await api.staffWorkspace());
+    setProgrammes((await api.adminProgrammes()).programmes);
     await onChanged();
   }
   async function create(event: FormEvent) {
@@ -118,7 +131,9 @@ export default function StaffInvitations({
       )}
       <form onSubmit={(event) => void create(event)}>
         <div className="form-group">
-          <label htmlFor="staff-group">{t('staffGroup')}</label>
+          <label htmlFor="staff-group">
+            {t(role === 'programme_officer' ? 'programmeChoose' : 'staffGroup')}
+          </label>
           <select
             id="staff-group"
             required
@@ -127,11 +142,13 @@ export default function StaffInvitations({
             onChange={(e) => setOrg(e.target.value)}
           >
             <option value="">{t('adminChooseGroup')}</option>
-            {workspace.groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
+            {(role === 'programme_officer' ? programmes : workspace.groups).map(
+              (group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ),
+            )}
           </select>
         </div>
         <div className="form-group">
@@ -202,10 +219,16 @@ export default function StaffInvitations({
             id="staff-role"
             disabled={frozen}
             value={role}
-            onChange={(e) =>
-              setRole(e.target.value as StaffInviteInput['role'])
-            }
+            onChange={(e) => {
+              if (
+                (e.target.value === 'programme_officer') !==
+                (role === 'programme_officer')
+              )
+                setOrg('');
+              setRole(e.target.value as StaffInviteInput['role']);
+            }}
           >
+            <option value="programme_officer">{t('programmeOfficer')}</option>
             <option value="secretary">{t('adminRoleSecretary')}</option>
             <option value="treasurer">{t('adminRoleTreasurer')}</option>
             <option value="chair">{t('adminRoleChair')}</option>
@@ -231,7 +254,11 @@ export default function StaffInvitations({
           <h3>{item.name}</h3>
           <p>
             {item.phone} ·{' '}
-            {workspace.groups.find((g) => g.id === item.organisation_id)?.name}{' '}
+            {
+              [...workspace.groups, ...programmes].find(
+                (g) => g.id === item.organisation_id,
+              )?.name
+            }{' '}
             · {item.role}
           </p>
           <p>

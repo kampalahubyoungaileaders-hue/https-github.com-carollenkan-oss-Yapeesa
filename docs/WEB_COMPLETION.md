@@ -14,13 +14,23 @@ balanced journals, inclusive dates and optional record references. See
 restore proof is documented separately in `BACKUP_RESTORE.md`; it must not be
 represented as a production backup service.
 
+Programme reports add audited parent links and officer assignments, 21-day meeting
+attention, attendance and repayment trends, exact arrears ageing, separate currency
+totals and aggregate CSV exports. Programme officers receive no member identities,
+individual group records or money permissions. See `PROGRAMME_REPORTS.md` for
+scope, historical-date semantics and the current 500-group report bound.
+
+Local Fineract identity proof verifies distinct staff users, exact restricted roles,
+individual audit attribution, write revocation and rejected unknown tenants on the
+pinned unmodified service. It creates no financial accounts. See
+`FINERACT_STAFF_PROOF.md`; this is not a hosted tenant or SACCO/lender release.
+
 Remaining work:
 
-- Programme relationships, scoped dashboards, attendance and repayment trends,
-  arrears, and programme exports.
 - Production backup scheduling, encrypted off-site retention and an isolated
   hosted/fresh-cluster restore exercise.
-- Fineract per-staff identity, tenant templates and SACCO/lender workflows. Live
+- Hosted Fineract staff mapping/credential storage, tenant templates and
+  SACCO/lender workflows. Live
   hosting and the actual worked SACCO month/dividend examples are prerequisites
   for accepting those financial workflows.
 

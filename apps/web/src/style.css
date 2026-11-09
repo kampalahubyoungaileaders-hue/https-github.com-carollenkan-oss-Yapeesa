@@ -2619,3 +2619,72 @@ dialog::backdrop {
   border-top: 1px solid #d7dfda;
   padding-top: 16px;
 }
+
+.programme-workspace {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(16px, 4vw, 48px);
+  min-width: 0;
+}
+.programme-workspace p,
+.programme-workspace dd,
+.programme-workspace h2,
+.programme-administration li {
+  overflow-wrap: anywhere;
+}
+.programme-workspace .admin-card {
+  margin-block: 20px;
+}
+.programme-filters,
+.programme-summary {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+}
+.programme-summary .admin-card {
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+}
+.programme-summary strong {
+  font-size: 2rem;
+}
+.programme-trends {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.programme-month {
+  border: 1px solid var(--border, #dce7e6);
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 0;
+}
+.programme-group details {
+  margin-top: 20px;
+}
+.programme-group summary,
+.programme-administration summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.programme-administration form {
+  margin-block: 20px;
+}
+@media (max-width: 760px) {
+  .programme-filters,
+  .programme-summary,
+  .programme-trends {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .programme-workspace .panel-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .programme-workspace .button {
+    max-width: 100%;
+    white-space: normal;
+  }
+}

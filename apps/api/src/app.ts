@@ -15,6 +15,7 @@ import { checkedFinalShareout } from './final-shareout.js';
 import { activateInvitations, runStaffJob } from './staff.js';
 import { checkedShareOut } from './shareout.js';
 import { checkedMeetings } from './meeting.js';
+import { checkedProgramme } from './programme.js';
 import { checkedLoans, checkedLoanQuote } from './loans.js';
 import { checkedFines } from './fines.js';
 import { checkedSocial } from './social.js';
@@ -26,6 +27,10 @@ import {
 } from './security.js';
 import {
   sessionSchema,
+  programmeListSchema,
+  programmeReportSchema,
+  adminProgrammeWorkspaceSchema,
+  adminProgrammeBody,
   groupSchema,
   workspaceSchema,
   purchaseBody,
@@ -649,6 +654,119 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
           user.tokens.access_token,
           request.params.id,
           'invite',
+        );
+      },
+    );
+    app.get(
+      '/api/programmes',
+      { schema: { response: { 200: programmeListSchema, ...errors } } },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        reply.header('Cache-Control', 'no-store');
+        return configured().backend.rpc(
+          'programme_list',
+          {},
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.get<{ Params: { id: string }; Querystring: { as_of?: string } }>(
+      '/api/programmes/:id',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id'],
+            properties: { id: { type: 'string', format: 'uuid' } },
+          },
+          querystring: {
+            type: 'object',
+            additionalProperties: false,
+            properties: { as_of: { type: 'string', format: 'date' } },
+          },
+          response: { 200: programmeReportSchema, ...errors },
+        },
+      },
+      async (request, reply) => {
+        const user = await authorised(request, reply);
+        if (!user.context.mfa_verified) throw new ApiError(403, 'MFA_REQUIRED');
+        const raw = await configured().backend.rpc(
+          'programme_report',
+          { p_org: request.params.id, p_asof: request.query.as_of ?? null },
+          user.tokens.access_token,
+        );
+        reply.header('Cache-Control', 'no-store');
+        return checkedProgramme(raw, request.params.id, request.query.as_of);
+      },
+    );
+    app.get(
+      '/api/admin/programmes',
+      {
+        schema: { response: { 200: adminProgrammeWorkspaceSchema, ...errors } },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply);
+        reply.header('Cache-Control', 'no-store');
+        return configured().backend.rpc(
+          'admin_programme_workspace',
+          {},
+          user.tokens.access_token,
+        );
+      },
+    );
+    app.post<{
+      Body: {
+        request_id: string;
+        device_id: string;
+        action: string;
+        programme_id: string | null;
+        group_id: string | null;
+        person_id: string | null;
+        enabled: boolean | null;
+        name: string;
+        country_code: string;
+        currency: string;
+        time_zone: string;
+        reason: string;
+      };
+    }>(
+      '/api/admin/programmes',
+      {
+        schema: {
+          body: adminProgrammeBody,
+          response: {
+            200: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['id'],
+              properties: { id: { type: 'string', format: 'uuid' } },
+            },
+            ...errors,
+          },
+        },
+      },
+      async (request, reply) => {
+        const user = await administrator(request, reply),
+          b = request.body;
+        reply.header('Cache-Control', 'no-store');
+        return configured().backend.rpc(
+          'admin_programme',
+          {
+            p_request: b.request_id,
+            p_device: b.device_id,
+            p_action: b.action,
+            p_programme: b.programme_id,
+            p_group: b.group_id,
+            p_person: b.person_id,
+            p_enabled: b.enabled,
+            p_name: b.name,
+            p_country: b.country_code,
+            p_currency: b.currency,
+            p_zone: b.time_zone,
+            p_reason: b.reason,
+          },
+          user.tokens.access_token,
         );
       },
     );

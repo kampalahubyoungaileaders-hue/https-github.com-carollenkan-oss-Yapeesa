@@ -1,3 +1,4 @@
+import { programme } from './programme';
 import { finalShareout } from './shareout';
 import { audit } from './audit';
 import { authenticatorRecovery } from './authenticatorRecovery';
@@ -6,6 +7,7 @@ import { reviews } from './reviews';
 import { secure } from './secure';
 import { web } from './web';
 const en = {
+  ...programme,
   ...web,
   ...finalShareout,
   ...secure,

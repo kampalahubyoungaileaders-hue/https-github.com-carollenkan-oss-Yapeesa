@@ -1,5 +1,13 @@
 import { v7 } from 'uuid';
 import type { paths } from './schema';
+export type ProgrammeList =
+  paths['/api/programmes']['get']['responses'][200]['content']['application/json'];
+export type ProgrammeReport =
+  paths['/api/programmes/{id}']['get']['responses'][200]['content']['application/json'];
+export type AdminProgrammeWorkspace =
+  paths['/api/admin/programmes']['get']['responses'][200]['content']['application/json'];
+export type AdminProgrammeInput =
+  paths['/api/admin/programmes']['post']['requestBody']['content']['application/json'];
 export type Recovery =
   paths['/api/auth/recovery/verify']['post']['responses'][200]['content']['application/json'];
 export type Session =
@@ -219,6 +227,16 @@ export const api = {
       `/api/groups/${encodeURIComponent(id)}/audit.pdf?${new URLSearchParams({ from, to, ...(reference ? { reference } : {}) })}`,
     ),
   adminWorkspace: () => request<AdminWorkspace>('/api/admin/workspace'),
+  programmes: () => request<ProgrammeList>('/api/programmes'),
+  programmeReport: (id: string, asOf?: string) =>
+    request<ProgrammeReport>(
+      `/api/programmes/${encodeURIComponent(id)}${asOf ? `?${new URLSearchParams({ as_of: asOf })}` : ''}`,
+    ),
+  adminProgrammes: () =>
+    request<AdminProgrammeWorkspace>('/api/admin/programmes'),
+  adminProgramme: (input: AdminProgrammeInput) =>
+    request<{ id: string }>('/api/admin/programmes', input),
+
   reviews: (id: string) =>
     request<ReviewWorkspace>(`/api/groups/${encodeURIComponent(id)}/reviews`),
   reviewCommand: (id: string, input: ReviewCommand) =>
