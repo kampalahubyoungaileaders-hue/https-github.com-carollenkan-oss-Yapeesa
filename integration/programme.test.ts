@@ -384,16 +384,20 @@ test('programme officers see scoped group aggregates, exact arrears and trends w
       lc('disburse', { meeting_id: old, target_id: request }),
     )
   ).id;
-  const closing = (
-    await post(
-      `${root}/meetings`,
-      mc('propose', {
-        meeting_id: old,
-        counted_cash: '15000',
-        explanation: '',
-      }),
-    )
-  ).record_id;
+  await post(
+    `${root}/meetings`,
+    mc('propose', { meeting_id: old, counted_cash: '15000', explanation: '' }),
+  );
+  const closingResponse = await call(sec, 'GET', `${root}/meetings`);
+  assert.equal(closingResponse.statusCode, 200, closingResponse.body);
+  const closing = closingResponse
+    .json()
+    .meetings.find((m: { id: string }) => m.id === old).proposal.id;
+  assert.equal(
+    typeof closing,
+    'string',
+    'Use the exposed meeting workspace proposal reference',
+  );
   await post(
     `${root}/meetings`,
     mc('approve', { meeting_id: old, proposal_id: closing }),
