@@ -1,3 +1,4 @@
+import { registerSacco } from './sacco.js';
 import { auditData, renderAudit } from './audit.js';
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
 import cookie from '@fastify/cookie';
@@ -248,6 +249,7 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
   }
   app.after(() => {
     registerRecovery(app, config, clearTokens);
+    registerSacco(app, config, authorised);
     const errors = {
       400: errorSchema,
       401: errorSchema,

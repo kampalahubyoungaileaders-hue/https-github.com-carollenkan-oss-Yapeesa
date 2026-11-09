@@ -8,6 +8,7 @@ export interface ApiConfig {
   secureCookies: boolean;
   trustedProxyHops?: number;
   authAdminKey?: string;
+  fineractInstances?: Record<string, { url: string; localTest?: boolean }>;
 }
 export function readConfig(): ApiConfig | undefined {
   const env = process.env;
@@ -48,7 +49,44 @@ export function readConfig(): ApiConfig | undefined {
     throw new Error('Invalid TRUSTED_PROXY_HOPS');
   if (env['NODE_ENV'] === 'production' && !origin.startsWith('https://'))
     throw new Error('Production WEB_ORIGIN requires HTTPS');
+  let fineractInstances: ApiConfig['fineractInstances'];
+  if (env['FINERACT_INSTANCES']) {
+    const raw: unknown = JSON.parse(env['FINERACT_INSTANCES']);
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw))
+      throw new Error('Invalid FINERACT_INSTANCES');
+    fineractInstances = {};
+    for (const [id, item] of Object.entries(raw)) {
+      if (
+        !/^[a-z][a-z0-9_-]{0,62}$/.test(id) ||
+        !item ||
+        typeof item !== 'object' ||
+        !('url' in item) ||
+        typeof item.url !== 'string'
+      )
+        throw new Error('Invalid Fineract instance');
+      const endpoint = item as { url: string; localTest?: boolean };
+      if (endpoint.localTest && env['NODE_ENV'] === 'production')
+        throw new Error(
+          'Local Fineract test bypass is forbidden in production',
+        );
+      const base = new URL(endpoint.url);
+      if (
+        base.protocol !== 'https:' ||
+        base.username ||
+        base.password ||
+        base.search ||
+        base.hash ||
+        base.pathname !== '/fineract-provider/api/v1/'
+      )
+        throw new Error('Invalid Fineract URL');
+      fineractInstances[id] = {
+        url: base.href,
+        ...(endpoint.localTest === true ? { localTest: true } : {}),
+      };
+    }
+  }
   return {
+    ...(fineractInstances ? { fineractInstances } : {}),
     supabaseUrl: url.origin,
     publishableKey: env['SUPABASE_PUBLISHABLE_KEY']!,
     pinPepper: env['PIN_PEPPER']!,
