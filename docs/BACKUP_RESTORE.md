@@ -38,8 +38,12 @@ node --env-file=.env scripts/verify-local-restore.mjs --fresh-cluster
 This mode reuses the source container's immutable image ID for compatible
 PostgreSQL/extension binaries, but mounts no source volume and bypasses provider
 initialization scripts. `initdb` creates a new cluster with only PostgreSQL's
-built-in roles and a random recovery administrator. The test asserts that no
-application/provider roles exist before restoring them.
+built-in roles and the source's bootstrap administrator identity (OID 10). The
+test asserts that no other application/provider roles exist before restoring
+them. PostgreSQL role grants depend on the bootstrap grantor identity: changing
+its name and then replaying GRANTED BY statements can fail. The role manifest
+omits only that administrator's already-completed CREATE ROLE; its exact ALTER
+settings and all other role creation/grants are replayed and compared.
 
 A separate `pg_dumpall --roles-only --no-role-passwords` manifest restores role
 flags, settings and memberships. Their fingerprints must match the source before

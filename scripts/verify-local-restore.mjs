@@ -41,7 +41,7 @@ let restored,
   created = false,
   freshCreated = false;
 const freshContainer = `yapesa_recovery_${randomBytes(8).toString('hex')}`;
-const bootstrapRole = `recovery_${randomBytes(8).toString('hex')}`;
+let bootstrapRole;
 const bootstrapPassword = randomBytes(32).toString('base64url');
 function command(args, input, env = process.env) {
   return new Promise((resolve, reject) => {
@@ -318,6 +318,13 @@ try {
   assert(/^[A-Fa-f0-9-]+$/.test(snapshot));
   const expected = await fingerprint(source);
   const expectedRoles = await roleFingerprint(source);
+  bootstrapRole = (
+    await source.query('select rolname from pg_roles where oid=10')
+  ).rows[0]?.rolname;
+  assert(
+    /^[a-z_][a-z0-9_]*$/.test(bootstrapRole),
+    'Expected a conventional local bootstrap role',
+  );
   const rolesArchive = freshCluster
     ? await docker([
         'pg_dumpall',
@@ -387,14 +394,27 @@ try {
         '-v',
         'ON_ERROR_STOP=1',
       ],
-      rolesArchive,
+      // OID 10 is PostgreSQL's bootstrap grantor. Preserve that identity rather
+      // than weakening role memberships to accommodate a different bootstrap.
+      // initdb created it already; replay its ALTER and all other CREATEs.
+      Buffer.from(
+        rolesArchive
+          .toString()
+          .split('\n')
+          .filter(
+            (line) =>
+              line !== `CREATE ROLE ${bootstrapRole};` &&
+              line !== `CREATE ROLE "${bootstrapRole}";`,
+          )
+          .join('\n'),
+      ),
       destination,
     );
     const roleClient = new pg.Client(restoreConnection);
     await roleClient.connect();
     try {
       assert.deepEqual(
-        await roleFingerprint(roleClient, bootstrapRole),
+        await roleFingerprint(roleClient),
         expectedRoles,
         'Fresh-cluster role flags, settings and memberships must match',
       );
