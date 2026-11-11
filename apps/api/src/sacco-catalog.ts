@@ -142,7 +142,7 @@ export const saccoOperations: SaccoOperation[] = [
     cash,
     'savingsaccounts/{id}/transactions?command=deposit',
     'DEPOSIT_SAVINGSACCOUNT',
-    `transactionDate:date transactionAmount:decimal paymentTypeId?:id ${dayNote}`,
+    `transactionDate:date transactionAmount:decimal paymentTypeId:id ${dayNote}`,
     true,
   ),
   op(
@@ -152,7 +152,7 @@ export const saccoOperations: SaccoOperation[] = [
     cash,
     'savingsaccounts/{id}/transactions?command=withdrawal',
     'WITHDRAW_SAVINGSACCOUNT',
-    `transactionDate:date transactionAmount:decimal paymentTypeId?:id ${dayNote}`,
+    `transactionDate:date transactionAmount:decimal paymentTypeId:id ${dayNote}`,
     true,
   ),
   op(
@@ -313,7 +313,7 @@ export const saccoOperations: SaccoOperation[] = [
     cash,
     'loans/{id}/transactions?command=repayment',
     'REPAYMENT_LOAN',
-    `transactionDate:date transactionAmount:decimal paymentTypeId?:id ${dayNote}`,
+    `transactionDate:date transactionAmount:decimal paymentTypeId:id ${dayNote}`,
     true,
   ),
   op(

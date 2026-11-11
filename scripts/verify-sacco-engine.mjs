@@ -318,6 +318,14 @@ try {
       locale: 'en',
     }),
   );
+  const paymentTypeId = scalarId(
+    await native(root, 'POST', 'paymenttypes', {
+      name: `${prefix}_cash`,
+      description: 'Disposable cash receipt',
+      isCashPayment: true,
+      position: '1',
+    }),
+  );
   stage = 'verified Yapesa staff mapping';
   await login('root', 'MEETING_ADMIN');
   await login('maker', 'MEETING_SECRETARY');
@@ -392,7 +400,7 @@ try {
   stage = 'pending cash and duplicate protection';
   const deposit = await submit(
     'savings.deposit',
-    { transactionDate: today, transactionAmount: '100000' },
+    { transactionDate: today, transactionAmount: '100000', paymentTypeId },
     savingsId,
   );
   assert.equal(
@@ -414,7 +422,7 @@ try {
   stage = 'cash withdrawal';
   await execute(
     'savings.withdraw',
-    { transactionDate: today, transactionAmount: '25000' },
+    { transactionDate: today, transactionAmount: '25000', paymentTypeId },
     savingsId,
   );
   assert.equal(await balance(), '75000');
