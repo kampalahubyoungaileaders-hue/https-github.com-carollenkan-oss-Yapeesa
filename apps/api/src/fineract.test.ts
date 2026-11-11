@@ -1,6 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fineractJson, fineractMinor, Fineract } from './fineract.js';
+import { saccoOperations, saccoPayload } from './sacco-catalog.js';
+test('individual SACCO members include the native legal form and await activation', () => {
+  const operation = saccoOperations.find(
+    (item) => item.id === 'member.create',
+  )!;
+  const payload = saccoPayload(operation, {
+    officeId: '1',
+    firstname: 'Local',
+    lastname: 'Member',
+    submittedOnDate: '2026-11-01',
+  });
+  assert.equal(payload['legalFormId'], '1');
+  assert.equal(payload['active'], false);
+});
 test('Fineract numbers retain their exact source tokens, including beyond safe integers', () => {
   assert.deepEqual(
     fineractJson(

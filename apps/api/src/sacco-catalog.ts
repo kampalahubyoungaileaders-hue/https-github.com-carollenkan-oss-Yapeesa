@@ -521,7 +521,11 @@ export function saccoPayload(
     ['loan.apply', 'loan.quote'].includes(operation.id)
   )
     result['loanType'] = 'individual';
-  if (operation.id === 'member.create') result['active'] = false;
+  if (operation.id === 'member.create') {
+    result['active'] = false;
+    // This workflow creates individual members, never corporate clients.
+    result['legalFormId'] = '1';
+  }
   if (operation.checker) return {};
   return result;
 }
