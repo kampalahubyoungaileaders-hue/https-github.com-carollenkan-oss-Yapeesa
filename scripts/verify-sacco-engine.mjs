@@ -312,6 +312,9 @@ try {
       interestOnSavingsAccountId: gl.expense,
       incomeFromFeeAccountId: gl.income,
       incomeFromPenaltyAccountId: gl.income,
+      overdraftPortfolioControlId: gl.cash,
+      incomeFromInterestId: gl.income,
+      writeOffAccountId: gl.expense,
       locale: 'en',
     }),
   );
