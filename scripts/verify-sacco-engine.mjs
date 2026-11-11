@@ -199,11 +199,9 @@ try {
     'READ_AUDIT',
     'READ_OFFICE',
   ];
-  for (const code of [
-    ...actions,
-    ...reads,
-    ...actions.map((p) => p + '_CHECKER'),
-  ])
+  // Fineract 1.12 excludes *_CHECKER from GET /permissions. The role
+  // permission catalogue includes them; validate there before assigning them.
+  for (const code of [...actions, ...reads])
     assert(available.has(code), `Pinned permission missing: ${code}`);
   async function actor(label, codes) {
     const credentials = {
@@ -216,9 +214,27 @@ try {
         description: 'Disposable SACCO acceptance only',
       }),
     );
+    const catalogue = await native(root, 'GET', `roles/${role}/permissions`);
+    const availableForRole = new Set(
+      catalogue.permissionUsageData.map((permission) => permission.code),
+    );
+    for (const code of codes)
+      assert(
+        availableForRole.has(code),
+        `Pinned role permission missing: ${code}`,
+      );
     await native(root, 'PUT', `roles/${role}/permissions`, {
       permissions: Object.fromEntries(codes.map((code) => [code, true])),
     });
+    const configured = await native(root, 'GET', `roles/${role}/permissions`);
+    assert.deepEqual(
+      configured.permissionUsageData
+        .filter((permission) => permission.selected)
+        .map((permission) => permission.code)
+        .sort(),
+      [...codes].sort(),
+      'The disposable role must have exactly the requested permissions',
+    );
     const userId = scalarId(
       await native(root, 'POST', 'users', {
         username: credentials.username,
