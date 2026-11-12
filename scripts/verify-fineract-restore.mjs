@@ -59,9 +59,10 @@ async function connect(config) {
   return client;
 }
 async function fingerprint(client) {
+  await client.query('set search_path=pg_catalog');
   const tables = (
     await client.query(`select n.nspname, c.relname, pg_get_userbyid(c.relowner) owner,
-    c.relrowsecurity, c.relforcerowsecurity, coalesce(c.relacl::text,'') grants
+    c.relrowsecurity, c.relforcerowsecurity, array(select x::text from unnest(coalesce(c.relacl,acldefault('r',c.relowner))) x order by x::text) grants
     from pg_class c join pg_namespace n on n.oid=c.relnamespace
     where c.relkind='r' and n.nspname not in ('pg_catalog','information_schema') and n.nspname !~ '^pg_toast'
     order by n.nspname collate "C", c.relname collate "C"`)
@@ -81,7 +82,7 @@ async function fingerprint(client) {
   }
   const catalogues = {};
   for (const [name, sql] of Object.entries({
-    schemas: `select nspname,pg_get_userbyid(nspowner) owner,coalesce(nspacl::text,'') grants from pg_namespace
+    schemas: `select nspname,pg_get_userbyid(nspowner) owner,array(select x::text from unnest(coalesce(nspacl,acldefault('n',nspowner))) x order by x::text) grants from pg_namespace
       where nspname not in ('pg_catalog','information_schema') and nspname !~ '^pg_' order by nspname`,
     columns: `select table_schema,table_name,column_name,ordinal_position,data_type,udt_schema,udt_name,is_nullable,column_default,is_identity,identity_generation,
       character_maximum_length,numeric_precision,numeric_scale,datetime_precision,collation_schema,collation_name,is_generated,generation_expression,domain_schema,domain_name
@@ -92,9 +93,9 @@ async function fingerprint(client) {
     indexes: `select schemaname,tablename,indexname,indexdef from pg_indexes where schemaname not in ('pg_catalog','information_schema') order by schemaname,tablename,indexname`,
     sequences: `select schemaname,sequencename,sequenceowner,data_type::text,start_value::text,min_value::text,max_value::text,increment_by::text,cycle,cache_size::text,last_value::text
       from pg_sequences where schemaname not in ('pg_catalog','information_schema') order by schemaname,sequencename`,
-    functions: `select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) arguments,pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,coalesce(p.proacl::text,'') grants
+    functions: `select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) arguments,pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,array(select x::text from unnest(coalesce(p.proacl,acldefault('f',p.proowner))) x order by x::text) grants
       from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname not in ('pg_catalog','information_schema') and p.prokind in ('f','p') order by n.nspname,p.proname,arguments`,
-    views: `select n.nspname,c.relname,pg_get_userbyid(c.relowner) owner,coalesce(c.relacl::text,'') grants,pg_get_viewdef(c.oid) definition
+    views: `select n.nspname,c.relname,pg_get_userbyid(c.relowner) owner,array(select x::text from unnest(coalesce(c.relacl,acldefault('r',c.relowner))) x order by x::text) grants,pg_get_viewdef(c.oid) definition
       from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relkind in ('v','m') and n.nspname not in ('pg_catalog','information_schema') order by n.nspname,c.relname`,
     triggers: `select n.nspname,c.relname,t.tgname,t.tgenabled,pg_get_triggerdef(t.oid) definition
       from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where not t.tgisinternal and n.nspname not in ('pg_catalog','information_schema') order by n.nspname,c.relname,t.tgname`,
@@ -251,7 +252,57 @@ try {
     const actual = await fingerprint(restored);
     // Hash comparison avoids printing recovered source rows in assertion errors.
     const hash = (value) =>
-      createHash('sha256').update(JSON.stringify(value)).digest('hex');
+      createHash('sha256').update(JSON.stringify(value ?? null)).digest('hex');
+    if (hash(actual) !== hash(expected)) {
+      const changedTables = expected.data.filter(
+        (table, index) => hash(table) !== hash(actual.data[index]),
+      );
+      const changedCatalogues = Object.keys(expected.catalogues).filter(
+        (key) =>
+          hash(expected.catalogues[key]) !== hash(actual.catalogues[key]),
+      );
+      console.error(
+        JSON.stringify({
+          database,
+          changedTables: changedTables.map((table) => ({
+            schema: table.nspname,
+            table: table.relname,
+            changedKeys: Object.keys(table).filter(
+              (key) =>
+                hash(table[key]) !==
+                hash(
+                  actual.data.find(
+                    (row) =>
+                      row.nspname === table.nspname &&
+                      row.relname === table.relname,
+                  )?.[key] ?? null,
+                ),
+            ),
+          })),
+          changedCatalogues: changedCatalogues.map((category) => {
+            const before = expected.catalogues[category],
+              after = actual.catalogues[category];
+            const index = before.findIndex(
+              (row, index) => hash(row) !== hash(after[index] ?? null),
+            );
+            return {
+              category,
+              expectedCount: before.length,
+              restoredCount: after.length,
+              firstChangedIndex: index,
+              changedKeys:
+                index < 0
+                  ? []
+                  : Object.keys(before[index]).filter(
+                      (key) =>
+                        hash(before[index][key]) !==
+                        hash(after[index]?.[key] ?? null),
+                    ),
+            };
+          }),
+        }),
+      );
+    }
     assert.equal(
       hash(actual),
       hash(expected),
