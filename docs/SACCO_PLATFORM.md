@@ -63,8 +63,8 @@ authoritative; the Groups share-out engine never calculates SACCO dividends.
 
 ## Acceptance still to finish
 
-- Running-engine tests for the account, loan, dividend and maker-checker contracts.
-- SACCO web workspace, account forms, reports, teller reconciliation and migrations.
+- Expanded running-engine acceptance beyond the disposable cash/loan/share proof.
+- Executable reports, teller reconciliation and customer-record migrations.
 - Product templates and automatic tenant provisioning with isolation proof.
 - Member self-service linking, KYC file handling and operational staff lifecycle.
 - A supplied real SACCO month, dividend calculation and opening-balance migration,
@@ -73,6 +73,12 @@ authoritative; the Groups share-out engine never calculates SACCO dividends.
 
 No hosted SACCO, customer account, real financial fixture, SMS or payment transfer
 is created by this work. Offline workflows and native Android builds remain deferred.
+
+The web workspace includes native account/loan forms, approvals, journal reads
+and a product-scoped dividend posting view. The latter shows member allocations,
+their native posting status and savings transaction references. It does not run
+the tenant-wide dividend job. See [SYSTEM_ACCEPTANCE.md](SYSTEM_ACCEPTANCE.md)
+for the full remaining scope and supplied-record requirements.
 
 Pinned upstream contracts:
 

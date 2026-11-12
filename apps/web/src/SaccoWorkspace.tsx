@@ -193,7 +193,16 @@ function DataTable({
               r['officeName'],
           ),
       ],
-      ['account', s.account, (r) => text(r['accountNo'] ?? r['glCode'])],
+      [
+        'account',
+        s.account,
+        (r) =>
+          text(
+            r['accountNo'] ??
+              r['glCode'] ??
+              record(r['accountData'])['accountNo'],
+          ),
+      ],
       [
         'product',
         s.product,
@@ -206,6 +215,11 @@ function DataTable({
       ['type', s.type, (r) => text(r['type'] ?? r['transactionType'])],
       ['currency', s.currency, (r) => text(record(r['currency'])['code'])],
       ['amount', s.amount, (r) => text(r['amount'])],
+      [
+        'savingsTransaction',
+        s.savingsTransaction,
+        (r) => text(r['savingsTransactionId']),
+      ],
       ['principal', s.principal, (r) => text(r['principalDue'])],
       ['interest', s.interest, (r) => text(r['interestDue'])],
       ['fees', s.fees, (r) => text(r['feeChargesDue'])],
@@ -296,6 +310,7 @@ function Detail({ data }: { data: SaccoJson }) {
         'transactions',
         'purchasedShares',
         'dividends',
+        'pageItems',
         'charges',
         'guarantors',
         'identifiers',
@@ -380,9 +395,11 @@ function Detail({ data }: { data: SaccoJson }) {
       {nested.map(([key, v]) => (
         <section key={key}>
           <h3>
-            {key
-              .replace(/([A-Z])/g, ' $1')
-              .replace(/^./, (c) => c.toUpperCase())}
+            {key === 'pageItems'
+              ? s.dividendAllocations
+              : key
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, (c) => c.toUpperCase())}
           </h3>
           <DataTable rows={(v as SaccoJson[]).map(record)} />
         </section>
@@ -413,6 +430,7 @@ export default function SaccoWorkspace({
     [from, setFrom] = useState(''),
     [to, setTo] = useState(''),
     [office, setOffice] = useState(''),
+    [dividendProduct, setDividendProduct] = useState(''),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [username, setUsername] = useState(''),
@@ -444,6 +462,14 @@ export default function SaccoWorkspace({
   }
   async function refresh() {
     const query: Record<string, string> = { offset: String(offset) };
+    if (resource === 'dividends') {
+      if (!/^[1-9]\d{0,18}$/.test(dividendProduct)) {
+        setData(null);
+        setDetail(null);
+        return;
+      }
+      query['product'] = dividendProduct;
+    }
     if (search && resource === 'members') query['search'] = search;
     if (resource === 'journals') {
       if (!from || !to || !office) {
@@ -454,7 +480,12 @@ export default function SaccoWorkspace({
     }
     setData(await api.saccoRecords(org, resource, query));
     if (selected)
-      setDetail(await api.saccoRecords(org, resource, { record: selected }));
+      setDetail(
+        await api.saccoRecords(org, resource, {
+          record: selected,
+          ...(resource === 'dividends' ? { product: dividendProduct } : {}),
+        }),
+      );
   }
   useEffect(() => {
     let active = true;
@@ -463,6 +494,7 @@ export default function SaccoWorkspace({
     setData(null);
     setDetail(null);
     setSelected('');
+    setDividendProduct('');
     setAction('');
     setPending(null);
     setError('');
@@ -504,6 +536,13 @@ export default function SaccoWorkspace({
     setPreview(null);
     setBusy(true);
     const query: Record<string, string> = { offset: String(offset) };
+    if (resource === 'dividends') {
+      if (!/^[1-9]\d{0,18}$/.test(dividendProduct)) {
+        setBusy(false);
+        return;
+      }
+      query['product'] = dividendProduct;
+    }
     if (search && resource === 'members') query['search'] = search;
     if (resource === 'journals') {
       if (!from || !to || !office) {
@@ -526,7 +565,17 @@ export default function SaccoWorkspace({
     return () => {
       active = false;
     };
-  }, [org, resource, offset, search, from, to, office, catalog]);
+  }, [
+    org,
+    resource,
+    offset,
+    search,
+    from,
+    to,
+    office,
+    dividendProduct,
+    catalog,
+  ]);
   useEffect(() => {
     if (!operation || !definition?.template) {
       setTemplate({});
@@ -559,7 +608,12 @@ export default function SaccoWorkspace({
   async function open(id: string) {
     setSelected(id);
     await perform(async () =>
-      setDetail(await api.saccoRecords(org, resource, { record: id })),
+      setDetail(
+        await api.saccoRecords(org, resource, {
+          record: id,
+          ...(resource === 'dividends' ? { product: dividendProduct } : {}),
+        }),
+      ),
     );
   }
   async function connect(e: FormEvent) {
@@ -807,6 +861,24 @@ export default function SaccoWorkspace({
                     />
                   </label>
                 </div>
+              )}
+              {resource === 'dividends' && (
+                <>
+                  <p>{s.dividendHelp}</p>
+                  <label>
+                    {saccoFieldLabels['productId']}
+                    <input
+                      value={dividendProduct}
+                      inputMode="numeric"
+                      maxLength={19}
+                      disabled={!!pending}
+                      onChange={(e) => {
+                        setDividendProduct(e.target.value);
+                        setOffset(0);
+                      }}
+                    />
+                  </label>
+                </>
               )}
               <DataTable
                 rows={rows}

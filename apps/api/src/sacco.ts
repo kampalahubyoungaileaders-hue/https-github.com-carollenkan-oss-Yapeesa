@@ -418,6 +418,10 @@ export function registerSacco(
       }
       let path = q.template ? r.template : q.record ? r.detail : r.path;
       if (!path) throw new ApiError(400, 'INVALID_SACCO_OPERATION');
+      if (request.params.resource === 'dividends') {
+        if (!q.product) throw new ApiError(400, 'SACCO_PRODUCT_REQUIRED');
+        path = path.replace('{product}', id(q.product));
+      }
       if (q.record) path = path.replace('{id}', id(q.record));
       const params = new URLSearchParams();
       if (r.page && !q.record && !q.template) {
@@ -425,7 +429,8 @@ export function registerSacco(
         params.set('offset', q.offset ?? '0');
       }
       if (q.client) params.set('clientId', id(q.client));
-      if (q.product) params.set('productId', id(q.product));
+      if (q.product && request.params.resource !== 'dividends')
+        params.set('productId', id(q.product));
       if (q.search && request.params.resource === 'members')
         params.set('displayName', q.search);
       if (request.params.resource === 'journals') {

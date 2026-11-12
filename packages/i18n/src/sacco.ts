@@ -68,6 +68,10 @@ export const saccoText = {
   optional: 'Optional',
   exactHelp:
     'Enter exact amounts using a decimal point, without currency symbols or grouping commas.',
+  dividendHelp:
+    'Choose a share product to inspect its dividends. Open a dividend to see member allocations, posting status and savings transaction references. Approval and posting are separate steps.',
+  dividendAllocations: 'Dividend allocations',
+  savingsTransaction: 'Savings transaction',
   open: 'Open',
   status: 'Status',
   account: 'Account',
@@ -266,6 +270,7 @@ export const saccoResourceLabels: Record<string, string> = {
   loans: 'Loans',
   'savings-products': 'Savings products',
   'share-products': 'Share products and dividends',
+  dividends: 'Dividend postings',
   'loan-products': 'Loan products',
   branches: 'Branches',
   tellers: 'Teller operations',

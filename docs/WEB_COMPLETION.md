@@ -1,5 +1,8 @@
 # Web completion work
 
+The full-system checklist is in [SYSTEM_ACCEPTANCE.md](SYSTEM_ACCEPTANCE.md).
+Groups completion below does not mean the SACCO and Lenders modules are complete.
+
 Completed and live: group administration, shares and corrections, Social fund,
 fines, scheduled loans, meetings with two-officer closing, final share-out and
 individual payout receipts, share statements, PIN recovery, new-cycle setup with
@@ -29,8 +32,10 @@ Remaining work:
 
 - Production backup scheduling, encrypted off-site retention and an isolated
   hosted restore exercise.
-- Hosted Fineract staff mapping/credential storage, tenant templates and
-  SACCO/lender workflows. Live
+- SACCO staff mapping, encrypted individual credentials, approval queue,
+  native account/loan forms and development acceptance now exist on PR #22.
+  Tenant templates, teller settlement, imports, member self-service, Lenders and
+  uncertain-outcome reconciliation remain unfinished. Live
   hosting and the actual worked SACCO month/dividend examples are prerequisites
   for accepting those financial workflows.
 

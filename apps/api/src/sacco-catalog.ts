@@ -444,6 +444,13 @@ export const saccoResources: Record<
     detail: 'loanproducts/{id}',
     template: 'loanproducts/template',
   },
+  dividends: {
+    label: saccoResourceLabels['dividends']!,
+    path: 'shareproduct/{product}/dividend',
+    roles: accounts,
+    detail: 'shareproduct/{product}/dividend/{id}',
+    page: true,
+  },
   branches: {
     label: saccoResourceLabels['branches']!,
     path: 'offices',

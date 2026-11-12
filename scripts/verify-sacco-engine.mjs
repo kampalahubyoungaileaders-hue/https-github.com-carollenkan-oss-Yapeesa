@@ -33,7 +33,8 @@ const app = buildApp(config),
   cookies = new Map();
 let stage = 'setup',
   oldConfiguration,
-  oldPermissionSettings;
+  oldPermissionSettings,
+  oldPostingJob;
 const iso = (days) => {
     const d = new Date();
     d.setUTCDate(d.getUTCDate() + days);
@@ -334,6 +335,44 @@ try {
       ...actions.filter((code) => independent.has(code)),
       ...nativeActions.map((p) => p + '_CHECKER'),
     ]);
+  // The pinned posting job is tenant-wide, not a per-product staff command.
+  // Keep its broad scheduler permission out of customer actors and the API.
+  const scheduler = await actor('scheduler', [
+    'READ_SCHEDULER',
+    'EXECUTEJOB_SCHEDULER',
+  ]);
+  const postingJobs = (await native(scheduler.client, 'GET', 'jobs')).filter(
+    (job) => job.displayName === 'Post Dividends For Shares',
+  );
+  assert.equal(postingJobs.length, 1, 'Pinned dividend posting job required');
+  const postingJob = postingJobs[0];
+  oldPostingJob = postingJob;
+  assert.equal(postingJob.currentlyRunning, false);
+  // Avoid a scheduled run racing the explicit, disposable acceptance run.
+  await native(root, 'PUT', `jobs/${postingJob.jobId}`, {
+    active: false,
+  });
+  async function runDividendPosting() {
+    const path = `jobs/${postingJob.jobId}`;
+    const before = await native(scheduler.client, 'GET', path);
+    assert.equal(before.currentlyRunning, false);
+    await native(scheduler.client, 'POST', `${path}?command=executeJob`, {});
+    const deadline = Date.now() + 60000;
+    while (Date.now() < deadline) {
+      const job = await native(scheduler.client, 'GET', path);
+      const history = job.lastRunHistory;
+      if (
+        !job.currentlyRunning &&
+        history?.version !== before.lastRunHistory?.version &&
+        history?.jobRunEndTime
+      ) {
+        assert.equal(history.status, 'success', 'Dividend job must complete');
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    assert.fail('Dividend posting job did not finish within 60 seconds');
+  }
   stage = 'configured cash accounting product';
   const gl = {};
   for (const [name, type] of [
@@ -702,6 +741,59 @@ try {
     beforeDividend,
     'A replay must not duplicate dividend credit',
   );
+  stage = 'native dividend posting and repeated-job reconciliation';
+  await runDividendPosting();
+  const posted = await native(
+    root,
+    'GET',
+    `shareproduct/${shareProduct}/dividend/${dividendId}`,
+  );
+  assert.equal(posted.pageItems.length, 1);
+  assert.equal(
+    posted.pageItems[0].status.code,
+    'shareAccountDividendStatusType.posted',
+  );
+  const creditId = posted.pageItems[0].savingsTransactionId;
+  assert.match(creditId, /^[1-9]\d*$/);
+  assert.equal(BigInt(await balance()), beforeDividend + 1000n);
+  const credit = await native(
+    maker.client,
+    'GET',
+    `savingsaccounts/${savingsId}/transactions/${creditId}`,
+  );
+  assert.equal(fineractMinor(credit.amount, 0), '1000');
+  assert.equal(credit.reversed, false);
+  const visible = await ok(
+    'maker',
+    'GET',
+    `/api/saccos/${org}/records/dividends?product=${shareProduct}&record=${dividendId}`,
+  );
+  assert.equal(visible.pageItems[0].savingsTransactionId, creditId);
+  assert.equal(
+    visible.pageItems[0].status.code,
+    'shareAccountDividendStatusType.posted',
+  );
+  assert.equal(
+    (await call('maker', 'GET', `/api/saccos/${org}/records/dividends`))
+      .statusCode,
+    400,
+  );
+  assert.equal(
+    (
+      await call(
+        'maker',
+        'GET',
+        `/api/saccos/${org}/records/dividends?product=..`,
+      )
+    ).statusCode,
+    400,
+  );
+  await runDividendPosting();
+  assert.equal(
+    BigInt(await balance()),
+    beforeDividend + 1000n,
+    'A repeated completed posting job must not credit a dividend twice',
+  );
   stage = 'native journal reconciliation';
   const entries = await native(
     root,
@@ -751,6 +843,8 @@ try {
       duplicateCashPrevented: true,
       withdrawalBalanceMatched: true,
       nativeSharesAndDividendApprovalVerified: true,
+      nativeDividendSavingsCreditVerified: true,
+      repeatedDividendJobDidNotDuplicateCredit: true,
       nativeLoanLifecycleVerified: true,
       loanInterestAndSettlementMatched: true,
       loanRepaymentReplayPrevented: true,
@@ -759,11 +853,15 @@ try {
       messagesSent: 0,
       externalPaymentTransfers: 0,
       limitation:
-        'Disposable default tenant only; dividend posting job, teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
+        'Disposable default tenant only; teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
     }),
   );
 } finally {
   try {
+    if (oldPostingJob)
+      await root.request('PUT', `jobs/${oldPostingJob.jobId}`, {
+        active: oldPostingJob.active,
+      });
     if (oldPermissionSettings)
       await root.request('PUT', 'permissions', {
         permissions: oldPermissionSettings,
