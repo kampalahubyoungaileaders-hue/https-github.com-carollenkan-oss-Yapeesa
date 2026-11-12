@@ -121,7 +121,10 @@ test('administrator creates a group once, adds a member, assigns a secretary and
     overflowing: Array.from(document.querySelectorAll<HTMLElement>('body *'))
       .filter((element) => {
         const box = element.getBoundingClientRect();
-        return box.width > 0 && box.right + window.scrollX > window.innerWidth + 1;
+        return (
+          box.width > 0 &&
+          box.right + window.scrollX > window.innerWidth + 1
+        );
       })
       .slice(0, 30)
       .map((element) => {
