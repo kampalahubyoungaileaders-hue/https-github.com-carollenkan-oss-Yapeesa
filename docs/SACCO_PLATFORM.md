@@ -81,3 +81,19 @@ Pinned upstream contracts:
 - [Account API](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/portfolio/accounts/api/AccountsApiResource.java)
 - [Maker-checker API](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/commands/api/MakercheckersApiResource.java)
 - [Permission controls](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/useradministration/api/PermissionsApiResource.java)
+
+## Native share approval blocker (12 November 2026)
+
+The disposable running Fineract 1.12.0 role catalogue does not include
+`CREATE_SHAREACCOUNT_CHECKER`, although it includes `CREATE_SHAREACCOUNT`.
+The attempted native share/dividend acceptance stops before creating financial
+fixtures. Do not grant CHECKER_SUPER_USER or bypass the required approval controls
+to make this test pass. Native savings and loan acceptance passed independently.
+
+Share/dividend writes must remain unavailable under the current native-only
+maker-checker policy until an approval design is reviewed. A Yapesa-managed
+independent approval queue is a possible design change, not an implemented or
+accepted replacement. It requires reviewed identity, payload binding, immutable
+audits, self-approval denial, revocation and replay/uncertain-outcome handling.
+The native dividend approval endpoint uses PUT; approval and dividend posting
+are distinct operations.
