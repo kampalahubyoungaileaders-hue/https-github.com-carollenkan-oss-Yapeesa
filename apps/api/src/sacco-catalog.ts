@@ -151,7 +151,7 @@ export const saccoOperations: SaccoOperation[] = [
     'savings',
     cash,
     'savingsaccounts/{id}/transactions?command=withdrawal',
-    'WITHDRAW_SAVINGSACCOUNT',
+    'WITHDRAWAL_SAVINGSACCOUNT',
     `transactionDate:date transactionAmount:decimal paymentTypeId:id ${dayNote}`,
     true,
   ),

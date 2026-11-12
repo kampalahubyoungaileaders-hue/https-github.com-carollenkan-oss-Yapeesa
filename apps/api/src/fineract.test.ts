@@ -119,3 +119,10 @@ test('Fineract credential envelopes cannot move between people, SACCOs, users or
     ),
   );
 });
+
+test('cash withdrawal uses the native transaction permission, not application withdrawal', () => {
+  assert.equal(
+    saccoOperations.find((item) => item.id === 'savings.withdraw')?.permission,
+    'WITHDRAWAL_SAVINGSACCOUNT',
+  );
+});
