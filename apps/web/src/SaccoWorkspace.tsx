@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   api,
   ClientError,
@@ -286,7 +286,17 @@ function DataTable({
     </div>
   );
 }
-function Detail({ data }: { data: SaccoJson }) {
+function Detail({
+  data,
+  offset = 0,
+  busy = false,
+  onPage,
+}: {
+  data: SaccoJson;
+  offset?: number;
+  busy?: boolean;
+  onPage?: (offset: number) => void;
+}) {
   const r = record(data),
     summary = record(r['summary']),
     currency = text(record(r['currency'])['code']);
@@ -402,6 +412,33 @@ function Detail({ data }: { data: SaccoJson }) {
                   .replace(/^./, (c) => c.toUpperCase())}
           </h3>
           <DataTable rows={(v as SaccoJson[]).map(record)} />
+          {key === 'pageItems' && onPage && (
+            <div className="sacco-paging">
+              <span>
+                {s.total}: {text(r['totalFilteredRecords'])}
+              </span>
+              <button
+                className="button"
+                disabled={busy || offset === 0}
+                onClick={() => onPage(Math.max(0, offset - 50))}
+              >
+                {s.previous}
+              </button>
+              <button
+                className="button"
+                disabled={
+                  busy ||
+                  (v as SaccoJson[]).length < 50 ||
+                  (/^\d+$/.test(text(r['totalFilteredRecords'])) &&
+                    BigInt(offset + 50) >=
+                      BigInt(text(r['totalFilteredRecords'])))
+                }
+                onClick={() => onPage(offset + 50)}
+              >
+                {s.next}
+              </button>
+            </div>
+          )}
         </section>
       ))}
     </>
@@ -431,6 +468,7 @@ export default function SaccoWorkspace({
     [to, setTo] = useState(''),
     [office, setOffice] = useState(''),
     [dividendProduct, setDividendProduct] = useState(''),
+    [detailOffset, setDetailOffset] = useState(0),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [username, setUsername] = useState(''),
@@ -442,6 +480,13 @@ export default function SaccoWorkspace({
     [pending, setPending] = useState<SaccoCommand | null>(null),
     [message, setMessage] = useState(''),
     [preview, setPreview] = useState<SaccoJson | null>(null);
+  const detailScope = useRef(''),
+    detailSerial = useRef(0);
+  const nextDetailScope = `${org}/${resource}/${dividendProduct}`;
+  if (detailScope.current !== nextDetailScope) {
+    detailScope.current = nextDetailScope;
+    detailSerial.current++;
+  }
   const chosen = choices.find((c) => c.id === org),
     definition = catalog?.resources.find((r) => r.id === resource),
     operations =
@@ -461,6 +506,7 @@ export default function SaccoWorkspace({
     }
   }
   async function refresh() {
+    const scope = detailScope.current;
     const query: Record<string, string> = { offset: String(offset) };
     if (resource === 'dividends') {
       if (!/^[1-9]\d{0,18}$/.test(dividendProduct)) {
@@ -478,14 +524,10 @@ export default function SaccoWorkspace({
       }
       Object.assign(query, { from, to, office });
     }
-    setData(await api.saccoRecords(org, resource, query));
-    if (selected)
-      setDetail(
-        await api.saccoRecords(org, resource, {
-          record: selected,
-          ...(resource === 'dividends' ? { product: dividendProduct } : {}),
-        }),
-      );
+    const result = await api.saccoRecords(org, resource, query);
+    if (scope !== detailScope.current) return;
+    setData(result);
+    if (selected) await loadDetail(selected, detailOffset);
   }
   useEffect(() => {
     let active = true;
@@ -605,16 +647,25 @@ export default function SaccoWorkspace({
     definition?.template,
     operation,
   ]);
+  async function loadDetail(id: string, pageOffset: number) {
+    const scope = detailScope.current,
+      serial = ++detailSerial.current;
+    const result = await api.saccoRecords(org, resource, {
+      record: id,
+      ...(resource === 'dividends'
+        ? { product: dividendProduct, offset: String(pageOffset) }
+        : {}),
+    });
+    if (scope === detailScope.current && serial === detailSerial.current) {
+      setDetail(result);
+      setDetailOffset(pageOffset);
+    }
+  }
   async function open(id: string) {
     setSelected(id);
-    await perform(async () =>
-      setDetail(
-        await api.saccoRecords(org, resource, {
-          record: id,
-          ...(resource === 'dividends' ? { product: dividendProduct } : {}),
-        }),
-      ),
-    );
+    setDetail(null);
+    setDetailOffset(0);
+    await perform(() => loadDetail(id, 0));
   }
   async function connect(e: FormEvent) {
     e.preventDefault();
@@ -945,7 +996,17 @@ export default function SaccoWorkspace({
                 <h2>
                   {s.details} · {selected}
                 </h2>
-                <Detail data={detail} />
+                <Detail
+                  data={detail}
+                  {...(resource === 'dividends'
+                    ? {
+                        offset: detailOffset,
+                        busy,
+                        onPage: (offset: number) =>
+                          void perform(() => loadDetail(selected, offset)),
+                      }
+                    : {})}
+                />
               </section>
             )}
             {operations.length > 0 && (

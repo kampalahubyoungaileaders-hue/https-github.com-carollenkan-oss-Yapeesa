@@ -53,23 +53,29 @@ test('dividend view separates approval from posted member credits and keeps prod
       expect(url.searchParams.get('product')).toBe('42');
       const detail = url.searchParams.get('record');
       expect(detail === null || detail === '7').toBe(true);
+      const offset = url.searchParams.get('offset') ?? '0';
+      expect(['0', '50']).toContain(offset);
+      const start = Number(offset);
       return route.fulfill({
         json: {
-          totalFilteredRecords: '1',
+          totalFilteredRecords: detail ? '51' : '1',
           pageItems: detail
-            ? [
-                {
-                  id: '8',
-                  accountData: { accountNo: 'SH-0008' },
+            ? Array.from({ length: start === 0 ? 50 : 1 }, (_, index) => {
+                const n = start + index;
+                return {
+                  id: String(8 + n),
+                  accountData: {
+                    accountNo: `SH-${String(8 + n).padStart(4, '0')}`,
+                  },
                   amount: '1000',
                   status: {
                     code: 'shareAccountDividendStatusType.posted',
                     value: 'Posted',
                   },
-                  savingsTransactionId: '9007199254740993',
-                },
-              ]
-            : [{ id: '7', amount: '1000', status: { value: 'Approved' } }],
+                  savingsTransactionId: String(9007199254740993n + BigInt(n)),
+                };
+              })
+            : [{ id: '7', amount: '51000', status: { value: 'Approved' } }],
         },
       });
     }
@@ -94,13 +100,36 @@ test('dividend view separates approval from posted member credits and keeps prod
     page.getByRole('heading', { name: 'Dividend allocations', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('cell', { name: 'Posted', exact: true }),
+    page.getByRole('cell', { name: 'Posted', exact: true }).first(),
   ).toBeVisible();
   await expect(
     page.getByRole('cell', { name: 'SH-0008', exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('cell', { name: '9007199254740993', exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  const allocations = page
+    .getByRole('heading', { name: 'Dividend allocations', exact: true })
+    .locator('..');
+  await allocations
+    .getByRole('button', { name: 'Next page', exact: true })
+    .click();
+  await expect(
+    page.getByRole('cell', { name: 'SH-0058', exact: true }),
+  ).toBeVisible();
+  await expect(
+    allocations.getByRole('button', { name: 'Next page', exact: true }),
+  ).toBeDisabled();
+  await allocations
+    .getByRole('button', { name: 'Previous page', exact: true })
+    .click();
+  await expect(
+    page.getByRole('cell', { name: 'SH-0008', exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Refresh', exact: true }).click();
   await expect(

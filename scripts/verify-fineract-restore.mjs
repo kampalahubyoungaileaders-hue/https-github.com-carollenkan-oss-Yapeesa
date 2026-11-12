@@ -83,7 +83,8 @@ async function fingerprint(client) {
   for (const [name, sql] of Object.entries({
     schemas: `select nspname,pg_get_userbyid(nspowner) owner,coalesce(nspacl::text,'') grants from pg_namespace
       where nspname not in ('pg_catalog','information_schema') and nspname !~ '^pg_' order by nspname`,
-    columns: `select table_schema,table_name,column_name,ordinal_position,data_type,udt_schema,udt_name,is_nullable,column_default,is_identity,identity_generation
+    columns: `select table_schema,table_name,column_name,ordinal_position,data_type,udt_schema,udt_name,is_nullable,column_default,is_identity,identity_generation,
+      character_maximum_length,numeric_precision,numeric_scale,datetime_precision,collation_schema,collation_name,is_generated,generation_expression,domain_schema,domain_name
       from information_schema.columns where table_schema not in ('pg_catalog','information_schema') order by table_schema,table_name,ordinal_position`,
     constraints: `select n.nspname,c.relname,k.conname,k.contype,k.condeferrable,k.condeferred,k.convalidated,pg_get_constraintdef(k.oid) definition
       from pg_constraint k join pg_class c on c.oid=k.conrelid join pg_namespace n on n.oid=c.relnamespace

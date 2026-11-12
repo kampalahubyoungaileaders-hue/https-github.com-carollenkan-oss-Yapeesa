@@ -8,6 +8,7 @@ import {
   type FineractCredentials,
 } from './fineract.js';
 import { openFineract, sealFineract } from './sacco-credentials.js';
+import { saccoDividendRecord } from './sacco-dividends.js';
 import {
   saccoOperations,
   saccoResources,
@@ -420,6 +421,13 @@ export function registerSacco(
       if (!path) throw new ApiError(400, 'INVALID_SACCO_OPERATION');
       if (request.params.resource === 'dividends') {
         if (!q.product) throw new ApiError(400, 'SACCO_PRODUCT_REQUIRED');
+        if (q.record)
+          return saccoDividendRecord(
+            (path) => c.client.request('GET', path),
+            q.product,
+            q.record,
+            q.offset ?? '0',
+          );
         path = path.replace('{product}', id(q.product));
       }
       if (q.record) path = path.replace('{id}', id(q.record));

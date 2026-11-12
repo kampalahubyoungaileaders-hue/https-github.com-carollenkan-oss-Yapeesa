@@ -80,6 +80,13 @@ their native posting status and savings transaction references. It does not run
 the tenant-wide dividend job. See [SYSTEM_ACCEPTANCE.md](SYSTEM_ACCEPTANCE.md)
 for the full remaining scope and supplied-record requirements.
 
+Dividend reads require the native `READ_DIVIDEND_SHAREPRODUCT` permission as well
+as Yapesa manager/accountant access. Yapesa verifies the payout belongs to the
+selected product because the pinned native allocation endpoint ignores that URL
+parameter. Allocation pages are limited to 50 rows and can be paged in the web
+view. Parent validation is bounded to 1,000 payout records per product; a truncated
+parent lookup fails explicitly rather than claiming a missing dividend.
+
 Pinned upstream contracts:
 
 - [Idempotency](https://github.com/apache/fineract/blob/1.12.0/fineract-doc/src/docs/en/chapters/architecture/idempotency.adoc)

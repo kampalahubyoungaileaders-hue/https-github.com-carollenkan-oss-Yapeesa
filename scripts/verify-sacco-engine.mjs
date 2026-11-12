@@ -267,6 +267,7 @@ try {
     'READ_CONFIGURATION',
     'READ_AUDIT',
     'READ_OFFICE',
+    'READ_DIVIDEND_SHAREPRODUCT',
   ];
   // Fineract 1.12 excludes *_CHECKER from GET /permissions. The role
   // permission catalogue includes them; validate there before assigning them.
@@ -346,6 +347,16 @@ try {
   );
   assert.equal(postingJobs.length, 1, 'Pinned dividend posting job required');
   const postingJob = postingJobs[0];
+  await assert.rejects(
+    () =>
+      maker.client.request(
+        'POST',
+        `jobs/${postingJob.jobId}?command=executeJob`,
+        {},
+      ),
+    { code: 'FINERACT_PERMISSION_DENIED' },
+    'Customer maker must not execute tenant-wide jobs',
+  );
   oldPostingJob = postingJob;
   assert.equal(postingJob.currentlyRunning, false);
   // Avoid a scheduled run racing the explicit, disposable acceptance run.
@@ -779,6 +790,22 @@ try {
   assert.equal(
     visible.pageItems[0].status.code,
     'shareAccountDividendStatusType.posted',
+  );
+  const visiblePayouts = await ok(
+    'maker',
+    'GET',
+    `/api/saccos/${org}/records/dividends?product=${shareProduct}`,
+  );
+  assert.equal(visiblePayouts.pageItems[0].id, dividendId);
+  assert.equal(
+    (
+      await call(
+        'maker',
+        'GET',
+        `/api/saccos/${org}/records/dividends?product=999999999&record=${dividendId}`,
+      )
+    ).statusCode,
+    404,
   );
   assert.equal(
     (await call('maker', 'GET', `/api/saccos/${org}/records/dividends`))
