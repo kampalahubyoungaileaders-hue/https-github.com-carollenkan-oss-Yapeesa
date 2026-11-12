@@ -201,8 +201,6 @@ try {
     'REPAYMENT_LOAN',
   ];
   const reads = [
-    'READ_SHAREACCOUNT',
-    'READ_SHAREPRODUCT',
     'READ_LOAN',
     'READ_LOANPRODUCT',
     'READ_CLIENT',
