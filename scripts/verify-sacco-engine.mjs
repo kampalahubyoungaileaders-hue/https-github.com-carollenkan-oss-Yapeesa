@@ -275,6 +275,8 @@ try {
   const gl = {};
   for (const [name, type] of [
     ['cash', '1'],
+    ['loanPortfolio', '1'],
+    ['loanSuspense', '1'],
     ['savings', '2'],
     ['equity', '3'],
     ['income', '4'],
@@ -356,8 +358,8 @@ try {
       accountingRule: '2',
       locale: 'en',
       fundSourceAccountId: gl.cash,
-      loanPortfolioAccountId: gl.cash,
-      transfersInSuspenseAccountId: gl.savings,
+      loanPortfolioAccountId: gl.loanPortfolio,
+      transfersInSuspenseAccountId: gl.loanSuspense,
       interestOnLoanAccountId: gl.income,
       incomeFromFeeAccountId: gl.income,
       incomeFromPenaltyAccountId: gl.income,
