@@ -36,6 +36,9 @@ services:
       FINERACT_DEFAULT_TENANTDB_TIMEZONE: UTC
       FINERACT_DEFAULT_TENANTDB_DESCRIPTION: Yapesa local demo
       FINERACT_DEFAULT_MASTER_PASSWORD: ${FINERACT_MASTER_PASSWORD:?Missing local master password}
+      # Existing local volumes used the upstream tenant-key default. Keep that
+      # fallback until an explicit offline key rotation is performed.
+      FINERACT_DEFAULT_TENANTDB_MASTER_PASSWORD: ${FINERACT_TENANT_MASTER_PASSWORD:-fineract}
       FINERACT_SERVER_SSL_ENABLED: 'true'
       FINERACT_MANAGEMENT_ENDPOINT_WEB_EXPOSURE_INCLUDE: health,info
       FINERACT_REMOTE_JOB_MESSAGE_HANDLER_SPRING_EVENTS_ENABLED: 'true'

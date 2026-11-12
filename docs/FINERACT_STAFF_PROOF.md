@@ -11,7 +11,7 @@ The script accepts only the loopback HTTPS Compose endpoint on port 8443. Its
 self-signed certificate exception is limited to that local endpoint; this is not a
 production client or a hosted configuration. Explicit local-proof mode is required.
 The upstream default tenant and its documented local bootstrap account provision
-only the isolated fixtures. `FINERACT_DEFAULT_MASTER_PASSWORD` protects tenant
+only the isolated fixtures. `FINERACT_DEFAULT_TENANTDB_MASTER_PASSWORD` protects tenant
 configuration and is not the bootstrap user's login password. Optional local
 bootstrap credentials stay in the process environment. Generated staff passwords
 and authentication keys stay in memory and never appear in output or artifacts.

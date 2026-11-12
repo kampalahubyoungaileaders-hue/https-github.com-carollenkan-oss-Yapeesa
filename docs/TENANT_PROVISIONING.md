@@ -79,3 +79,24 @@ Pinned upstream contracts:
 - [Startup tenant upgrades](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/infrastructure/core/service/migration/TenantDatabaseUpgradeService.java)
 - [Native password encryptor](https://github.com/apache/fineract/blob/1.12.0/fineract-core/src/main/java/org/apache/fineract/infrastructure/core/service/database/DatabasePasswordEncryptor.java)
 - [Native encryption format and test](https://github.com/apache/fineract/blob/1.12.0/fineract-core/src/test/java/org/apache/fineract/infrastructure/security/utils/EncryptionUtilTest.java)
+
+## Tenant-key setting and existing local volumes
+
+The native properties distinguish `fineract.tenant.master-password`
+(`FINERACT_DEFAULT_TENANTDB_MASTER_PASSWORD`) from the database fallback master
+setting. Runtime acceptance exposed that the original Compose file only set the
+latter; the tenant registry consequently used the upstream default key.
+
+New development environments now explicitly map `FINERACT_TENANT_MASTER_PASSWORD`
+to the actual native tenant setting. Existing ignored `.env` files without that
+variable retain the historical native key via the Compose fallback, so this
+change does not silently rotate or invalidate their registry ciphertext. The
+operator test compares its selected key with the running container privately
+before writing anything. Recovery needs this actual tenant key, not merely the
+older database-fallback variable.
+
+Do not add/change the tenant-key value on an already-initialised registry by
+copying the new example value. That requires a separately verified offline
+rotation of encrypted connection records and native master-password hashes.
+No existing volume is deleted or automatically re-encrypted here. Example keys
+remain development-only; hosted operation needs separately protected secrets.

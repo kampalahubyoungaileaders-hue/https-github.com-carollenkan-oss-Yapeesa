@@ -3,7 +3,7 @@ import { Buffer } from 'node:buffer';
 import { spawn } from 'node:child_process';
 import { randomBytes, createHash } from 'node:crypto';
 import pg from 'pg';
-import { Fineract } from '../apps/api/src/fineract.ts';
+import { Fineract, fineractMinor } from '../apps/api/src/fineract.ts';
 import { encryptTenantPassword } from '../apps/api/src/fineract-tenant-format.ts';
 import {
   lenderProduct,
@@ -14,9 +14,8 @@ import { localStaffPassword } from './fineract-test-credentials.mjs';
 // Phase 5 operator spike. Only fresh randomly named tenants in the exact local
 // Compose database are supported. No hosted endpoint or customer export input.
 assert.equal(process.env.FINERACT_LOCAL_TENANT_PROOF, '1');
-assert(
-  process.env.FINERACT_DB_PASSWORD && process.env.FINERACT_MASTER_PASSWORD,
-);
+assert(process.env.FINERACT_DB_PASSWORD);
+const tenantMaster = process.env.FINERACT_TENANT_MASTER_PASSWORD || 'fineract';
 const compose = [
   'compose',
   '--env-file',
@@ -45,6 +44,7 @@ const plans = ['a', 'b'].map((letter) => ({
   registered: false,
 }));
 let stage = 'scope',
+  engineId,
   admin,
   sourceConfig,
   engineStopped = false;
@@ -110,6 +110,12 @@ async function ready() {
   const client = new Fineract(endpoint, 'default', bootstrap),
     deadline = Date.now() + 300000;
   while (Date.now() < deadline) {
+    if (
+      (await command(['inspect', '--format', '{{.State.Running}}', engineId]))
+        .toString()
+        .trim() !== 'true'
+    )
+      throw new Error(`Native engine exited during ${stage}`);
     try {
       await client.request('GET', 'offices');
       return;
@@ -178,6 +184,17 @@ async function applyTemplate(client) {
     assert.equal(saved.interestType.id, product.interestType);
     assert.equal(saved.currency.code, terms.currencyCode);
     assert.equal(saved.currency.decimalPlaces, terms.digitsAfterDecimal);
+    assert.equal(
+      fineractMinor(saved.principal, Number(terms.digitsAfterDecimal)),
+      fineractMinor(terms.principal, Number(terms.digitsAfterDecimal)),
+    );
+    assert.equal(saved.numberOfRepayments, terms.numberOfRepayments);
+    assert.equal(saved.repaymentEvery, terms.repaymentEvery);
+    assert.equal(saved.accountingRule.id, terms.accountingRule);
+    assert.equal(
+      saved.transactionProcessingStrategyCode,
+      terms.transactionProcessingStrategyCode,
+    );
     assert.match(saved.interestRatePerPeriod, /^1(?:\.0+)?$/);
     products[product.key] = id;
   }
@@ -238,6 +255,33 @@ try {
     user: 'fineract',
     password: process.env.FINERACT_DB_PASSWORD,
   };
+  engineId = (await command([...compose, 'ps', '-q', 'fineract']))
+    .toString()
+    .trim();
+  assert(/^[a-f0-9]{12,64}$/.test(engineId));
+  const engineInfo = JSON.parse(
+    (await command(['inspect', engineId])).toString(),
+  )[0];
+  assert.equal(
+    engineInfo.Config.Labels['com.docker.compose.service'],
+    'fineract',
+  );
+  assert.equal(
+    engineInfo.Config.Labels['com.docker.compose.project'],
+    'yapesa-fineract',
+  );
+  const environment = new Map(
+    engineInfo.Config.Env.map((entry) => {
+      const split = entry.indexOf('=');
+      return [entry.slice(0, split), entry.slice(split + 1)];
+    }),
+  );
+  // Compare privately; assertions must never print key values.
+  assert(
+    (environment.get('FINERACT_DEFAULT_TENANTDB_MASTER_PASSWORD') ??
+      'fineract') === tenantMaster,
+    'Tenant master setting differs from the running local engine',
+  );
   admin = await connect({ ...sourceConfig, database: 'fineract_tenants' });
   // Suppress statement/parameter logging for this private operator session.
   await admin.query(
@@ -255,7 +299,7 @@ try {
   for (const plan of plans) {
     stage = 'create isolated tenant database';
     const collision = await admin.query(
-      'select 1 from pg_database where datname=$1 union all select 1 from pg_roles where rolname=$1',
+      'select 1 from pg_database where datname=$1 union all select 1 from pg_roles where rolname=$1 union all select 1 from tenants where identifier=$1',
       [plan.database],
     );
     assert.equal(collision.rowCount, 0, 'Refuse existing operator resource');
@@ -270,10 +314,7 @@ try {
     await admin.query(
       `revoke all on database ${ident(plan.database)} from public`,
     );
-    const encrypted = encryptTenantPassword(
-      process.env.FINERACT_MASTER_PASSWORD,
-      plan.password,
-    );
+    const encrypted = encryptTenantPassword(tenantMaster, plan.password);
     await admin.query('begin');
     try {
       await admin.query(
@@ -539,10 +580,12 @@ try {
             [plan.identifier],
           );
           assert.equal(removed.rowCount, 1);
-          await admin.query(
+          assert.equal(removed.rows[0].oltp_id, removed.rows[0].report_id);
+          const connectionRemoved = await admin.query(
             'delete from tenant_server_connections where id=$1 and schema_name=$2 and schema_username=$3',
             [removed.rows[0].oltp_id, plan.database, plan.role],
           );
+          assert.equal(connectionRemoved.rowCount, 1);
           await admin.query('commit');
         }
         if (plan.databaseCreated)

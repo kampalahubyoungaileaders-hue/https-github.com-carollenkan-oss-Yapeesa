@@ -185,3 +185,12 @@ This does not expose registry/database/Docker authority to the customer API.
 Production self-serve provisioning remains pending a private durable operator
 worker and approved hosting. Fixture rates/terms are not customer lending policy.
 See [TENANT_PROVISIONING.md](TENANT_PROVISIONING.md) for the contract and limits.
+
+The first runtime provisioning attempt exposed an existing environment mapping
+error: `FINERACT_DEFAULT_MASTER_PASSWORD` is the database fallback, while the
+native tenant registry uses `FINERACT_DEFAULT_TENANTDB_MASTER_PASSWORD`. Compose
+now maps a distinct explicit tenant-master variable for new development setups.
+Existing local environments without it retain the historical native key;
+changing that key in place would invalidate encrypted connection records. No
+existing volume/key is silently rotated. The operator spike verifies its key
+selection against the running container before registration.
