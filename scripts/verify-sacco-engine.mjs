@@ -380,6 +380,7 @@ try {
     ['loanPortfolio', '1'],
     ['loanSuspense', '1'],
     ['savings', '2'],
+    ['dividendPayable', '2'],
     ['equity', '3'],
     ['income', '4'],
     ['expense', '5'],
@@ -394,6 +395,12 @@ try {
         description: 'Disposable accounting fixture',
       }),
     );
+  // Pinned native accounting requires financial activity 201 to debit the
+  // dedicated dividend-payable liability when crediting members' savings.
+  await native(root, 'POST', 'financialactivityaccounts', {
+    financialActivityId: '201',
+    glAccountId: gl.dividendPayable,
+  });
   const currencies = await native(root, 'GET', 'currencies');
   const selected = currencies.selectedCurrencyOptions.map((c) => c.code);
   if (!selected.includes('UGX'))

@@ -66,6 +66,12 @@ that the balance is unchanged. Customer makers/checkers receive no scheduler
 execution permission. No arbitrary job execution endpoint is exposed in Yapesa.
 A tenant-wide operational release workflow remains required for hosting.
 
+Native posting also requires financial activity `PAYABLE_DIVIDENDS` (201) mapped
+to a liability account. The disposable setup creates a dedicated dividend-payable
+liability and this mapping before posting; the running-engine check caught its
+absence. A tenant template must include and validate this mapping. This fixture
+does not define a customer's profit appropriation or dividend funding policy.
+
 Upstream contracts:
 
 - [Posting selection](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/portfolio/shareaccounts/service/ShareAccountDividendReadPlatformServiceImpl.java)

@@ -81,3 +81,38 @@ investigation and record the recovery point and elapsed recovery time.
 References: [pg_dump](https://www.postgresql.org/docs/current/app-pgdump.html),
 [pg_restore](https://www.postgresql.org/docs/current/app-pgrestore.html),
 [snapshot synchronization](https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION).
+
+## Native SACCO database recovery proof
+
+After the disposable Fineract financial acceptance check, CI also runs:
+
+```sh
+FINERACT_LOCAL_RESTORE_PROOF=1 node --env-file=.env scripts/verify-fineract-restore.mjs
+```
+
+This is restricted to the exact local `yapesa-fineract` Compose database container.
+It has no hosted-connection option. It temporarily stops the local engine to
+quiesce jobs and sequences, and restarts it in cleanup. It takes separate
+repeatable-read snapshots and custom-format dumps of `fineract_tenants` and
+`fineract_default`. Dumps stay in process memory; they are never uploaded as
+artifacts. The default tenant must already contain financial journals.
+
+Recovery uses the source database's immutable PostgreSQL image in a fresh
+container with a separate temporary filesystem and a random, loopback-only port.
+No source volume is mounted. The generated recovery password is passed by
+inherited environment name, never as an argument or output. The source's single
+local bootstrap role is required; additional operator roles are deliberately
+unsupported by this disposable proof rather than silently omitted.
+
+For both databases, the proof compares exact per-table row counts and SHA-256
+content fingerprints, owners/grants/RLS flags, column definitions, constraints,
+indexes, sequences, user functions, views and user triggers. Comparison failures
+print hashes, not source rows or raw restore errors. The recovery container and
+its temporary data are removed even when checks fail. Tenant registry secrets and
+staff password hashes are therefore never published in CI logs or artifacts.
+
+This exercises SQL/database recovery only. A full operational drill still needs
+the matching separately protected Fineract master encryption key, credentials,
+compatible engine and API startup, individual staff authentication, reconciliation,
+and an isolated hosted target. It does not provide encrypted off-site storage,
+backup scheduling, retention, alerting or recovery-time guarantees.
