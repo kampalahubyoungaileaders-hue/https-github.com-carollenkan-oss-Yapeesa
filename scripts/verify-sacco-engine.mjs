@@ -189,8 +189,14 @@ try {
     'ACTIVATE_SAVINGSACCOUNT',
     'DEPOSIT_SAVINGSACCOUNT',
     'WITHDRAWAL_SAVINGSACCOUNT',
+    'CREATE_LOAN',
+    'APPROVE_LOAN',
+    'DISBURSE_LOAN',
+    'REPAYMENT_LOAN',
   ];
   const reads = [
+    'READ_LOAN',
+    'READ_LOANPRODUCT',
     'READ_CLIENT',
     'READ_SAVINGSACCOUNT',
     'READ_SAVINGSPRODUCT',
@@ -326,6 +332,49 @@ try {
       position: '1',
     }),
   );
+  stage = 'configured disposable loan product';
+  const loanProduct = scalarId(
+    await native(root, 'POST', 'loanproducts', {
+      name: `${prefix}_loan`,
+      shortName: randomBytes(2).toString('hex'),
+      currencyCode: 'UGX',
+      digitsAfterDecimal: '0',
+      inMultiplesOf: '0',
+      principal: '100000',
+      numberOfRepayments: '1',
+      repaymentEvery: '1',
+      repaymentFrequencyType: '2',
+      interestRatePerPeriod: '1',
+      interestRateFrequencyType: '2',
+      amortizationType: '1',
+      interestType: '1',
+      interestCalculationPeriodType: '1',
+      transactionProcessingStrategyCode: 'mifos-standard-strategy',
+      daysInMonthType: '1',
+      daysInYearType: '1',
+      isInterestRecalculationEnabled: false,
+      accountingRule: '2',
+      locale: 'en',
+      fundSourceAccountId: gl.cash,
+      loanPortfolioAccountId: gl.cash,
+      transfersInSuspenseAccountId: gl.savings,
+      interestOnLoanAccountId: gl.income,
+      incomeFromFeeAccountId: gl.income,
+      incomeFromPenaltyAccountId: gl.income,
+      incomeFromRecoveryAccountId: gl.income,
+      writeOffAccountId: gl.expense,
+      overpaymentLiabilityAccountId: gl.savings,
+      goodwillCreditAccountId: gl.expense,
+      chargeOffExpenseAccountId: gl.expense,
+      chargeOffFraudExpenseAccountId: gl.expense,
+      incomeFromChargeOffInterestAccountId: gl.income,
+      incomeFromChargeOffFeesAccountId: gl.income,
+      incomeFromChargeOffPenaltyAccountId: gl.income,
+      incomeFromGoodwillCreditInterestAccountId: gl.income,
+      incomeFromGoodwillCreditFeesAccountId: gl.income,
+      incomeFromGoodwillCreditPenaltyAccountId: gl.income,
+    }),
+  );
   stage = 'verified Yapesa staff mapping';
   await login('root', 'MEETING_ADMIN');
   await login('maker', 'MEETING_SECRETARY');
@@ -426,6 +475,76 @@ try {
     savingsId,
   );
   assert.equal(await balance(), '75000');
+  stage = 'native loan schedule and lifecycle';
+  const terms = {
+    clientId,
+    productId: loanProduct,
+    principal: '100000',
+    loanTermFrequency: '1',
+    loanTermFrequencyType: '2',
+    numberOfRepayments: '1',
+    repaymentEvery: '1',
+    repaymentFrequencyType: '2',
+    interestRatePerPeriod: '1',
+    amortizationType: '1',
+    interestType: '1',
+    interestCalculationPeriodType: '1',
+    transactionProcessingStrategyCode: 'mifos-standard-strategy',
+    expectedDisbursementDate: start,
+    submittedOnDate: start,
+  };
+  const quote = await ok('maker', 'POST', `/api/saccos/${org}/commands`, {
+    request_id: v7(),
+    operation: 'loan.quote',
+    values: terms,
+  });
+  assert.equal(quote.status, 'preview');
+  const loanId = await execute('loan.apply', terms);
+  const loan = () =>
+    native(maker.client, 'GET', `loans/${loanId}?associations=all`);
+  assert.equal((await loan()).status.pendingApproval, true);
+  await execute('loan.approve', { approvedOnDate: start }, loanId);
+  const disburse = await submit(
+    'loan.disburse',
+    { actualDisbursementDate: start, paymentTypeId },
+    loanId,
+  );
+  assert.equal(
+    (await loan()).status.waitingForDisbursal,
+    true,
+    'Pending disbursement must not move money',
+  );
+  await check(disburse);
+  const activeLoan = await loan();
+  assert.equal(activeLoan.status.active, true);
+  assert.equal(
+    fineractMinor(activeLoan.summary.principalOutstanding, 0),
+    '100000',
+  );
+  assert.equal(fineractMinor(activeLoan.summary.interestCharged, 0), '1000');
+  const repayment = await submit(
+    'loan.repay',
+    {
+      transactionDate: today,
+      transactionAmount: '101000',
+      paymentTypeId,
+    },
+    loanId,
+  );
+  assert.equal(
+    fineractMinor((await loan()).summary.principalOutstanding, 0),
+    '100000',
+  );
+  await check(repayment);
+  const settled = await loan();
+  assert.equal(fineractMinor(settled.summary.totalOutstanding, 0), '0');
+  assert.equal(settled.status.closedObligationsMet, true);
+  await ok('maker', 'POST', `/api/saccos/${org}/commands`, repayment.command);
+  assert.equal(
+    fineractMinor((await loan()).summary.totalRepayment, 0),
+    '101000',
+    'Replayed repayment must not duplicate cash',
+  );
   stage = 'native journal reconciliation';
   const entries = await native(
     root,
@@ -474,12 +593,15 @@ try {
       pendingCashNotPosted: true,
       duplicateCashPrevented: true,
       withdrawalBalanceMatched: true,
+      nativeLoanLifecycleVerified: true,
+      loanInterestAndSettlementMatched: true,
+      loanRepaymentReplayPrevented: true,
       nativeJournalsBalanced: true,
       actualMakerAndCheckerAttributed: true,
       messagesSent: 0,
       externalPaymentTransfers: 0,
       limitation:
-        'Disposable default tenant only; shares, loans, dividends, teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
+        'Disposable default tenant only; shares, dividends, teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
     }),
   );
 } finally {
