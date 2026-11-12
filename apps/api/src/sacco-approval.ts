@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { ApiError } from './backend.js';
 import { saccoOperations, saccoPayload } from './sacco-catalog.js';
 export const independentOperations = new Set([
@@ -40,4 +41,19 @@ export function independentCommand(
       throw new ApiError(400, 'INVALID_SACCO_REFERENCE');
   }
   return { operation, body, path };
+}
+
+/** Bind approval to the native contract as well as the entered values. */
+export function independentFingerprint(
+  command: ReturnType<typeof independentCommand>,
+): string {
+  return createHash('sha256')
+    .update(
+      JSON.stringify({
+        method: command.operation.method,
+        path: command.path,
+        body: command.body,
+      }),
+    )
+    .digest('hex');
 }

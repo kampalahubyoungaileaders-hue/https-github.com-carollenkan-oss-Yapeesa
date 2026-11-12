@@ -347,7 +347,10 @@ function Detail({ data }: { data: SaccoJson }) {
                 ? Object.entries(value)
                 : [[key, value] as [string, SaccoJson]],
             )
-            .filter(([key]) => !['locale', 'dateFormat'].includes(key))
+            .filter(
+              ([key]) =>
+                !['locale', 'dateFormat', 'command_hash'].includes(key),
+            )
             .map(([key, value]) => (
               <div key={key}>
                 <dt>

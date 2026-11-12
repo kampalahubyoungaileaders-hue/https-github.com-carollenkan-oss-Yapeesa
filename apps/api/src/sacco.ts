@@ -13,7 +13,11 @@ import {
   saccoResources,
   saccoPayload,
 } from './sacco-catalog.js';
-import { independentOperations, independentCommand } from './sacco-approval.js';
+import {
+  independentOperations,
+  independentCommand,
+  independentFingerprint,
+} from './sacco-approval.js';
 interface StaffIdentity {
   tokens: { access_token: string };
   context: { person_id: string; can_administer: boolean };
@@ -498,6 +502,8 @@ export function registerSacco(
           throw new ApiError(409, 'SACCO_REVIEW_CHANGED');
         const frozen = object(proposal['values']);
         const checked = independentCommand(frozen, c.roles, c.permissions);
+        if (independentFingerprint(checked) !== frozen['command_hash'])
+          throw new ApiError(409, 'SACCO_REVIEW_CHANGED');
         const args = {
           p_org: org,
           p_id: input.record,
@@ -586,7 +592,7 @@ export function registerSacco(
       if (op.id === 'approval.execute')
         throw new ApiError(400, 'INVALID_SACCO_REFERENCE');
       if (independentOperations.has(op.id)) {
-        independentCommand(input, c.roles, c.permissions);
+        const native = independentCommand(input, c.roles, c.permissions);
         return rpc(
           'sacco_review',
           {
@@ -596,6 +602,7 @@ export function registerSacco(
             p_user: c.userId,
             p_payload: {
               operation: input.operation,
+              command_hash: independentFingerprint(native),
               values: input.values,
               ...(input.record ? { record: input.record } : {}),
               ...(input.sub_record ? { sub_record: input.sub_record } : {}),

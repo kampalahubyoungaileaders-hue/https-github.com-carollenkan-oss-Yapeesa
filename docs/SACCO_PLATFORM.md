@@ -114,3 +114,9 @@ or paid resource is provisioned by this implementation.
 Independent approval audit device references identify the verified Auth session,
 labelled reference_kind=auth_session in each audit event; they are not physical
 device enrollment identifiers.
+
+The proposal also stores a native-command fingerprint covering HTTP method,
+resource path and the validated native request body. Review and execution reject
+a fingerprint mismatch, including a command-catalog change between deployment
+versions. This binds the approved command, not a guarantee that externally
+maintained native product terms or account state cannot change.
