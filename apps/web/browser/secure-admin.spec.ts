@@ -122,8 +122,7 @@ test('administrator creates a group once, adds a member, assigns a secretary and
       .filter((element) => {
         const box = element.getBoundingClientRect();
         return (
-          box.width > 0 &&
-          box.right + window.scrollX > window.innerWidth + 1
+          box.width > 0 && box.right + window.scrollX > window.innerWidth + 1
         );
       })
       .slice(0, 30)

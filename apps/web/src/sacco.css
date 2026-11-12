@@ -168,7 +168,8 @@
 .sacco-pending code {
   overflow-wrap: anywhere;
 }
-.sacco-workspace .table-wrap {
+.sacco-workspace .table-wrap,
+.sacco-admin .table-wrap {
   overflow: auto;
   max-width: 100%;
 }
