@@ -1,0 +1,110 @@
+{
+  "version": "lender-cash-v1",
+  "accounts": [
+    { "key": "cash", "code": "YP100", "name": "Cash", "type": "1" },
+    {
+      "key": "portfolio",
+      "code": "YP110",
+      "name": "Loans receivable",
+      "type": "1"
+    },
+    {
+      "key": "suspense",
+      "code": "YP111",
+      "name": "Loan transfers suspense",
+      "type": "1"
+    },
+    {
+      "key": "overpayment",
+      "code": "YP210",
+      "name": "Loan overpayments",
+      "type": "2"
+    },
+    { "key": "capital", "code": "YP300", "name": "Owner capital", "type": "3" },
+    {
+      "key": "interest",
+      "code": "YP400",
+      "name": "Loan interest income",
+      "type": "4"
+    },
+    { "key": "fees", "code": "YP410", "name": "Loan fee income", "type": "4" },
+    {
+      "key": "penalties",
+      "code": "YP420",
+      "name": "Loan penalty income",
+      "type": "4"
+    },
+    {
+      "key": "recovery",
+      "code": "YP430",
+      "name": "Loan recovery income",
+      "type": "4"
+    },
+    {
+      "key": "expense",
+      "code": "YP500",
+      "name": "Loan write-offs and goodwill",
+      "type": "5"
+    }
+  ],
+  "products": [
+    {
+      "key": "flat",
+      "name": "Flat interest loan",
+      "shortName": "YPFL",
+      "interestType": "1"
+    },
+    {
+      "key": "declining",
+      "name": "Declining balance loan",
+      "shortName": "YPDB",
+      "interestType": "0"
+    }
+  ],
+  "roles": [
+    {
+      "key": "loan_officer",
+      "permissions": [
+        "READ_CLIENT",
+        "READ_OFFICE",
+        "READ_LOAN",
+        "READ_LOANPRODUCT",
+        "READ_AUDIT",
+        "READ_PERMISSION",
+        "READ_CONFIGURATION",
+        "CREATE_CLIENT",
+        "CREATE_LOAN",
+        "REPAYMENT_LOAN"
+      ]
+    },
+    {
+      "key": "manager",
+      "permissions": [
+        "READ_CLIENT",
+        "READ_OFFICE",
+        "READ_LOAN",
+        "READ_LOANPRODUCT",
+        "READ_AUDIT",
+        "READ_PERMISSION",
+        "READ_CONFIGURATION",
+        "ACTIVATE_CLIENT",
+        "APPROVE_LOAN",
+        "DISBURSE_LOAN",
+        "CREATE_CLIENT_CHECKER",
+        "ACTIVATE_CLIENT_CHECKER",
+        "CREATE_LOAN_CHECKER",
+        "APPROVE_LOAN_CHECKER",
+        "DISBURSE_LOAN_CHECKER",
+        "REPAYMENT_LOAN_CHECKER"
+      ]
+    }
+  ],
+  "nativeCheckedActions": [
+    "CREATE_CLIENT",
+    "ACTIVATE_CLIENT",
+    "CREATE_LOAN",
+    "APPROVE_LOAN",
+    "DISBURSE_LOAN",
+    "REPAYMENT_LOAN"
+  ]
+}

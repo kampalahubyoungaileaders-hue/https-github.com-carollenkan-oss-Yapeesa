@@ -170,3 +170,18 @@ Fineract remains unmodified and owns every financial calculation and journal.
 No blanket checker privilege is granted. Direct engine access must be isolated
 before hosted use; no new paid hosting is authorized. See SACCO_PLATFORM.md
 for freshness, audit, session checks and uncertain-outcome limitations.
+
+## 12 November 2026: named-tenant provisioning acceptance boundary
+
+The pinned Fineract 1.12.0 source has no tenant-creation REST resource. Its native
+registry and startup migrator support additional separately configured databases.
+The Phase 5 operator spike therefore creates/registers fresh local databases,
+restarts unmodified Fineract for native migrations, and applies a versioned lender
+configuration through native APIs. It checks separate restricted database logins,
+wrong-tenant staff denial and overlapping-ID isolation. The password compatibility
+helper is covered by upstream's Java test vector; staff envelopes remain AES-GCM.
+
+This does not expose registry/database/Docker authority to the customer API.
+Production self-serve provisioning remains pending a private durable operator
+worker and approved hosting. Fixture rates/terms are not customer lending policy.
+See [TENANT_PROVISIONING.md](TENANT_PROVISIONING.md) for the contract and limits.

@@ -133,3 +133,13 @@ resource path and the validated native request body. Review and execution reject
 a fingerprint mismatch, including a command-catalog change between deployment
 versions. This binds the approved command, not a guarantee that externally
 maintained native product terms or account state cannot change.
+
+## Named-tenant and lender-template spike
+
+The local operator acceptance runner now exercises registration of two named
+native tenants, native startup migrations, distinct restricted database owners,
+and a lender cash chart with flat/declining products and restricted native staff
+roles. It checks HTTP staff isolation and database connection denial using
+independent credentials and overlapping native client IDs. Terms are explicit
+fixture inputs. It is not a hosted/self-serve provisioning endpoint or a SACCO
+product template. See [TENANT_PROVISIONING.md](TENANT_PROVISIONING.md).
