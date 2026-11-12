@@ -264,7 +264,7 @@ export const saccoOperations: SaccoOperation[] = [
     'APPROVE_DIVIDEND_SHAREPRODUCT',
     '',
     true,
-    { subTarget: true },
+    { subTarget: true, method: 'PUT' },
   ),
   op(
     'loan.apply',

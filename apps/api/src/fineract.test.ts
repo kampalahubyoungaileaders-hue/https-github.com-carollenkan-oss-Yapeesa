@@ -126,3 +126,11 @@ test('cash withdrawal uses the native transaction permission, not application wi
     'WITHDRAWAL_SAVINGSACCOUNT',
   );
 });
+
+test('native dividend approval uses PUT with a dividend subresource', () => {
+  const operation = saccoOperations.find(
+    (item) => item.id === 'dividend.approve',
+  )!;
+  assert.equal(operation.method, 'PUT');
+  assert.equal(operation.subTarget, true);
+});

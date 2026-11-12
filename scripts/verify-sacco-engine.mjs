@@ -107,12 +107,13 @@ async function queue(label = 'checker') {
   const result = await ok(label, 'GET', `/api/saccos/${org}/records/approvals`);
   return result.pageItems;
 }
-async function submit(operation, values = {}, record) {
+async function submit(operation, values = {}, record, subRecord) {
   const command = {
     request_id: v7(),
     operation,
     values,
     ...(record ? { record } : {}),
+    ...(subRecord ? { sub_record: subRecord } : {}),
   };
   const result = await ok(
     'maker',
@@ -189,12 +190,19 @@ try {
     'ACTIVATE_SAVINGSACCOUNT',
     'DEPOSIT_SAVINGSACCOUNT',
     'WITHDRAWAL_SAVINGSACCOUNT',
+    'CREATE_SHAREACCOUNT',
+    'APPROVE_SHAREACCOUNT',
+    'ACTIVATE_SHAREACCOUNT',
+    'CREATE_DIVIDEND_SHAREPRODUCT',
+    'APPROVE_DIVIDEND_SHAREPRODUCT',
     'CREATE_LOAN',
     'APPROVE_LOAN',
     'DISBURSE_LOAN',
     'REPAYMENT_LOAN',
   ];
   const reads = [
+    'READ_SHAREACCOUNT',
+    'READ_SHAREPRODUCT',
     'READ_LOAN',
     'READ_LOANPRODUCT',
     'READ_CLIENT',
@@ -377,6 +385,34 @@ try {
       incomeFromGoodwillCreditPenaltyAccountId: gl.income,
     }),
   );
+  stage = 'configured disposable share product';
+  const shareProduct = scalarId(
+    await native(root, 'POST', 'products/share', {
+      name: `${prefix}_shares`,
+      shortName: randomBytes(2).toString('hex'),
+      description: 'Disposable share and dividend proof',
+      currencyCode: 'UGX',
+      digitsAfterDecimal: '0',
+      inMultiplesOf: '0',
+      totalShares: '1000',
+      sharesIssued: '1000',
+      unitPrice: '1000',
+      minimumShares: '1',
+      nominalShares: '10',
+      maximumShares: '100',
+      allowDividendCalculationForInactiveClients: false,
+      minimumActivePeriodForDividends: '1',
+      minimumactiveperiodFrequencyType: '0',
+      lockinPeriodFrequency: '1',
+      lockinPeriodFrequencyType: '0',
+      accountingRule: '2',
+      shareReferenceId: gl.cash,
+      shareSuspenseId: gl.savings,
+      shareEquityId: gl.equity,
+      incomeFromFeeAccountId: gl.income,
+      locale: 'en',
+    }),
+  );
   stage = 'verified Yapesa staff mapping';
   await login('root', 'MEETING_ADMIN');
   await login('maker', 'MEETING_SECRETARY');
@@ -547,6 +583,68 @@ try {
     '101000',
     'Replayed repayment must not duplicate cash',
   );
+  stage = 'native share lifecycle';
+  const shareId = await execute('share.apply', {
+    clientId,
+    productId: shareProduct,
+    savingsAccountId: savingsId,
+    submittedDate: start,
+    applicationDate: start,
+    requestedShares: '10',
+  });
+  await execute('share.approve', { approvedDate: start }, shareId);
+  await execute('share.activate', { activatedDate: start }, shareId);
+  const share = await native(maker.client, 'GET', `accounts/share/${shareId}`);
+  assert.equal(share.status.code, 'shareAccountStatusType.active');
+  assert.equal(share.summary.totalApprovedShares, '10');
+  stage = 'native dividend allocation and approval';
+  const dividend = await submit(
+    'dividend.declare',
+    {
+      dividendPeriodStartDate: start,
+      dividendPeriodEndDate: iso(-1),
+      dividendAmount: '1000',
+    },
+    shareProduct,
+  );
+  await check(dividend);
+  const payouts = () =>
+    native(root, 'GET', `shareproduct/${shareProduct}/dividend`);
+  const declared = (await payouts()).pageItems;
+  assert.equal(declared.length, 1);
+  assert.equal(fineractMinor(declared[0].amount, 0), '1000');
+  const dividendId = declared[0].id;
+  const detail = await native(
+    root,
+    'GET',
+    `shareproduct/${shareProduct}/dividend/${dividendId}`,
+  );
+  assert.equal(detail.pageItems.length, 1);
+  assert.equal(fineractMinor(detail.pageItems[0].amount, 0), '1000');
+  const beforeDividend = BigInt(await balance());
+  const approval = await submit(
+    'dividend.approve',
+    {},
+    shareProduct,
+    dividendId,
+  );
+  assert.equal(
+    BigInt(await balance()),
+    beforeDividend,
+    'Pending dividend approval must not credit savings',
+  );
+  await check(approval);
+  assert.equal(
+    (await payouts()).pageItems[0].status.code,
+    'shareAccountDividendStatusType.approved',
+  );
+  assert.equal(BigInt(await balance()), beforeDividend);
+  await ok('maker', 'POST', `/api/saccos/${org}/commands`, approval.command);
+  assert.equal(
+    BigInt(await balance()),
+    beforeDividend,
+    'Approval replay must not post dividends before the native posting job',
+  );
   stage = 'native journal reconciliation';
   const entries = await native(
     root,
@@ -595,6 +693,7 @@ try {
       pendingCashNotPosted: true,
       duplicateCashPrevented: true,
       withdrawalBalanceMatched: true,
+      nativeSharesAndDividendApprovalVerified: true,
       nativeLoanLifecycleVerified: true,
       loanInterestAndSettlementMatched: true,
       loanRepaymentReplayPrevented: true,
@@ -603,7 +702,7 @@ try {
       messagesSent: 0,
       externalPaymentTransfers: 0,
       limitation:
-        'Disposable default tenant only; shares, dividends, teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
+        'Disposable default tenant only; dividend posting job, teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
     }),
   );
 } finally {
