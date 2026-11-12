@@ -22,7 +22,7 @@ assert.equal(base.pathname, '/fineract-provider/api/v1/');
 assert(!base.username && !base.password && !base.search && !base.hash);
 const prefix = `yp_probe_${randomBytes(6).toString('hex')}`;
 // The pinned upstream integration tests document this local bootstrap account.
-// FINERACT_DEFAULT_MASTER_PASSWORD encrypts tenant database configuration; it is
+// FINERACT_DEFAULT_TENANTDB_MASTER_PASSWORD encrypts tenant configuration; it is
 // not the bootstrap user's login password.
 const admin = {
   username: process.env.FINERACT_LOCAL_ADMIN_USER ?? 'mifos',

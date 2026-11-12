@@ -89,6 +89,7 @@ test('review scheduled loan terms, approve as another officer, record cash once,
     await expect(
       sec.getByRole('button', { name: 'Refresh meetings', exact: true }),
     ).toBeEnabled();
+    const meetingDate = await sec.locator('#new-meeting-date').inputValue();
     await sec
       .getByRole('button', { name: 'Open meeting', exact: true })
       .click();
@@ -104,6 +105,7 @@ test('review scheduled loan terms, approve as another officer, record cash once,
       ).toBeEnabled();
     }
     await nav(sec, 'Overview');
+    await sec.locator('#saved-date').fill(meetingDate);
     await sec
       .getByLabel('Member', { exact: true })
       .selectOption(env['TEST_MEETING_MEMBER_PERSON']!);

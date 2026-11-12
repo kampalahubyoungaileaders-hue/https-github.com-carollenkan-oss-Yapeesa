@@ -159,3 +159,38 @@ integer schedule and chronological allocation. Loans require configured group
 officer consent and a separate recorded cash handover. Social reserve checks also
 cover share corrections and fine refunds after lending. No hosted sample loans
 or lender/SACCO ledger changes are introduced. Offline workflows remain deferred.
+
+## 12 November 2026 — targeted independent SACCO approvals
+
+The founder approved a hybrid after native 1.12.0 runtime acceptance found no
+CREATE_SHAREACCOUNT_CHECKER permission. Savings and loans retain tested native
+checking. Only enumerated share/dividend operations use a database-enforced
+Yapesa proposal, independent manager decision and original-maker dispatch.
+Fineract remains unmodified and owns every financial calculation and journal.
+No blanket checker privilege is granted. Direct engine access must be isolated
+before hosted use; no new paid hosting is authorized. See SACCO_PLATFORM.md
+for freshness, audit, session checks and uncertain-outcome limitations.
+
+## 12 November 2026: named-tenant provisioning acceptance boundary
+
+The pinned Fineract 1.12.0 source has no tenant-creation REST resource. Its native
+registry and startup migrator support additional separately configured databases.
+The Phase 5 operator spike therefore creates/registers fresh local databases,
+restarts unmodified Fineract for native migrations, and applies a versioned lender
+configuration through native APIs. It checks separate restricted database logins,
+wrong-tenant staff denial and overlapping-ID isolation. The password compatibility
+helper is covered by upstream's Java test vector; staff envelopes remain AES-GCM.
+
+This does not expose registry/database/Docker authority to the customer API.
+Production self-serve provisioning remains pending a private durable operator
+worker and approved hosting. Fixture rates/terms are not customer lending policy.
+See [TENANT_PROVISIONING.md](TENANT_PROVISIONING.md) for the contract and limits.
+
+The first runtime provisioning attempt exposed an existing environment mapping
+error: `FINERACT_DEFAULT_MASTER_PASSWORD` is the database fallback, while the
+native tenant registry uses `FINERACT_DEFAULT_TENANTDB_MASTER_PASSWORD`. Compose
+now maps a distinct explicit tenant-master variable for new development setups.
+Existing local environments without it retain the historical native key;
+changing that key in place would invalidate encrypted connection records. No
+existing volume/key is silently rotated. The operator spike verifies its key
+selection against the running container before registration.

@@ -1,0 +1,336 @@
+.sacco-workspace {
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 32px;
+  min-height: 100vh;
+}
+.sacco-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.sacco-header h1 {
+  margin: 6px 0;
+  font-size: 30px;
+}
+.sacco-header p {
+  margin: 0;
+  color: var(--muted, #68758a);
+}
+.sacco-header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+}
+.sacco-header-actions label {
+  min-width: 220px;
+}
+.sacco-workspace label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.sacco-workspace input,
+.sacco-workspace select {
+  min-height: 42px;
+  max-width: 100%;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dce2e9;
+  border-radius: 8px;
+  background: #fff;
+  color: #172b42;
+  font: inherit;
+  box-sizing: border-box;
+}
+.sacco-workspace small,
+.sacco-workspace .hint {
+  color: #718096;
+  font-weight: 400;
+}
+.sacco-layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 24px;
+}
+.sacco-nav {
+  background: #102d42;
+  color: #dce9f2;
+  border-radius: 14px;
+  padding: 16px;
+  align-self: start;
+  display: grid;
+  gap: 5px;
+}
+.sacco-nav p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0 8px 14px;
+  color: #afc7d6;
+}
+.sacco-nav button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sacco-nav button.active {
+  background: #20526b;
+  color: #fff;
+  font-weight: 700;
+}
+.sacco-nav button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.sacco-main {
+  min-width: 0;
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+.sacco-main .panel,
+.sacco-connect {
+  padding: 24px;
+  border: 1px solid #e0e7ed;
+  border-radius: 14px;
+  background: #fff;
+}
+.sacco-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.sacco-section-head h2 {
+  margin: 5px 0 20px;
+}
+.sacco-field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 18px;
+}
+.sacco-connect {
+  max-width: 520px;
+  margin: 40px auto;
+}
+.sacco-empty {
+  padding: 40px 20px;
+  color: #718096;
+  line-height: 1.7;
+}
+.sacco-search {
+  max-width: 420px;
+}
+.sacco-paging {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.sacco-paging span {
+  margin-right: auto;
+  font-size: 13px;
+  color: #718096;
+}
+.sacco-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 16px 0 26px;
+}
+.sacco-facts dt {
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 6px;
+}
+.sacco-facts dd {
+  font-size: 15px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.sacco-pending {
+  margin-top: 20px;
+  border-left: 4px solid #d29b30;
+  padding: 12px 18px;
+  background: #fffaeb;
+}
+.sacco-pending code {
+  overflow-wrap: anywhere;
+}
+.sacco-workspace .table-wrap,
+.sacco-admin .table-wrap {
+  overflow: auto;
+  max-width: 100%;
+}
+.sacco-workspace table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.sacco-workspace th {
+  text-align: left;
+  color: #718096;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e0e7ed;
+  padding: 12px;
+}
+.sacco-workspace td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #edf1f5;
+}
+.sacco-workspace h3 {
+  font-size: 16px;
+  margin-top: 28px;
+}
+.sacco-workspace .error-banner,
+.sacco-workspace .success-banner {
+  margin-bottom: 18px;
+  overflow-wrap: anywhere;
+}
+.sacco-workspace form > .button {
+  margin-top: 10px;
+}
+.sacco-workspace .eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #52728a;
+}
+.sacco-main > section > p {
+  font-size: 13px;
+  color: #718096;
+  line-height: 1.7;
+}
+@media (max-width: 1000px) {
+  .sacco-workspace {
+    padding: 22px;
+  }
+  .sacco-field-grid,
+  .sacco-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sacco-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+@media (max-width: 700px) {
+  .sacco-workspace {
+    padding: 14px;
+  }
+  .sacco-header {
+    display: block;
+  }
+  .sacco-header h1 {
+    font-size: 25px;
+  }
+  .sacco-header-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-top: 20px;
+  }
+  .sacco-header-actions label {
+    min-width: 0;
+  }
+  .sacco-header-actions > .button {
+    justify-self: start;
+  }
+  .sacco-layout {
+    grid-template-columns: 1fr;
+  }
+  .sacco-nav {
+    display: flex;
+    overflow: auto;
+    gap: 5px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  .sacco-nav p {
+    display: none;
+  }
+  .sacco-nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 10px;
+    font-size: 12px;
+  }
+  .sacco-field-grid,
+  .sacco-facts {
+    grid-template-columns: 1fr;
+  }
+  .sacco-main .panel {
+    padding: 16px;
+  }
+  .sacco-section-head {
+    align-items: start;
+  }
+  .sacco-section-head h2 {
+    font-size: 20px;
+  }
+  .sacco-section-head > .button {
+    font-size: 11px;
+  }
+  .sacco-workspace label {
+    font-size: 12px;
+  }
+  .sacco-workspace table {
+    min-width: 480px;
+  }
+  .sacco-connect {
+    margin: 18px 0;
+    padding: 18px;
+  }
+  .sacco-paging > .button {
+    font-size: 11px;
+  }
+}
+.sacco-admin .sacco-field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.sacco-admin label {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+.sacco-admin input,
+.sacco-admin select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+  border: 1px solid #dce2e9;
+  border-radius: 7px;
+  padding: 9px;
+  background: #fff;
+  font: inherit;
+}
+.sacco-admin input[type='checkbox'] {
+  width: 20px;
+  min-height: 20px;
+}
+.sacco-admin {
+  margin-bottom: 24px;
+}
+@media (max-width: 700px) {
+  .sacco-admin .sacco-field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

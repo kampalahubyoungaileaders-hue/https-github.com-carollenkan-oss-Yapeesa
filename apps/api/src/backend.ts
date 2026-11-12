@@ -4,6 +4,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public code: string,
+    public fields?: string[],
   ) {
     super(code);
   }
@@ -69,6 +70,15 @@ export class Backend {
         ('error_code' in result || 'code' in result)
           ? String('error_code' in result ? result.error_code : result.code)
           : '';
+      if (path.startsWith('/rest/v1/rpc/sacco_')) {
+        if (code === '42501') throw new ApiError(403, 'PERMISSION_DENIED');
+        if (code === '23505')
+          throw new ApiError(409, 'SACCO_REFERENCE_CONFLICT');
+        if (
+          ['22023', '23514', '23502', '23503', 'P0001', 'P0002'].includes(code)
+        )
+          throw new ApiError(422, 'INVALID_SACCO_REQUEST');
+      }
       if (path.startsWith('/auth/') && response.status === 429)
         throw new ApiError(429, 'TOO_MANY_ATTEMPTS');
       if (path === '/auth/v1/user' && code === 'same_password')

@@ -1,3 +1,4 @@
+import { registerSacco } from './sacco.js';
 import { auditData, renderAudit } from './audit.js';
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
 import cookie from '@fastify/cookie';
@@ -121,7 +122,10 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
   app.setErrorHandler((error, _request, reply) => {
     const err = error as Error & { validation?: unknown; statusCode?: number };
     if (error instanceof ApiError)
-      return reply.code(error.status).send({ error: error.code });
+      return reply.code(error.status).send({
+        error: error.code,
+        ...(error.fields?.length ? { fields: error.fields } : {}),
+      });
     if (err.validation)
       return reply.code(400).send({ error: 'INVALID_REQUEST' });
     if (err.statusCode === 429)
@@ -248,6 +252,7 @@ export function buildApp(config?: ApiConfig, webRoot?: string) {
   }
   app.after(() => {
     registerRecovery(app, config, clearTokens);
+    registerSacco(app, config, authorised);
     const errors = {
       400: errorSchema,
       401: errorSchema,

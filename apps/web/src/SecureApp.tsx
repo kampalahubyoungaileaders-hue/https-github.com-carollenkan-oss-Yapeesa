@@ -6,17 +6,19 @@ import {
   type Session,
   type GroupList,
   type ProgrammeList,
+  type SaccoList,
   type SavedWorkspace,
   type Factor,
   type Receipt,
   type SharePurchase,
 } from '@yapesa/api-client';
 import { calcVersion } from '@yapesa/domain';
-import { t } from '@yapesa/i18n';
+import { t, saccoText } from '@yapesa/i18n';
 import { Icon } from './icons';
 import { exportRows } from './workspace';
 import InvitationForm from './InvitationForm';
 import ProgrammeReports from './ProgrammeReports';
+import SaccoWorkspace from './SaccoWorkspace';
 import Administration from './Administration';
 import RecoveryForm from './RecoveryForm';
 import ShareCorrection from './ShareCorrection';
@@ -88,6 +90,8 @@ export default function SecureApp() {
   const [groups, setGroups] = useState<GroupList>([]);
   const [programmes, setProgrammes] = useState<ProgrammeList>([]);
   const [programmeOpen, setProgrammeOpen] = useState(false);
+  const [saccos, setSaccos] = useState<SaccoList>([]);
+  const [saccoOpen, setSaccoOpen] = useState(false);
   const [workspace, setWorkspace] = useState<SavedWorkspace | null>(null);
   const [selected, setSelected] = useState('');
   const [tab, setTab] = useState<Tab>('overview');
@@ -128,10 +132,13 @@ export default function SecureApp() {
       return;
     let cancelled = false;
     setLoading(true);
-    Promise.all([api.groups(), api.programmes()])
-      .then(async ([values, programmeValues]) => {
+    Promise.all([api.groups(), api.programmes(), api.saccos()])
+      .then(async ([values, programmeValues, saccoValues]) => {
         if (!cancelled) {
           setProgrammes(programmeValues);
+          setSaccos(saccoValues.filter((v) => v.can_work));
+          if (!values.length && saccoValues.some((v) => v.can_work))
+            setSaccoOpen(true);
           if (!values.length && programmeValues.length) setProgrammeOpen(true);
         }
         if (cancelled) return;
@@ -317,6 +324,8 @@ export default function SecureApp() {
       setWorkspace(null);
       setGroups([]);
       setProgrammes([]);
+      setSaccos([]);
+      setSaccoOpen(false);
       setProgrammeOpen(false);
       setFactor(null);
       setReceipt(null);
@@ -591,6 +600,14 @@ export default function SecureApp() {
         </div>
       </div>
     );
+  if (saccoOpen && saccos.length)
+    return (
+      <SaccoWorkspace
+        choices={saccos}
+        onSignOut={() => void signOut()}
+        onBack={() => setSaccoOpen(false)}
+      />
+    );
   if (programmeOpen && programmes.length)
     return (
       <ProgrammeReports
@@ -699,6 +716,18 @@ export default function SecureApp() {
                 {t(titleKeys[key])}
               </button>
             ))}
+          {saccos.length > 0 && (
+            <button
+              className="live-nav"
+              onClick={() => {
+                setMenu(false);
+                setSaccoOpen(true);
+              }}
+            >
+              <Icon name="ledger" />
+              {saccoText.title}
+            </button>
+          )}
           {programmes.length > 0 && (
             <button
               className="live-nav"

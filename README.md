@@ -1,13 +1,18 @@
 # Yapesa
 
 Digital records for savings groups, lenders and SACCOs, from Fencher Technologies.
-This repository includes the **Phase 0 foundation** and a **web Groups workspace
-preview**. The web preview uses labelled sample records saved in this browser.
-The authenticated online share-purchase path is implemented separately and requires
-server/account configuration. A development deployment is available at
+The authenticated web app includes Groups administration, meeting records,
+shares, Social fund, fines, loans, approvals, share-out and reports. A separate
+sample workspace uses labelled browser-only records. A development deployment is available at
 https://yapesa-web.onrender.com/#live with the first administrator activated.
 See [hosting and onboarding](docs/HOSTING.md). The agreed scope
 and later phases are in [the build brief](docs/BUILD_BRIEF.md).
+
+The Fineract-backed SACCO workspace is under development on PR #22, including
+individual staff identities, controlled account/loan commands and dividend
+posting visibility. It is not a complete or hosted SACCO/Lenders release. See the
+[full-system acceptance checklist](docs/SYSTEM_ACCEPTANCE.md) and
+[SACCO implementation scope](docs/SACCO_PLATFORM.md) before onboarding customers.
 
 ## Saved organisation records
 
@@ -65,7 +70,7 @@ Fineract's own database migrations.
 
 Fineract has a self-signed local TLS certificate and its default demo tenant.
 It is bound to loopback; its database has no host port. Do not expose this stack
-or use it with customer records. The future Yapesa API will be its only caller.
+or use it with customer records. Customer applications reach it only through the Yapesa API.
 Credentials and service keys must never be added to either client application.
 Local demo credentials are not production credentials.
 
@@ -110,9 +115,9 @@ Branch protection must require `checks`, `local-stack`, `secure-web` and
 ## Structure
 
 - `apps/mobile`: Expo Router development-build shell.
-- `apps/web`: React/Vite responsive web shell.
-- `apps/api`: Fastify authentication gateway and protected share-purchase API.
-- `packages/domain`: tested integer share-purchase and reversal calculations; online shares are recalculated and posted in Postgres.
+- `apps/web`: React/Vite responsive Groups and SACCO web workspaces.
+- `apps/api`: Fastify authentication gateway, Groups API and controlled native SACCO integration.
+- `packages/domain`: tested integer Groups calculations; saved financial writes are recalculated and posted in Postgres.
 - `packages/api-client`: generated OpenAPI types and typed API client.
 - `packages/ui-tokens`, `i18n`, `country-packs`: shared foundations.
 - `supabase`: CLI-generated local configuration, migrations and tests.

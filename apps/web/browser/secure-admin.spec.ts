@@ -114,11 +114,34 @@ test('administrator creates a group once, adds a member, assigns a secretary and
   await expect(
     page.getByRole('cell', { name: 'Secretary', exact: true }),
   ).toBeVisible();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true);
+  const layout = await page.evaluate(() => ({
+    width: window.innerWidth,
+    content: document.documentElement.scrollWidth,
+    scrollX: window.scrollX,
+    overflowing: Array.from(document.querySelectorAll<HTMLElement>('body *'))
+      .filter((element) => {
+        const box = element.getBoundingClientRect();
+        return (
+          box.width > 0 && box.right + window.scrollX > window.innerWidth + 1
+        );
+      })
+      .slice(0, 30)
+      .map((element) => {
+        const box = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+          tag: element.tagName,
+          class: element.className,
+          left: box.left + window.scrollX,
+          right: box.right + window.scrollX,
+          width: box.width,
+          minWidth: style.minWidth,
+          display: style.display,
+          overflow: style.overflowX,
+        };
+      }),
+  }));
+  expect(layout.content <= layout.width, JSON.stringify(layout)).toBe(true);
   await page.screenshot({
     path: info.outputPath('group-administration.png'),
     fullPage: true,
