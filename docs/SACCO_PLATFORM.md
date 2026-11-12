@@ -110,3 +110,7 @@ set by the operator after verifying private-engine access. This is an operator
 attestation, not a network isolation mechanism. Staff must not have a direct
 route to Fineract. Loopback-only disposable tests are exempt. No hosted migration
 or paid resource is provisioned by this implementation.
+
+Independent approval audit device references identify the verified Auth session,
+labelled reference_kind=auth_session in each audit event; they are not physical
+device enrollment identifiers.

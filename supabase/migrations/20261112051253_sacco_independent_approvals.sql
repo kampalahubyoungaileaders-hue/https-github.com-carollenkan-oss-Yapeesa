@@ -45,9 +45,9 @@ declare p private.sacco_proposal;d private.sacco_decision;r private.sacco_dispat
  if p.actor_id<>private.current_person() or p.engine_user<>p_user or p.connection_version<>v or p.payload<>p_payload then raise exception 'Proposal reference conflict' using errcode='23505';end if;
  else
  insert into private.sacco_proposal values(p_id,p_org,private.current_person(),p_user,v,p_payload->>'operation',p_payload,h,now());
- insert into public.audit_log(organisation_id,actor_id,action,record_id,after_value) values(p_org,private.current_person(),'sacco_proposal',p_id,jsonb_build_object('review_hash',h,'operation',p_payload->>'operation','engine_user',p_user));
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),(auth.jwt()->>'session_id')::uuid,'sacco_proposal',p_id,jsonb_build_object('reference_kind','auth_session','review_hash',h,'operation',p_payload->>'operation','engine_user',p_user));
  end if;
- return jsonb_build_object('id',p_id,'status','awaiting_approval','result',jsonb_build_object('review_hash',h));end if;
+ return jsonb_build_object('id',p_id,'status','awaiting_approval','result',jsonb_build_object('reference_kind','auth_session','review_hash',h));end if;
  if p.id is null or p.review_hash is distinct from p_hash or p.connection_version<>v then raise exception 'Review changed or unavailable' using errcode='23505';end if;
  if not private.sacco_review_actor(p_org,p.actor_id,p.engine_user,v,false) then raise exception 'Maker no longer eligible' using errcode='42501';end if;
  select * into d from private.sacco_decision where proposal_id=p.id;
@@ -57,7 +57,7 @@ declare p private.sacco_proposal;d private.sacco_decision;r private.sacco_dispat
  if d.actor_id<>private.current_person() or d.engine_user<>p_user or d.approved<>p_approved then raise exception 'Already decided' using errcode='23505';end if;
  else
  insert into private.sacco_decision values(p.id,private.current_person(),p_user,p_approved,(auth.jwt()->>'session_id')::uuid,now());
- insert into public.audit_log(organisation_id,actor_id,action,record_id,after_value) values(p_org,private.current_person(),'sacco_decision',p.id,jsonb_build_object('approved',p_approved,'review_hash',p.review_hash,'maker',p.actor_id,'engine_user',p_user));end if;
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),(auth.jwt()->>'session_id')::uuid,'sacco_decision',p.id,jsonb_build_object('reference_kind','auth_session','approved',p_approved,'review_hash',p.review_hash,'maker',p.actor_id,'engine_user',p_user));end if;
  return jsonb_build_object('id',p.id,'status',case when p_approved then 'approved' else 'rejected' end,'result','{}'::jsonb);end if;
  if p.actor_id<>private.current_person() or p.engine_user<>p_user then raise exception 'Original maker required' using errcode='42501';end if;
  if p_action='claim' then
@@ -66,7 +66,7 @@ declare p private.sacco_proposal;d private.sacco_decision;r private.sacco_dispat
  if d.approved is distinct from true or d.recorded_at<=now()-interval '10 minutes' or not private.sacco_review_actor(p_org,d.actor_id,d.engine_user,v,true,d.session_id) then raise exception 'Fresh independent approval required' using errcode='42501';end if;
  if exists(select 1 from private.sacco_dispatch where proposal_id=p.id) then raise exception 'Execution requires reconciliation' using errcode='23505';end if;
  insert into private.sacco_dispatch values(p.id,now());
- insert into public.audit_log(organisation_id,actor_id,action,record_id,after_value) values(p_org,private.current_person(),'sacco_dispatch',p.id,jsonb_build_object('review_hash',p.review_hash,'approver',d.actor_id));
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),(auth.jwt()->>'session_id')::uuid,'sacco_dispatch',p.id,jsonb_build_object('reference_kind','auth_session','review_hash',p.review_hash,'approver',d.actor_id));
  return jsonb_build_object('id',p.id,'status','claimed','payload',p.payload);end if;
  if p_action='finish' then
  if p_status not in ('succeeded','rejected','uncertain') or jsonb_typeof(p_result)<>'object' or octet_length(p_result::text)>2000 or exists(select 1 from jsonb_object_keys(p_result) k where k not in ('command_id','resource_id','sub_resource_id','status','error','body_hash')) then raise exception 'Invalid result' using errcode='22023';end if;

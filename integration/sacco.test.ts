@@ -399,7 +399,7 @@ test('SACCO metadata requires verified scoped staff and a server gateway; it nev
   assert.equal((await rpc('sacco_review', submit, teller, false)).status, 403);
   assert.equal((await rpc('sacco_review', submit, foreign)).status, 403);
   const proposed = await rpc('sacco_review', submit, teller);
-  assert.equal(proposed.status, 200);
+  assert.equal(proposed.status, 200, JSON.stringify(proposed.body));
   const hash = (proposed.body as { result: { review_hash: string } }).result
     .review_hash;
   assert.equal(
