@@ -544,6 +544,12 @@ test('SACCO metadata requires verified scoped staff and a server gateway; it nev
         .status,
     'uncertain',
   );
+  assert.equal(
+    ((await rpc('sacco_review', submit, teller)).body as { status: string })
+      .status,
+    'uncertain',
+    'Resubmitting a proposal must preserve its uncertain outcome',
+  );
   await assert.rejects(
     () =>
       db.query(

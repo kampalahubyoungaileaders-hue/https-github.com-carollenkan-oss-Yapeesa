@@ -60,6 +60,9 @@ async function native(actor, method, path, body) {
   }
 }
 async function call(label, method, url, payload) {
+  // Respect the production 30/minute command limit; never retry a write.
+  if (method === 'POST' && url.endsWith('/commands'))
+    await new Promise((resolve) => setTimeout(resolve, 2100));
   const r = await app.inject({
     method,
     url,

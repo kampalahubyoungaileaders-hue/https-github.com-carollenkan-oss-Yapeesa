@@ -49,6 +49,7 @@ export const saccoText = {
     'Record cash already received or handed over. This does not move money through a payment provider.',
   approvalHelp:
     'A submitted command can require an independent checker before it takes effect. Use the approval queue and refresh the record to confirm its final state.',
+  rejected: 'Request rejected. No financial entry was posted.',
   queued:
     'Submitted for independent approval. No financial entry has been posted.',
   approved:

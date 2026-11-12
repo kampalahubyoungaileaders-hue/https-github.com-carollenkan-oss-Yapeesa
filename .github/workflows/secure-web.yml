@@ -22,6 +22,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Start disposable Supabase and apply migrations
         run: pnpm local:test-stack
+      - name: Inspect local database security advisors
+        run: pnpm exec supabase db advisors --local --type security --level warn --fail-on error
       - run: pnpm local:provision
       - run: pnpm test:integration
       - name: Verify disposable backup and restore with security preserved

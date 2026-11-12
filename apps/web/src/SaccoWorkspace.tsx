@@ -591,7 +591,7 @@ export default function SaccoWorkspace({
       return;
     }
     if (result.status === 'rejected') {
-      setError(s.error);
+      setMessage(s.rejected);
       setPending(null);
       return;
     }

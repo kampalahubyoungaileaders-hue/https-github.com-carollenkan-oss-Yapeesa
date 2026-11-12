@@ -48,6 +48,11 @@ declare p private.sacco_proposal;d private.sacco_decision;r private.sacco_dispat
  h:=encode(extensions.digest(p_payload::text,'sha256'),'hex');
  if p.id is not null then
  if p.actor_id<>private.current_person() or p.engine_user<>p_user or p.connection_version<>v or p.payload<>p_payload then raise exception 'Proposal reference conflict' using errcode='23505';end if;
+ select * into r from private.sacco_dispatch_result where proposal_id=p.id;
+ if found then return jsonb_build_object('id',p.id,'status',r.status,'result',r.result||jsonb_build_object('review_hash',h));end if;
+ if exists(select 1 from private.sacco_dispatch where proposal_id=p.id) then return jsonb_build_object('id',p.id,'status','uncertain','result',jsonb_build_object('review_hash',h));end if;
+ select * into d from private.sacco_decision where proposal_id=p.id;
+ if found then return jsonb_build_object('id',p.id,'status',case when d.approved then 'approved' else 'rejected' end,'result',jsonb_build_object('review_hash',h));end if;
  else
  insert into private.sacco_proposal values(p_id,p_org,private.current_person(),p_user,v,p_payload->>'operation',p_payload,h,now());
  insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),private.sacco_session_ref(),'sacco_proposal',p_id,jsonb_build_object('reference_kind','auth_session','review_hash',h,'operation',p_payload->>'operation','engine_user',p_user));
