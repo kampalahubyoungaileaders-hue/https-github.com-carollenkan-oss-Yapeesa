@@ -350,6 +350,183 @@ test('SACCO metadata requires verified scoped staff and a server gateway; it nev
       ),
     (error: unknown) => (error as { code: string }).code === '55000',
   );
+  // Independent approval metadata runs against real Auth/RLS without engine calls.
+  const managerVersion = (await rpc('sacco_context', { p_org: org }, manager))
+    .body as { version: string };
+  assert.equal(
+    (
+      await rpc(
+        'sacco_link',
+        {
+          p_org: org,
+          p_user: '90002',
+          p_username: 'local_individual_manager',
+          p_credential: sealFineract(
+            { username: 'local_individual_manager', password: 'disposable' },
+            config!.cookieKey,
+            managerPerson,
+            org,
+            managerVersion.version,
+            '90002',
+          ),
+          p_version: managerVersion.version,
+          p_device: device,
+        },
+        manager,
+      )
+    ).status,
+    200,
+  );
+  const proposal = v7();
+  const frozen = {
+    operation: 'share.apply',
+    values: {
+      clientId: '1',
+      productId: '2',
+      savingsAccountId: '3',
+      submittedDate: '2026-11-01',
+      applicationDate: '2026-11-01',
+      requestedShares: '10',
+    },
+  };
+  const submit = {
+    p_org: org,
+    p_action: 'submit',
+    p_id: proposal,
+    p_user: '90001',
+    p_payload: frozen,
+  };
+  assert.equal((await rpc('sacco_review', submit, teller, false)).status, 403);
+  assert.equal((await rpc('sacco_review', submit, foreign)).status, 403);
+  const proposed = await rpc('sacco_review', submit, teller);
+  assert.equal(proposed.status, 200);
+  const hash = (proposed.body as { result: { review_hash: string } }).result
+    .review_hash;
+  assert.equal(
+    (
+      await rpc(
+        'sacco_review',
+        {
+          ...submit,
+          p_payload: {
+            ...frozen,
+            values: { ...frozen.values, requestedShares: '11' },
+          },
+        },
+        teller,
+      )
+    ).status,
+    409,
+  );
+  const claim = {
+    p_org: org,
+    p_action: 'claim',
+    p_id: proposal,
+    p_user: '90001',
+    p_hash: hash,
+  };
+  assert.equal((await rpc('sacco_review', claim, teller)).status, 403);
+  const decision = {
+    p_org: org,
+    p_action: 'decide',
+    p_id: proposal,
+    p_user: '90002',
+    p_hash: hash,
+    p_approved: true,
+  };
+  assert.equal(
+    (await rpc('sacco_review', { ...decision, p_user: '90001' }, teller))
+      .status,
+    403,
+  );
+  assert.equal(
+    (
+      await rpc(
+        'sacco_review',
+        { ...decision, p_hash: '0'.repeat(64) },
+        manager,
+      )
+    ).status,
+    409,
+  );
+  assert.equal((await rpc('sacco_review', decision, manager)).status, 200);
+  assert.equal(
+    (await rpc('sacco_review', { ...decision, p_approved: false }, manager))
+      .status,
+    409,
+  );
+  await ok(
+    admin,
+    '/api/admin/saccos',
+    command({
+      action: 'role',
+      org,
+      person: managerPerson,
+      role: 'manager',
+      enabled: false,
+    }),
+  );
+  assert.equal(
+    (await rpc('sacco_review', claim, teller)).status,
+    403,
+    'Revoked approver cannot authorize dispatch',
+  );
+  await ok(
+    admin,
+    '/api/admin/saccos',
+    command({
+      action: 'role',
+      org,
+      person: managerPerson,
+      role: 'manager',
+      enabled: true,
+    }),
+  );
+  const claims = await Promise.all([
+    rpc('sacco_review', claim, teller),
+    rpc('sacco_review', claim, teller),
+  ]);
+  assert.deepEqual(claims.map((r) => r.status).sort(), [200, 409]);
+  assert.deepEqual(
+    (claims.find((r) => r.status === 200)!.body as { payload: object }).payload,
+    frozen,
+  );
+  assert.equal(
+    (
+      await rpc(
+        'sacco_review',
+        {
+          ...claim,
+          p_action: 'finish',
+          p_status: 'uncertain',
+          p_result: { error: 'DISPOSABLE_INTERRUPTION' },
+        },
+        teller,
+      )
+    ).status,
+    200,
+  );
+  assert.equal(
+    (await rpc('sacco_review', claim, teller)).body &&
+      ((await rpc('sacco_review', claim, teller)).body as { status: string })
+        .status,
+    'uncertain',
+  );
+  await assert.rejects(
+    () =>
+      db.query(
+        'update private.sacco_proposal set payload=payload where id=$1',
+        [proposal],
+      ),
+    (e: unknown) => (e as { code: string }).code === '55000',
+  );
+  await assert.rejects(
+    () =>
+      db.query('delete from private.sacco_decision where proposal_id=$1', [
+        proposal,
+      ]),
+    (e: unknown) => (e as { code: string }).code === '55000',
+  );
   await ok(teller, `/api/saccos/${org}/disconnect`, { device_id: device });
   await ok(
     admin,

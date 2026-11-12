@@ -13,6 +13,7 @@ import {
   saccoResources,
   saccoPayload,
 } from './sacco-catalog.js';
+import { independentOperations, independentCommand } from './sacco-approval.js';
 interface StaffIdentity {
   tokens: { access_token: string };
   context: { person_id: string; can_administer: boolean };
@@ -137,36 +138,46 @@ export function registerSacco(
     org: string,
     c: Awaited<ReturnType<typeof staff>>,
   ) {
-    const scope = asArray(
-      await rpc('sacco_approval_scope', { p_org: org }, user),
+    const scope = c.roles.includes('manager')
+      ? asArray(await rpc('sacco_approval_scope', { p_org: org }, user))
+      : [];
+    const local = asArray(
+      await rpc(
+        'sacco_review',
+        { p_org: org, p_action: 'list', p_id: null, p_user: c.userId },
+        user,
+      ),
     );
-    const raw = asArray(
-      await c.client.request('GET', 'makercheckers?includeJson=true'),
-    );
-    return raw.flatMap((item) => {
-      const bound = scope.find((s) => s['command_id'] === item['id']);
-      if (!bound) return [];
-      const body =
-        typeof item['commandAsJson'] === 'string'
-          ? fineractJson(item['commandAsJson'])
-          : null;
-      const hash = createHash('sha256').update(canonical(body)).digest('hex');
-      if (!body || hash !== bound['body_hash']) return [];
-      return [
-        {
-          id: item['id'],
-          name: bound['actor_name'],
-          operation: bound['operation'],
-          status: item['processingResult'],
-          date: item['madeOnDate'],
-          review_hash: hash,
-          values: body,
-          can_check:
-            bound['fineract_user_id'] !== c.userId &&
-            bound['actor_id'] !== user.context.person_id,
-        },
-      ];
-    });
+    const raw = c.roles.includes('manager')
+      ? asArray(await c.client.request('GET', 'makercheckers?includeJson=true'))
+      : [];
+    return [
+      ...local,
+      ...raw.flatMap((item) => {
+        const bound = scope.find((s) => s['command_id'] === item['id']);
+        if (!bound) return [];
+        const body =
+          typeof item['commandAsJson'] === 'string'
+            ? fineractJson(item['commandAsJson'])
+            : null;
+        const hash = createHash('sha256').update(canonical(body)).digest('hex');
+        if (!body || hash !== bound['body_hash']) return [];
+        return [
+          {
+            id: item['id'],
+            name: bound['actor_name'],
+            operation: bound['operation'],
+            status: item['processingResult'],
+            date: item['madeOnDate'],
+            review_hash: hash,
+            values: body,
+            can_check:
+              bound['fineract_user_id'] !== c.userId &&
+              bound['actor_id'] !== user.context.person_id,
+          },
+        ];
+      }),
+    ];
   }
   app.get(
     '/api/saccos',
@@ -478,6 +489,121 @@ export function registerSacco(
         (!op.checker && !c.permissions.includes(op.permission))
       )
         throw new ApiError(403, 'PERMISSION_DENIED');
+      const localReview =
+        op.checker && input.record && /^[0-9a-f-]{36}$/i.test(input.record);
+      if (localReview) {
+        const queue = await approvalQueue(user, org, c);
+        const proposal = queue.find((row) => row.id === input.record);
+        if (!proposal || proposal['review_hash'] !== input.review_hash)
+          throw new ApiError(409, 'SACCO_REVIEW_CHANGED');
+        const frozen = object(proposal['values']);
+        const checked = independentCommand(frozen, c.roles, c.permissions);
+        const args = {
+          p_org: org,
+          p_id: input.record,
+          p_user: c.userId,
+          p_hash: input.review_hash,
+        };
+        if (op.id === 'checker.approve' || op.id === 'checker.reject') {
+          return rpc(
+            'sacco_review',
+            {
+              ...args,
+              p_action: 'decide',
+              p_approved: op.id === 'checker.approve',
+            },
+            user,
+          );
+        }
+        if (op.id !== 'approval.execute')
+          throw new ApiError(400, 'INVALID_SACCO_OPERATION');
+        if (!c.endpoint?.localTest && !config?.fineractGatewayOnly)
+          throw new ApiError(503, 'FINERACT_PRIVATE_GATEWAY_REQUIRED');
+        // Native controls must not be silently disabled by the gateway.
+        const policies = asArray(
+          await c.client.request('GET', 'permissions?makerCheckerable=true'),
+        );
+        if (
+          !policies.some(
+            (p) =>
+              p['code'] === checked.operation.permission &&
+              p['selected'] === false,
+          )
+        )
+          throw new ApiError(409, 'FINERACT_APPROVAL_CONFIGURATION_CHANGED');
+        const claim = object(
+          await rpc('sacco_review', { ...args, p_action: 'claim' }, user),
+        );
+        if (claim['status'] !== 'claimed') return claim;
+        // Execute exactly the proposal that the database returned after atomic claim.
+        const command = independentCommand(
+          object(claim['payload']),
+          c.roles,
+          c.permissions,
+        );
+        let status: string;
+        let result: Record<string, string> = {};
+        try {
+          const response = object(
+            await c.client.request(
+              command.operation.method,
+              command.path,
+              command.body,
+              input.record,
+            ),
+          );
+          for (const [source, key] of [
+            ['commandId', 'command_id'],
+            ['resourceId', 'resource_id'],
+            ['subResourceId', 'sub_resource_id'],
+          ] as const)
+            if (response[source] !== undefined && response[source] !== null)
+              result[key] = id(response[source]);
+          result['body_hash'] = createHash('sha256')
+            .update(canonical(command.body))
+            .digest('hex');
+          status = 'succeeded';
+        } catch (error) {
+          status =
+            error instanceof ApiError &&
+            error.status < 500 &&
+            error.status !== 409
+              ? 'rejected'
+              : 'uncertain';
+          result = {
+            error:
+              error instanceof ApiError
+                ? error.code
+                : 'FINERACT_OUTCOME_UNCERTAIN',
+          };
+        }
+        return rpc(
+          'sacco_review',
+          { ...args, p_action: 'finish', p_status: status, p_result: result },
+          user,
+        );
+      }
+      if (op.id === 'approval.execute')
+        throw new ApiError(400, 'INVALID_SACCO_REFERENCE');
+      if (independentOperations.has(op.id)) {
+        independentCommand(input, c.roles, c.permissions);
+        return rpc(
+          'sacco_review',
+          {
+            p_org: org,
+            p_action: 'submit',
+            p_id: input.request_id,
+            p_user: c.userId,
+            p_payload: {
+              operation: input.operation,
+              values: input.values,
+              ...(input.record ? { record: input.record } : {}),
+              ...(input.sub_record ? { sub_record: input.sub_record } : {}),
+            },
+          },
+          user,
+        );
+      }
       const body = saccoPayload(op, input.values);
       let path = op.path;
       if (op.target) path = path.replace('{id}', id(input.record));

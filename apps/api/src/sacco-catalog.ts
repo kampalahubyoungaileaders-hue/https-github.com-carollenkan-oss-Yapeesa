@@ -346,6 +346,17 @@ export const saccoOperations: SaccoOperation[] = [
     'officeId:id closingDate:date comments',
   ),
   op(
+    'approval.execute',
+    saccoOperationLabels['approval.execute']!,
+    'approvals',
+    staff,
+    '',
+    'CHECKER',
+    '',
+    true,
+    { checker: true },
+  ),
+  op(
     'checker.approve',
     saccoOperationLabels['checker.approve']!,
     'approvals',
@@ -465,7 +476,7 @@ export const saccoResources: Record<
   approvals: {
     label: saccoResourceLabels['approvals']!,
     path: 'makercheckers?includeJson=true',
-    roles: managers,
+    roles: staff,
     detail: 'makercheckers/{id}',
   },
   reports: {

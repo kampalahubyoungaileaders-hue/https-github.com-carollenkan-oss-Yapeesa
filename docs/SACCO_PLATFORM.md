@@ -42,11 +42,11 @@ must be isolated from customer networks in production.
 ## Command controls
 
 The API uses each linked staff member's credentials, current Yapesa membership and
-Fineract permissions. Mutating customer commands require global maker-checker and
-the relevant native permission's maker-checker setting. The API never silently
+Fineract permissions. Savings and loan mutations require global maker-checker and the relevant native
+permission's maker-checker setting. The explicitly listed share/dividend operations
+use the independently reviewed Yapesa queue described below. The API never silently
 posts immediately when those controls are absent. Native checker permissions and
-Fineract's prohibition on self-checking remain authoritative. This conservative
-first policy requires independent checking for all supported mutations, not just
+Fineract's prohibition on self-checking remain authoritative. The policy requires independent checking for all supported mutations, not just
 large amounts; amount thresholds are not invented.
 
 A stable UUID is bound to the SACCO, staff identity, operation and canonical
@@ -82,18 +82,31 @@ Pinned upstream contracts:
 - [Maker-checker API](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/commands/api/MakercheckersApiResource.java)
 - [Permission controls](https://github.com/apache/fineract/blob/1.12.0/fineract-provider/src/main/java/org/apache/fineract/useradministration/api/PermissionsApiResource.java)
 
-## Native share approval blocker (12 November 2026)
+## Hybrid approval implementation (development)
 
-The disposable running Fineract 1.12.0 role catalogue does not include
-`CREATE_SHAREACCOUNT_CHECKER`, although it includes `CREATE_SHAREACCOUNT`.
-The attempted native share/dividend acceptance stops before creating financial
-fixtures. Do not grant CHECKER_SUPER_USER or bypass the required approval controls
-to make this test pass. Native savings and loan acceptance passed independently.
+The founder approved Yapesa-managed approval for the explicit share/dividend
+operation list. Savings/loan commands retain native maker-checker controls.
+Independent proposals preserve the exact input and database-generated hash,
+organisation, connection version and maker's assigned engine identity. A distinct
+verified manager with a different engine identity decides; a rejected proposal
+cannot be approved later. The maker then explicitly executes the frozen command
+under their own current native permissions. Approval expires after ten minutes.
+Yapesa rechecks both people's current roles/identity links, MFA recovery state and
+the approver's still-live verified Auth session before the single execution claim.
+The manager's native permission is checked when reviewing; the execution actor's
+native permission is checked again at execution. Native permission settings for
+these operations must be disabled explicitly by engine administration; the API
+never silently changes them. Native controls for other operations remain enabled.
 
-Share/dividend writes must remain unavailable under the current native-only
-maker-checker policy until an approval design is reviewed. A Yapesa-managed
-independent approval queue is a possible design change, not an implemented or
-accepted replacement. It requires reviewed identity, payload binding, immutable
-audits, self-approval denial, revocation and replay/uncertain-outcome handling.
-The native dividend approval endpoint uses PUT; approval and dividend posting
-are distinct operations.
+Proposals, decisions, dispatch claims and outcomes are immutable and contain no
+credentials or duplicate financial journals. The native idempotency key is the
+proposal UUID. Only one dispatch claim is allowed; an interrupted attempt remains
+blocked for reconciliation, including when the response could not be recorded.
+Do not create a replacement command to resolve an uncertain result. Reconciliation
+is not yet an automated workflow.
+
+Hosted independent execution is disabled unless FINERACT_GATEWAY_ONLY=true is
+set by the operator after verifying private-engine access. This is an operator
+attestation, not a network isolation mechanism. Staff must not have a direct
+route to Fineract. Loopback-only disposable tests are exempt. No hosted migration
+or paid resource is provisioned by this implementation.

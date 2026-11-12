@@ -339,6 +339,14 @@ function Detail({ data }: { data: SaccoJson }) {
       {Object.keys(record(r['values'])).length > 0 && (
         <dl className="sacco-facts">
           {Object.entries(record(r['values']))
+            .flatMap(([key, value]) =>
+              key === 'values' &&
+              value &&
+              typeof value === 'object' &&
+              !Array.isArray(value)
+                ? Object.entries(value)
+                : [[key, value] as [string, SaccoJson]],
+            )
             .filter(([key]) => !['locale', 'dateFormat'].includes(key))
             .map(([key, value]) => (
               <div key={key}>
@@ -587,7 +595,15 @@ export default function SaccoWorkspace({
       setPending(null);
       return;
     }
-    setMessage(s.confirmed);
+    setMessage(
+      result.status === 'awaiting_approval'
+        ? s.queued
+        : result.status === 'approved'
+          ? s.approved
+          : result.status === 'uncertain'
+            ? s.uncertain
+            : s.confirmed,
+    );
     setPending(null);
     await refresh();
   }

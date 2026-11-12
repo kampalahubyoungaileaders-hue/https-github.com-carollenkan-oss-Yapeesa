@@ -107,12 +107,13 @@ async function queue(label = 'checker') {
   const result = await ok(label, 'GET', `/api/saccos/${org}/records/approvals`);
   return result.pageItems;
 }
-async function submit(operation, values = {}, record) {
+async function submit(operation, values = {}, record, subRecord) {
   const command = {
     request_id: v7(),
     operation,
     values,
     ...(record ? { record } : {}),
+    ...(subRecord ? { sub_record: subRecord } : {}),
   };
   const result = await ok(
     'maker',
@@ -120,11 +121,56 @@ async function submit(operation, values = {}, record) {
     `/api/saccos/${org}/commands`,
     command,
   );
-  assert.equal(result.status, 'succeeded');
-  assert(result.result.command_id);
+  assert(['succeeded', 'awaiting_approval'].includes(result.status));
+  if (result.status === 'succeeded') assert(result.result.command_id);
   return { command, result };
 }
 async function check(pending) {
+  if (pending.result.status === 'awaiting_approval') {
+    const proposal = pending.result.id;
+    const hash = pending.result.result.review_hash;
+    const self = await call('maker', 'POST', `/api/saccos/${org}/commands`, {
+      request_id: v7(),
+      operation: 'checker.approve',
+      record: proposal,
+      review_hash: hash,
+      values: {},
+    });
+    assert.equal(self.statusCode, 403);
+    const approved = await ok(
+      'checker',
+      'POST',
+      `/api/saccos/${org}/commands`,
+      {
+        request_id: v7(),
+        operation: 'checker.approve',
+        record: proposal,
+        review_hash: hash,
+        values: {},
+      },
+    );
+    assert.equal(approved.status, 'approved');
+    const command = {
+      request_id: v7(),
+      operation: 'approval.execute',
+      record: proposal,
+      review_hash: hash,
+      values: {},
+    };
+    const executed = await ok(
+      'maker',
+      'POST',
+      `/api/saccos/${org}/commands`,
+      command,
+    );
+    assert.equal(executed.status, 'succeeded');
+    assert.deepEqual(
+      await ok('maker', 'POST', `/api/saccos/${org}/commands`, command),
+      executed,
+    );
+    return executed.result.resource_id;
+  }
+
   const commandId = pending.result.result.command_id;
   const own = (await queue('maker')).find((row) => row.id === commandId);
   if (own) assert(!own.can_check, 'Requester must not check own command');
@@ -189,11 +235,24 @@ try {
     'ACTIVATE_SAVINGSACCOUNT',
     'DEPOSIT_SAVINGSACCOUNT',
     'WITHDRAWAL_SAVINGSACCOUNT',
+    'CREATE_SHAREACCOUNT',
+    'APPROVE_SHAREACCOUNT',
+    'ACTIVATE_SHAREACCOUNT',
+    'CREATE_DIVIDEND_SHAREPRODUCT',
+    'APPROVE_DIVIDEND_SHAREPRODUCT',
     'CREATE_LOAN',
     'APPROVE_LOAN',
     'DISBURSE_LOAN',
     'REPAYMENT_LOAN',
   ];
+  const independent = new Set([
+    'CREATE_SHAREACCOUNT',
+    'APPROVE_SHAREACCOUNT',
+    'ACTIVATE_SHAREACCOUNT',
+    'CREATE_DIVIDEND_SHAREPRODUCT',
+    'APPROVE_DIVIDEND_SHAREPRODUCT',
+  ]);
+  const nativeActions = actions.filter((code) => !independent.has(code));
   const reads = [
     'READ_LOAN',
     'READ_LOANPRODUCT',
@@ -265,11 +324,12 @@ try {
   const maker = await actor('maker', [
       ...reads,
       ...actions,
-      ...actions.map((p) => p + '_CHECKER'),
+      ...nativeActions.map((p) => p + '_CHECKER'),
     ]),
     checker = await actor('checker', [
       ...reads,
-      ...actions.map((p) => p + '_CHECKER'),
+      ...actions.filter((code) => independent.has(code)),
+      ...nativeActions.map((p) => p + '_CHECKER'),
     ]);
   stage = 'configured cash accounting product';
   const gl = {};
@@ -377,6 +437,34 @@ try {
       incomeFromGoodwillCreditPenaltyAccountId: gl.income,
     }),
   );
+  stage = 'configured disposable share product';
+  const shareProduct = scalarId(
+    await native(root, 'POST', 'products/share', {
+      name: `${prefix}_shares`,
+      shortName: randomBytes(2).toString('hex'),
+      description: 'Disposable share and dividend proof',
+      currencyCode: 'UGX',
+      digitsAfterDecimal: '0',
+      inMultiplesOf: '0',
+      totalShares: '1000',
+      sharesIssued: '1000',
+      unitPrice: '1000',
+      minimumShares: '1',
+      nominalShares: '10',
+      maximumShares: '100',
+      allowDividendCalculationForInactiveClients: false,
+      minimumActivePeriodForDividends: '1',
+      minimumactiveperiodFrequencyType: '0',
+      lockinPeriodFrequency: '1',
+      lockinPeriodFrequencyType: '0',
+      accountingRule: '2',
+      shareReferenceId: gl.cash,
+      shareSuspenseId: gl.savings,
+      shareEquityId: gl.equity,
+      incomeFromFeeAccountId: gl.income,
+      locale: 'en',
+    }),
+  );
   stage = 'verified Yapesa staff mapping';
   await login('root', 'MEETING_ADMIN');
   await login('maker', 'MEETING_SECRETARY');
@@ -416,7 +504,9 @@ try {
     enabled: true,
   });
   await native(root, 'PUT', 'permissions', {
-    permissions: Object.fromEntries(actions.map((code) => [code, true])),
+    permissions: Object.fromEntries(
+      actions.map((code) => [code, !independent.has(code)]),
+    ),
   });
   stage = 'member lifecycle';
   const clientId = await execute('member.create', {
@@ -547,6 +637,68 @@ try {
     '101000',
     'Replayed repayment must not duplicate cash',
   );
+  stage = 'native share lifecycle';
+  const shareId = await execute('share.apply', {
+    clientId,
+    productId: shareProduct,
+    savingsAccountId: savingsId,
+    submittedDate: start,
+    applicationDate: start,
+    requestedShares: '10',
+  });
+  await execute('share.approve', { approvedDate: start }, shareId);
+  await execute('share.activate', { activatedDate: start }, shareId);
+  const share = await native(maker.client, 'GET', `accounts/share/${shareId}`);
+  assert.equal(share.status.code, 'shareAccountStatusType.active');
+  assert.equal(share.summary.totalApprovedShares, '10');
+  stage = 'native dividend allocation and approval';
+  const dividend = await submit(
+    'dividend.declare',
+    {
+      dividendPeriodStartDate: start,
+      dividendPeriodEndDate: iso(-1),
+      dividendAmount: '1000',
+    },
+    shareProduct,
+  );
+  await check(dividend);
+  const payouts = () =>
+    native(root, 'GET', `shareproduct/${shareProduct}/dividend`);
+  const declared = (await payouts()).pageItems;
+  assert.equal(declared.length, 1);
+  assert.equal(fineractMinor(declared[0].amount, 0), '1000');
+  const dividendId = declared[0].id;
+  const detail = await native(
+    root,
+    'GET',
+    `shareproduct/${shareProduct}/dividend/${dividendId}`,
+  );
+  assert.equal(detail.pageItems.length, 1);
+  assert.equal(fineractMinor(detail.pageItems[0].amount, 0), '1000');
+  const beforeDividend = BigInt(await balance());
+  const approval = await submit(
+    'dividend.approve',
+    {},
+    shareProduct,
+    dividendId,
+  );
+  assert.equal(
+    BigInt(await balance()),
+    beforeDividend,
+    'Pending dividend approval must not credit savings',
+  );
+  await check(approval);
+  assert.equal(
+    (await payouts()).pageItems[0].status.code,
+    'shareAccountDividendStatusType.approved',
+  );
+  assert.equal(BigInt(await balance()), beforeDividend);
+  await ok('maker', 'POST', `/api/saccos/${org}/commands`, approval.command);
+  assert.equal(
+    BigInt(await balance()),
+    beforeDividend,
+    'A replay must not duplicate dividend credit',
+  );
   stage = 'native journal reconciliation';
   const entries = await native(
     root,
@@ -595,6 +747,7 @@ try {
       pendingCashNotPosted: true,
       duplicateCashPrevented: true,
       withdrawalBalanceMatched: true,
+      nativeSharesAndDividendApprovalVerified: true,
       nativeLoanLifecycleVerified: true,
       loanInterestAndSettlementMatched: true,
       loanRepaymentReplayPrevented: true,
@@ -603,7 +756,7 @@ try {
       messagesSent: 0,
       externalPaymentTransfers: 0,
       limitation:
-        'Disposable default tenant only; shares, dividends, teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
+        'Disposable default tenant only; dividend posting job, teller closes, two-tenant provisioning, hosted operation and supplied SACCO figures still require separate acceptance.',
     }),
   );
 } finally {

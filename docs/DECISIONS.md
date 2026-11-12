@@ -159,3 +159,14 @@ integer schedule and chronological allocation. Loans require configured group
 officer consent and a separate recorded cash handover. Social reserve checks also
 cover share corrections and fine refunds after lending. No hosted sample loans
 or lender/SACCO ledger changes are introduced. Offline workflows remain deferred.
+
+## 12 November 2026 — targeted independent SACCO approvals
+
+The founder approved a hybrid after native 1.12.0 runtime acceptance found no
+CREATE_SHAREACCOUNT_CHECKER permission. Savings and loans retain tested native
+checking. Only enumerated share/dividend operations use a database-enforced
+Yapesa proposal, independent manager decision and original-maker dispatch.
+Fineract remains unmodified and owns every financial calculation and journal.
+No blanket checker privilege is granted. Direct engine access must be isolated
+before hosted use; no new paid hosting is authorized. See SACCO_PLATFORM.md
+for freshness, audit, session checks and uncertain-outcome limitations.

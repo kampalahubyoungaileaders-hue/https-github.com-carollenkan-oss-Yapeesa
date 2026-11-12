@@ -8,6 +8,7 @@ export interface ApiConfig {
   secureCookies: boolean;
   trustedProxyHops?: number;
   authAdminKey?: string;
+  fineractGatewayOnly?: boolean;
   fineractInstances?: Record<string, { url: string; localTest?: boolean }>;
 }
 export function readConfig(): ApiConfig | undefined {
@@ -86,6 +87,7 @@ export function readConfig(): ApiConfig | undefined {
     }
   }
   return {
+    fineractGatewayOnly: env['FINERACT_GATEWAY_ONLY'] === 'true',
     ...(fineractInstances ? { fineractInstances } : {}),
     supabaseUrl: url.origin,
     publishableKey: env['SUPABASE_PUBLISHABLE_KEY']!,

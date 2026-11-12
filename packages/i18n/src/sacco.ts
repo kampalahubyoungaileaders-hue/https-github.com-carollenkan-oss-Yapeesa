@@ -49,6 +49,10 @@ export const saccoText = {
     'Record cash already received or handed over. This does not move money through a payment provider.',
   approvalHelp:
     'A submitted command can require an independent checker before it takes effect. Use the approval queue and refresh the record to confirm its final state.',
+  queued:
+    'Submitted for independent approval. No financial entry has been posted.',
+  approved:
+    'Decision recorded. The original maker must execute the approved command within 10 minutes.',
   confirmed:
     'The command was recorded by the accounting service. Refresh the record and approval queue to check its final state.',
   uncertain:
@@ -250,6 +254,7 @@ export const saccoOperationLabels: Record<string, string> = {
   'loan.guarantor': 'Add a member guarantor',
   'loan.writeoff': 'Write off an eligible loan',
   'closure.create': 'Close accounting period',
+  'approval.execute': 'Execute my approved command',
   'checker.approve': 'Approve pending command',
   'checker.reject': 'Reject pending command',
 };
