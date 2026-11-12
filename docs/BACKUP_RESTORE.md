@@ -111,6 +111,16 @@ print hashes, not source rows or raw restore errors. The recovery container and
 its temporary data are removed even when checks fail. Tenant registry secrets and
 staff password hashes are therefore never published in CI logs or artifacts.
 
+ACL comparisons sort grants and expand default privileges, so an implicit default
+and the same explicit grants compare equally. Column order compares the relative
+order of visible columns, including every column's type, precision and defaults.
+PostgreSQL retains physical attribute-number gaps after a column is dropped;
+pg_dump omits those already-dropped slots and a restore compacts the numbering.
+The proof records the source's dropped-slot count without treating that physical
+layout difference as lost data or ignoring a missing visible column.
+See PostgreSQL's [attribute catalogue](https://www.postgresql.org/docs/17/catalog-pg-attribute.html)
+for the distinction between visible columns and already-dropped physical slots.
+
 This exercises SQL/database recovery only. A full operational drill still needs
 the matching separately protected Fineract master encryption key, credentials,
 compatible engine and API startup, individual staff authentication, reconciliation,

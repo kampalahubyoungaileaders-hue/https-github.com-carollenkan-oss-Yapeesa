@@ -84,7 +84,8 @@ async function fingerprint(client) {
   for (const [name, sql] of Object.entries({
     schemas: `select nspname,pg_get_userbyid(nspowner) owner,array(select x::text from unnest(coalesce(nspacl,acldefault('n',nspowner))) x order by x::text) grants from pg_namespace
       where nspname not in ('pg_catalog','information_schema') and nspname !~ '^pg_' order by nspname`,
-    columns: `select table_schema,table_name,column_name,ordinal_position,data_type,udt_schema,udt_name,is_nullable,column_default,is_identity,identity_generation,
+    columns: `select table_schema,table_name,column_name,
+      row_number() over(partition by table_schema,table_name order by ordinal_position)::integer column_position,data_type,udt_schema,udt_name,is_nullable,column_default,is_identity,identity_generation,
       character_maximum_length,numeric_precision,numeric_scale,datetime_precision,collation_schema,collation_name,is_generated,generation_expression,domain_schema,domain_name
       from information_schema.columns where table_schema not in ('pg_catalog','information_schema') order by table_schema,table_name,ordinal_position`,
     constraints: `select n.nspname,c.relname,k.conname,k.contype,k.condeferrable,k.condeferred,k.convalidated,pg_get_constraintdef(k.oid) definition
@@ -209,6 +210,13 @@ try {
     ).rows[0].snapshot;
     assert(/^[A-F0-9-]+$/i.test(snapshot));
     const expected = await fingerprint(source);
+    // pg_dump omits already-dropped attribute slots. Compare visible column
+    // order above, not physical attnums that compact during SQL restoration.
+    const droppedSlots = (
+      await source.query(`select count(*)::text count from pg_attribute a
+      join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace
+      where a.attisdropped and c.relkind='r' and n.nspname not in ('pg_catalog','information_schema') and n.nspname !~ '^pg_toast'`)
+    ).rows[0].count;
     assert(expected.data.length > 0, 'No meaningful native schema');
     if (database === 'fineract_default') {
       const journal = expected.data.find(
@@ -308,6 +316,7 @@ try {
     results.push({
       database,
       tables: expected.data.length,
+      sourceDroppedColumnSlots: droppedSlots,
       rowsAndSchemaMatched: hash(actual) === hash(expected),
     });
   }
