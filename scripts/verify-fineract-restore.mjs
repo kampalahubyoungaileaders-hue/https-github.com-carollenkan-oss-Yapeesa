@@ -252,7 +252,9 @@ try {
     const actual = await fingerprint(restored);
     // Hash comparison avoids printing recovered source rows in assertion errors.
     const hash = (value) =>
-      createHash('sha256').update(JSON.stringify(value ?? null)).digest('hex');
+      createHash('sha256')
+        .update(JSON.stringify(value ?? null))
+        .digest('hex');
     if (hash(actual) !== hash(expected)) {
       const changedTables = expected.data.filter(
         (table, index) => hash(table) !== hash(actual.data[index]),
@@ -303,17 +305,16 @@ try {
         }),
       );
     }
-    assert.equal(
-      hash(actual),
-      hash(expected),
-      `Restored ${database} data/schema/owners differ`,
-    );
     results.push({
       database,
       tables: expected.data.length,
-      rowsAndSchemaMatched: true,
+      rowsAndSchemaMatched: hash(actual) === hash(expected),
     });
   }
+  assert(
+    results.every((result) => result.rowsAndSchemaMatched),
+    'Restored native data/schema/owners differ; see bounded metadata diagnostics',
+  );
   console.log(
     JSON.stringify({
       proof: 'local-fineract-independent-cluster-restore',
