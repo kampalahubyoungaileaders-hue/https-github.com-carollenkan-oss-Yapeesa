@@ -1,11 +1,16 @@
-grant usage on schema auth,extensions to yapesa_sacco;
-grant execute on function auth.jwt(),extensions.digest(text,text) to yapesa_sacco;
+grant usage on schema extensions to yapesa_sacco;
+grant execute on function extensions.digest(text,text) to yapesa_sacco;
 -- Approval evidence only: Fineract remains the sole SACCO money engine.
 create function private.sacco_review_actor(p_org uuid,p_person uuid,p_user text,p_version uuid,p_manager boolean,p_session uuid default null) returns boolean language sql stable security definer set search_path='' as $$
  select exists(select 1 from public.person a join auth.users u on u.id=a.auth_user_id where a.id=p_person and u.phone_confirmed_at is not null and exists(select 1 from auth.mfa_factors f where f.user_id=u.id and f.factor_type='totp' and f.status::text='verified') and (p_session is null or exists(select 1 from auth.sessions sess join auth.mfa_factors f on f.id=sess.factor_id and f.user_id=sess.user_id and f.status::text='verified' where sess.id=p_session and sess.user_id=u.id and sess.aal::text='aal2' and (sess.not_after is null or sess.not_after>now())))) and not exists(select 1 from private.mfa_recovery r where r.person_id=p_person and exists(select 1 from private.mfa_recovery_event e where e.recovery_id=r.id and e.phase='prepared') and not exists(select 1 from private.mfa_recovery_event e where e.recovery_id=r.id and e.phase='recovered')) and exists(select 1 from public.organisation o join private.sacco_connection c on c.organisation_id=o.id join public.membership m on m.organisation_id=o.id join private.fineract_identity i on i.organisation_id=o.id and i.person_id=m.person_id join private.fineract_link l on l.organisation_id=o.id and l.person_id=m.person_id where o.id=p_org and o.status='active' and o.type='sacco' and m.person_id=p_person and m.starts_at<=now() and (m.ends_at is null or m.ends_at>now()) and m.role=any(case when p_manager then array['manager'] else array['manager','accountant','loan_officer','teller','field_officer'] end) and i.fineract_user_id=p_user and l.fineract_user_id=p_user and l.username=i.username and c.version=p_version and l.connection_version=c.version);
 $$;
 revoke all on function private.sacco_review_actor(uuid,uuid,text,uuid,boolean,uuid) from public,anon,authenticated;
 grant execute on function private.sacco_review_actor(uuid,uuid,text,uuid,boolean,uuid) to yapesa_sacco;
+alter function private.sacco_review_actor(uuid,uuid,text,uuid,boolean,uuid) owner to postgres;
+create function private.sacco_session_ref() returns uuid language sql stable security definer set search_path='' as $$select nullif(auth.jwt()->>'session_id','')::uuid where private.session_active(true)$$;
+alter function private.sacco_session_ref() owner to postgres;
+revoke all on function private.sacco_session_ref() from public,anon,authenticated;
+grant execute on function private.sacco_session_ref() to yapesa_sacco;
 create table private.sacco_proposal(
  id uuid primary key,organisation_id uuid not null references private.sacco_connection(organisation_id),actor_id uuid not null references public.person(id),engine_user text not null,connection_version uuid not null,operation text not null check(operation in ('share.apply','share.approve','share.activate','share.purchase','share.redeem','dividend.declare','dividend.approve')),payload jsonb not null check(jsonb_typeof(payload)='object' and octet_length(payload::text)<=16000),review_hash text not null,recorded_at timestamptz not null default now()
 );
@@ -45,7 +50,7 @@ declare p private.sacco_proposal;d private.sacco_decision;r private.sacco_dispat
  if p.actor_id<>private.current_person() or p.engine_user<>p_user or p.connection_version<>v or p.payload<>p_payload then raise exception 'Proposal reference conflict' using errcode='23505';end if;
  else
  insert into private.sacco_proposal values(p_id,p_org,private.current_person(),p_user,v,p_payload->>'operation',p_payload,h,now());
- insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),(auth.jwt()->>'session_id')::uuid,'sacco_proposal',p_id,jsonb_build_object('reference_kind','auth_session','review_hash',h,'operation',p_payload->>'operation','engine_user',p_user));
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),private.sacco_session_ref(),'sacco_proposal',p_id,jsonb_build_object('reference_kind','auth_session','review_hash',h,'operation',p_payload->>'operation','engine_user',p_user));
  end if;
  return jsonb_build_object('id',p_id,'status','awaiting_approval','result',jsonb_build_object('reference_kind','auth_session','review_hash',h));end if;
  if p.id is null or p.review_hash is distinct from p_hash or p.connection_version<>v then raise exception 'Review changed or unavailable' using errcode='23505';end if;
@@ -56,8 +61,8 @@ declare p private.sacco_proposal;d private.sacco_decision;r private.sacco_dispat
  if d.proposal_id is not null then
  if d.actor_id<>private.current_person() or d.engine_user<>p_user or d.approved<>p_approved then raise exception 'Already decided' using errcode='23505';end if;
  else
- insert into private.sacco_decision values(p.id,private.current_person(),p_user,p_approved,(auth.jwt()->>'session_id')::uuid,now());
- insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),(auth.jwt()->>'session_id')::uuid,'sacco_decision',p.id,jsonb_build_object('reference_kind','auth_session','approved',p_approved,'review_hash',p.review_hash,'maker',p.actor_id,'engine_user',p_user));end if;
+ insert into private.sacco_decision values(p.id,private.current_person(),p_user,p_approved,private.sacco_session_ref(),now());
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),private.sacco_session_ref(),'sacco_decision',p.id,jsonb_build_object('reference_kind','auth_session','approved',p_approved,'review_hash',p.review_hash,'maker',p.actor_id,'engine_user',p_user));end if;
  return jsonb_build_object('id',p.id,'status',case when p_approved then 'approved' else 'rejected' end,'result','{}'::jsonb);end if;
  if p.actor_id<>private.current_person() or p.engine_user<>p_user then raise exception 'Original maker required' using errcode='42501';end if;
  if p_action='claim' then
@@ -66,7 +71,7 @@ declare p private.sacco_proposal;d private.sacco_decision;r private.sacco_dispat
  if d.approved is distinct from true or d.recorded_at<=now()-interval '10 minutes' or not private.sacco_review_actor(p_org,d.actor_id,d.engine_user,v,true,d.session_id) then raise exception 'Fresh independent approval required' using errcode='42501';end if;
  if exists(select 1 from private.sacco_dispatch where proposal_id=p.id) then raise exception 'Execution requires reconciliation' using errcode='23505';end if;
  insert into private.sacco_dispatch values(p.id,now());
- insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),(auth.jwt()->>'session_id')::uuid,'sacco_dispatch',p.id,jsonb_build_object('reference_kind','auth_session','review_hash',p.review_hash,'approver',d.actor_id));
+ insert into public.audit_log(organisation_id,actor_id,device_id,action,record_id,after_value) values(p_org,private.current_person(),private.sacco_session_ref(),'sacco_dispatch',p.id,jsonb_build_object('reference_kind','auth_session','review_hash',p.review_hash,'approver',d.actor_id));
  return jsonb_build_object('id',p.id,'status','claimed','payload',p.payload);end if;
  if p_action='finish' then
  if p_status not in ('succeeded','rejected','uncertain') or jsonb_typeof(p_result)<>'object' or octet_length(p_result::text)>2000 or exists(select 1 from jsonb_object_keys(p_result) k where k not in ('command_id','resource_id','sub_resource_id','status','error','body_hash')) then raise exception 'Invalid result' using errcode='22023';end if;

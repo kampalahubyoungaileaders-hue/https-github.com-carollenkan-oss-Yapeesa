@@ -399,6 +399,38 @@ test('SACCO metadata requires verified scoped staff and a server gateway; it nev
   assert.equal((await rpc('sacco_review', submit, teller, false)).status, 403);
   assert.equal((await rpc('sacco_review', submit, foreign)).status, 403);
   const proposed = await rpc('sacco_review', submit, teller);
+  if (proposed.status !== 200) {
+    const metadata = await db.query(
+      "select p.proname,r.rolname owner,has_schema_privilege(r.rolname,'auth','USAGE') owner_auth,has_schema_privilege('yapesa_sacco','auth','USAGE') executor_auth from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='private' and p.proname in ('sacco_review','sacco_review_actor')",
+    );
+    console.log('Disposable review function grants', metadata.rows);
+    try {
+      await db.query('begin');
+      const claims = JSON.parse(
+        Buffer.from(token(teller).split('.')[1]!, 'base64url').toString('utf8'),
+      ) as object;
+      await db.query(
+        "select set_config('request.jwt.claims',$1,true),set_config('request.headers',$2,true)",
+        [
+          JSON.stringify(claims),
+          JSON.stringify({ 'x-yapesa-auth': config!.gatewayKey }),
+        ],
+      );
+      await db.query('set local role authenticated');
+      await db.query(
+        "select public.sacco_review($1,'submit',$2,'90001',$3::jsonb)",
+        [org, proposal, JSON.stringify(frozen)],
+      );
+    } catch (error) {
+      const e = error as { code?: string; where?: string };
+      console.log('Disposable review SQL context', {
+        code: e.code,
+        where: e.where,
+      });
+    } finally {
+      await db.query('rollback');
+    }
+  }
   assert.equal(proposed.status, 200, JSON.stringify(proposed.body));
   const hash = (proposed.body as { result: { review_hash: string } }).result
     .review_hash;
